@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Purchase Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <link rel="stylesheet" href="css/hrms.css">
+</head>
+ <style>
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background-color: #f0f0f0;
+      padding: 10px 20px;
+    }
+
+    .search-box {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .search-box button,
+    .back-button {
+      padding: 6px 12px;
+      font-size: 14px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .search-box button:hover,
+    .back-button:hover {
+      background-color: #0056b3;
+    }
+  </style>
+<body>
+  <div class="maindashboard">
+    <!-- Sidebar Fragment -->
+    <div th:fragment="sidebarFragment">
+    <header class="header">
+      <div class="logo"></div>
+      <div class="search-box">
+        <input type="text" placeholder="Search..." id="search">
+        <button>Search</button>        
+      </div>
+      <button type="button" class="back-button" onclick="goBack();">Back to Dashboard</button>
+      
+    </header>
+    
+    <div class="sidebar">
+         
+        <ul class="sidebar-menu">
+<!--             <li><a th:href="@{/qualitycontrol/incomingmaterialqualityinspectiongrid}">Purchase Requisition Management</a></li> -->
+            <li><a th:href="@{/purchase/rawmaterialpurchaseordergrid}">Raw Material Purchase Order Management</a></li>
+            <li><a th:href="@{/purchase/rawmaterialreceiptnotegrid}">Raw Material Receipt Note Management</a></li>            
+            <li><a th:href="@{/purchase/rawmaterialpurchaseinvoicegrid}">Raw Material Purchase Invoice Management</a></li>            
+            <li><a th:href="@{/purchase/requestforquotationgrid}">Request for Quotation (RFQ) Management</a></li>
+            <li><a th:href="@{/purchase/requestforproposalgrid}">Request for Proposal (RFP) Management</a></li>
+            <li><a th:href="@{/purchase/requestforinformationgrid}">Request for Information (RFI) Management</a></li>
+            <li><a th:href="@{/purchase/salesproposalgrid}">Sales Proposal (SP) Management</a></li>
+            <li><a th:href="@{/purchase/purchasedandsalesagreementgrid}">Purchase and Sales Agreement (PSA) Management</a></li>
+            <li><a th:href="@{/purchase/emergencyprocurementrequestgrid}">Emergency Procurement Request Management</a></li>
+            <li><a th:href="@{/purchase/competitiveprocurementrequestgrid}">Competitive Procurement Request Management</a></li>
+            <li><a th:href="@{/qualitycontrol/qualitycontrolauditgrid}">Planned Purchase Request Management</a></li>
+            <li><a th:href="@{/purchase/noncompetitivepurchaserequestgrid}">Non Competitive Purchase Request Management</a></li>
+            <li><a th:href="@{/purchase/onlinepurchaserequestgrid}">Online Purchase Request Management</a></li>
+           
+            </ul>
+    </div>
+<!--    <script>function goBack() { -->
+<!-- // 	window.location.href = '/dashboard'; -->
+<!-- // 	} -->
+<!--    </script>  -->
+</div>
+
+
+    <!-- Main Content -->
+    <div class="content" id="content-area">
+      <h1>Purchase Management Section</h1>
+      <p>Select a sub-field from the sidebar to proceed.</p>
+
+      <!-- Back Button -->
+      <button class="back-btn" onclick="window.history.back();">
+        <i class="fas fa-arrow-left"></i> Back
+      </button>
+    </div>
+
+    <!-- Footer Fragment -->
+  
+    <footer th:fragment="footerFragment" >
+      <div class="footer">
+      <p>&copy; 2024 Your Company. All Rights Reserved.</p>
+    </div>
+    </footer>
+    
+  </div>
+
+  <script>
+    /**
+     * Function to load dynamic content into the content area.
+     * @param {string} path - The path to the content file.
+     * @param {string} title - The title to display in the content area.
+     */
+     
+//      function goBack() {
+//  		window.location.href = '/dashboard';
+//  	  }
+ 	
+    function loadContent(path, title) {
+      const contentArea = document.getElementById('content-area');
+      contentArea.innerHTML = `<h1>${title}</h1>`; // Clear content and set title
+
+      fetch(path)
+        .then(response => {
+          if (!response.ok) throw new Error(`Failed to load ${path}: ${response.statusText}`);
+          return response.text();
+        })
+        .then(data => {
+          contentArea.innerHTML += data;
+        })
+        .catch(error => {
+          contentArea.innerHTML += '<p>Failed to load the content. Please try again later.</p>';
+          console.error(`Error loading content from ${path}:`, error);
+        });
+    }
+
+    /**
+     * Navigate back to the previous page in history.
+     */
+    function goBack() {
+      window.history.back();
+    }
+  </script>
+</body>
+
+</html>

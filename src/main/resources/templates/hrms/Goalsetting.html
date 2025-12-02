@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Goal Setting</title>
+  <link rel="stylesheet" href="/css/empinfo.css">
+  <link rel="stylesheet" href="/css/hrms.css"> <!-- // for side bar code  -->
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<style>
+  label {
+    font-size: 13px;
+  }
+</style>
+<body>
+<div th:replace="~{HRMS.html :: sidebarFragment}"></div> <!-- // for side bar code  -->
+
+<form id="goalForm" enctype="/form-data">
+  <input type="hidden" id="id" name="id" th:value="${goal?.id}">
+
+  <div class="form-container" style="min-height: 397px;padding: 57px;">
+    <h2 id="form-title">Goal Management</h2>
+
+    <!-- First Row -->
+    <div class="form-row">
+      <div class="form-group">
+        <label for="employeeuid">Employee ID:</label>
+        <select id="employeeuid" name="employeeuid" onchange="fetchEmployeDetails(this.value)"
+			th:if="${goal == null or goal.id == null}">
+
+          <option value="">-- Select Employee ID --</option>
+          <option th:each="uid : ${employeeuid}" th:value="${uid}" th:text="${uid}"></option>
+        </select>
+		<input type="text" id="employeeuid" name="employeeuid" th:if="${goal?.id != null}"
+						             th:value="${goal?.employeeUID}" readonly>
+
+      </div>
+      <div class="form-group">
+        <label>First Name:</label>
+        <input type="text" id="first_name" name="first_name" readonly>
+      </div>
+      <div class="form-group">
+        <label>Last Name:</label>
+        <input type="text" id="last_name" name="last_name" readonly>
+      </div>
+    </div>
+
+    <!-- Second Row -->
+    <div class="form-row">
+      <div class="form-group">
+        <label>Department Name:</label>
+        <input type="text" id="departmentname" name="departmentname" readonly>
+      </div>
+      <div class="form-group">
+        <label for="title">Goal Title:</label>
+        <input type="text" id="title" name="title" th:value="${goal?.title}">
+      </div>
+      <div class="form-group">
+        <label for="description">Goal Description:</label>
+        <input id="description" name="description" th:value="${goal?.description}">
+      </div>
+    </div>
+
+    <!-- Third Row -->
+    <div class="form-row">
+      <div class="form-group">
+        <label for="targetDate">Target Date:</label>
+        <input type="date" id="targetDate" name="targetDate" th:value="${goal?.targetDate}">
+      </div>
+      <div class="form-group">
+        <label for="priority">Priority</label>
+        <select id="priority" name="priority" th:value="${goal?.priority}">
+          <option value="">-- Select --</option>
+          <option value="High" th:selected="${goal?.priority=='High'}">High</option>
+          <option value="Medium" th:selected="${goal?.priority=='Medium'}">Medium</option>
+          <option value="Low" th:selected="${goal?.priority=='Low'}">Low</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="regularUpdate">Regular Update</label>
+        <input id="regularUpdate" name="regularUpdate" th:value="${goal?.regularUpdate}">
+      </div>
+    </div>
+
+    <!-- Fourth Row -->
+    <div class="form-row">
+      <div class="form-group">
+        <label for="status">Status:</label>
+        <select id="status" name="status" th:value="${goal?.status}">
+          <option value="">-- Select --</option>
+          <option value="Not Started" th:selected="${goal?.status=='Not Started'}">Not Started</option>
+          <option value="In Progress" th:selected="${goal?.status=='In Progress'}">In Progress</option>
+          <option value="Completed" th:selected="${goal?.status=='Completed'}">Completed</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <button type="button" id="submitBtn" onclick="submitForm()">Submit</button>	
+      <button type="button"  onclick="goback()">Back</button>
+      <div id="message"></div>
+    </div>
+  </div>
+</form>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script> 
+function goBack() {
+	window.location.href = '/dashboard';
+	}
+	
+//Back button logic
+function goback() {
+  window.location.href = '/hrms/GoalGrid';
+}
+</script>
+<script>
+	
+	$(document).ready(function() {
+				             // Auto-fill Item details when updating
+				             var existingEmployeeuid = $('#employeeuid').val();
+				             if (existingEmployeeuid) {
+				                 fetchEmployeDetails(existingEmployeeuid);
+				             }
+							 });	
+function fetchEmployeDetails(employeeuid) {
+  if (!employeeuid) return;
+
+  $.ajax({
+    url: '/goal/details',
+    method: 'GET',
+    data: { employeeuid: employeeuid },
+    success: function(response) {
+      $('#first_name').val(response.firstName);
+      $('#last_name').val(response.lastName);
+      $('#departmentname').val(response.departmentName);
+    },
+    error: function() {
+      alert('Error fetching employee details. Please try again.');
+    }
+  });
+}
+
+function submitForm() {
+  const employeeuid   = $('#employeeuid').val().trim();
+  const firstName     = $('#first_name').val().trim();
+  const lastName      = $('#last_name').val().trim();
+  const department    = $('#departmentname').val().trim();
+  const title         = $('#title').val().trim();
+  const description   = $('#description').val().trim();
+  const targetDate    = $('#targetDate').val().trim();
+  const priority      = $('#priority').val().trim();
+  const regularUpdate = $('#regularUpdate').val().trim();
+  const status        = $('#status').val().trim();
+
+  // 🔹 Validation checks with popup alerts
+  if (employeeuid === "") { alert("Please select an Employee UID."); return; }
+  if (firstName === "") { alert("First Name is required."); return; }
+  if (lastName === "") { alert("Last Name is required."); return; }
+  if (department === "") { alert("Department Name is required."); return; }
+  if (title === "") { alert("Goal Title is required."); return; }
+  if (description === "") { alert("Goal Description is required."); return; }
+  if (targetDate === "") { alert("Please select a Target Date."); return; }
+  
+  // 🔹 Target date validation (no past dates allowed)
+  const today = new Date().toISOString().split("T")[0];
+  if (targetDate < today) { 
+    alert("Target Date cannot be in the past."); 
+    return; 
+  }
+
+  if (priority === "") { alert("Please select a Priority."); return; }
+  if (regularUpdate === "") { alert("Regular Update is required."); return; }
+  if (status === "") { alert("Please select a Status."); return; }
+
+  // ✅ If all validations pass → submit form
+  const formData = new FormData(document.getElementById('goalForm'));
+  const id = $('#id').val();
+  let url, successMessage;
+
+  if (!id) {
+    url = '/savegoalform';
+    successMessage = 'Goal setting saved successfully!';
+  } else {
+    url = '/updategoal';
+    successMessage = 'Goal updated successfully!';
+  }
+
+  $.ajax({
+    url: url,
+    type: 'POST',
+    data: formData,
+    processData: false,
+    contentType: false,
+    success: function(response) {
+      alert(successMessage); // ✅ Popup on success
+      resetForm();
+      window.location.href = '/hrms/GoalGrid';
+    },
+    error: function() {
+      alert('Error saving goal. Please try again.');
+    }
+  });
+}
+
+function resetForm() {
+  $('#goalForm')[0].reset();
+  $('#id').val('');
+  $('#message').text('');
+  $('#form-title').text('Goal Management');
+  $('#submitBtn').text('Submit');
+}
+
+function prefillForm(data) {
+  $('#id').val(data.id);
+  $('#title').val(data.title);
+  $('#description').val(data.description);
+  $('#targetDate').val(data.targetDate);
+  $('#priority').val(data.priority);
+  $('#status').val(data.status);
+  $('#regularUpdate').val(data.regularUpdate);
+  $('#form-title').text('Update Goal Setting');
+  $('#submitBtn').text('Update');
+}
+</script>
+</body>
+</html>

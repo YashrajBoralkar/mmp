@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Online Purchase Request Form</title>
+  <link rel="stylesheet" href="/css/empinfo.css">
+  <link rel="stylesheet" href="/css/hrms.css"> 
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+<div th:replace="~{PURCHASE.html :: sidebarFragment}"></div> <!-- // for side bar code  -->                                                                        
+    
+   <form  id="onlinepurchaserequest" enctype="multipart/form-data" class="form-container" >
+    <!-- Personal Information Section -->
+<input type="hidden" id="id" name="id" th:value="${oprform?.id}">        
+    <h2>Online Purchase Request Form</h2>   
+     
+
+      <!-- First Row -->
+    
+      <div class="form-row" >
+        <div class="form-group">
+            <label for="requestdate">Request Date :</label>
+            <input type="date" id="requestdate" name="requestdate" th:value="${oprform?.requestdate}" required>
+        </div>
+      
+      <div class="form-group">
+                    <label for="requestingdepartment">Requesting Department</label>
+                    <select name="requestingdepartment" id="requestingdepartment" th:value="${oprform.requestingdepartment}" >
+                        <option value="">-- Select Department --</option>
+                        <option th:each="uid : ${dname}" th:value="${uid}" th:text="${uid}" th:selected="${oprform != null and uid == oprform.requestingdepartment}"></option>
+                    </select>
+            </div>
+    <div class="form-group">
+      <label for="requestedby">Requested By :</label>
+            <input type="text" id="requestedby" name="requestedby" th:value="${oprform?.requestedby}" required>
+    </div>
+     <div class="form-group">           
+       <label for="websitelink">Website Link :</label>
+            <input type="text" id="websitelink" name="websitelink" th:value="${oprform?.websitelink}" required>
+      </div>
+    
+  
+      </div>
+
+      <!-- Second Row -->
+      <div class="form-row">
+       
+    
+        <div class="form-group">      
+       <label for="onlinevendorname">Online Vendor Name :</label>
+            <input type="text" id="onlinevendorname" name="onlinevendorname" th:value="${oprform?.onlinevendorname}" required>
+      </div>
+
+      <div class="form-group">
+       <label for="onlinevendoremail">Vendor Email :</label>
+            <input type="email" id="onlinevendoremail" name="onlinevendoremail" th:value="${oprform?.onlinevendoremail}" required>
+                       
+    </div>
+
+      <div class="form-group">
+        	  <label for="onlinevendorcontactnumber">Vendor Mobile Number</label>
+            <input type="tel" id="onlinevendorcontactnumber" name="onlinevendorcontactnumber"   maxlength="10" th:value="${oprform?.onlinevendorcontactnumber}" required>
+      </div>
+        <div class="form-group">
+       <label for="paymentmethod">Payment Method :</label>
+            <select id="paymentmethod" name="paymentmethod" th:value="${oprform?.paymentmethod }" required>
+                <option value="">Select Payment Methods</option>
+                <option value="credit" th:selected="${oprform?.paymentmethod == 'credit'}">Credit Card</option>
+                <option value="bank" th:selected="${oprform?.paymentmethod == 'bank'}">Bank Transfer</option>
+                <option value="paypal" th:selected="${oprform?.paymentmethod == 'paypal'}">PayPal</option>
+            </select>
+         
+      </div>
+      </div>
+      <!-- Third Row -->
+      <div class="form-row"> 
+      
+        <div class="form-group">
+     
+            <label for="orderconfirmation">Order Confirmation :</label>
+            <select id="orderconfirmation" name="orderconfirmation" th:value="${oprform?.orderconfirmation}" required>
+                <option value="">Select Order Confirmation</option>
+                <option value="yes" th:selected="${oprform?.orderconfirmation == 'yes'}">Yes</option>
+                <option value="no" th:selected="${oprform?.orderconfirmation == 'no'}">No</option>
+            </select>
+
+      </div>
+         <div class="form-group">
+         
+                    <label for="productuid">Product ID :</label>
+            <select id="productuid" name="productuid" onchange="fetchproductDetails(this.value)"  th:if="${oprform == null or oprform.id == null}" required>
+				<option value="">Select Product ID</option>
+				<option th:each="uid : ${productuid}" th:value="${uid}" th:text="${uid}"></option>
+			</select>
+    		<input type="text" id="productuid" name="productuid" th:value="${oprform?.productuid}" onchange="fetchproductDetails(this.value)" readonly th:if="${oprform?.id != null}">
+        </div>
+       <div class="form-group">
+        <label for="productname">Product Name :</label>
+            <input type="text" id="productname" name="productname" readonly>
+       </div>
+      <div class="form-group">                   
+         <label for="unitprice">Unit Price :</label>
+         <input type="number" id="unitprice" name="unitprice" readonly>
+         </div>
+      </div>
+
+      <!-- four Row -->
+      
+      <div class="form-row">
+      <div class="form-group">
+         <label for="onlinepurchasequantity">Quantity :</label>
+            <input type="number" id="onlinepurchasequantity" name="onlinepurchasequantity" th:value="${oprform?.onlinepurchasequantity}" required>
+         </div>
+        
+        <div class="form-group">
+         <label for="totalprice">Total Price :</label>
+            <input type="number" id="totalprice" name="totalprice" th:value="${oprform?.totalprice}" readonly>
+        </div>
+        <div class="form-group">
+           <label for="shippingcost">Shipping Cost :</label>
+            <input type="number" id="shippingcost" name="shippingcost" th:value="${oprform?.shippingcost}" required>
+        </div>
+         <div class="form-group">
+              <label for="taxamount">Tax Amount :</label>
+            <input type="number" id="taxamount" name="taxamount" th:value="${oprform?.taxamount}" required>
+          
+        </div>
+        </div>
+        
+        
+       <!-- four Row -->
+      <div class="form-row">
+          <div class="form-group">
+           <label for="finaltotalamount">Final Total Amount :</label>
+            <input type="number" id="finaltotalamount" name="finaltotalamount" th:value="${oprform?.finaltotalamount}" readonly>
+        </div>
+        <div class="form-group">
+          <label for="deliveryaddress">Delivery Address :</label>
+            <input type="text" id="deliveryaddress" name="deliveryaddress" th:value="${oprform?.deliveryaddress}" required>
+            
+        </div>
+        <div class="form-group">
+           <label for="expecteddeliverydate">Expected Delivery Date</label>
+            <input type="date" id="expecteddeliverydate" name="expecteddeliverydate" th:value="${oprform?.expecteddeliverydate}" required>
+
+        </div>
+          <div class="form-group">
+         <label for="trackingnumber">Tracking Number :</label>
+            <input type="text" id="trackingnumber" name="trackingnumber" th:value="${oprform?.trackingnumber}" required>
+
+        </div>
+      </div>
+
+ <!-- four Row -->
+      <div class="form-row">     
+        <div class="form-group">
+           <label for="courierservicename">Courier Service Name :</label>
+            <input type="text" id="courierservicename" name="courierservicename" th:value="${oprform?.courierservicename}" required>
+        </div>
+        <div class="form-group">
+          <label for="budgetcode">Budget Code :</label>
+            <input type="number" id="budgetcode" name="budgetcode" th:value="${oprform?.budgetcode}" required>
+        </div>
+      <div class="form-group">
+       <label for="availablebudget">Available Budget :</label>
+            <input type="number" id="availablebudget" name="availablebudget" th:value="${oprform?.availablebudget}" required>
+      </div>
+       <div class="form-group">
+          <label for="fundingsource">Funding Source :</label>
+            <select id="fundingsource" name="fundingsource" th:value="${oprform?.fundingsource}" required>
+                <option value="">Select Funding Source</option>
+                <option value="internal" th:selected="${oprform?.fundingsource == 'internal'}">Internal Funding</option>
+                <option value="grant" th:selected="${oprform?.fundingsource == 'grant'}">Grant Funding</option>
+                <option value="external" th:selected="${oprform?.fundingsource == 'external'}">External Funding</option>
+            </select>
+      </div>
+      </div>
+      
+       <!-- four Row -->
+     <div class="form-row">   
+      <div class="form-group">
+         <label for="financedepartmentapprovalstatus">Finance Dept Approval Status :</label>
+            <select id="financedepartmentapprovalstatus" name="financedepartmentapprovalstatus" th:value="${oprform?.financedepartmentapprovalstatus}" required>
+                <option value="">Select Approval Status</option>
+                <option value="pending" th:selected="${oprform?.financedepartmentapprovalstatus == 'pending'}">Pending</option>
+                <option value="approve" th:selected="${oprform?.financedepartmentapprovalstatus == 'approve'}">Approve</option>
+                <option value="reject" th:selected="${oprform?.financedepartmentapprovalstatus == 'reject'}">Rejected</option>
+            </select> 
+      </div>
+       <div class="form-group">
+         <label for="financedepartmentapprovername">Finance Dept Approver Name :</label>
+            <input type="text" id="financedepartmentapprovername" name="financedepartmentapprovername" th:value="${oprform?.financedepartmentapprovername}" required>
+      </div>
+      <div class="form-group">
+          <label for="financedepartmentapprovaldate">Finance Dept Approval Date :</label>
+            <input type="date" id="financedepartmentapprovaldate" name="financedepartmentapprovaldate" th:value="${oprform?.financedepartmentapprovaldate}" required>
+      </div>
+      <div class="form-group">
+           
+        <label for="procurementapprovername">Procurement Approver Name :</label>
+            <input type="text" id="procurementapprovername" name="procurementapprovername" th:value="${oprform?.procurementapprovername}" required>
+      </div>
+     </div>
+     
+      <!-- four Row -->
+      <div class="form-row">
+        <div class="form-group">
+         <label for="procurementdepartmentapprovalstatus">Procurement Dept Approval Status :</label>
+            <select id="procurementdepartmentapprovalstatus" name="procurementdepartmentapprovalstatus" th:value="${oprform?.procurementdepartmentapprovalstatus}" required>
+                <option value="">Select Approval Status</option>
+                <option value="pending" th:selected="${oprform?.procurementdepartmentapprovalstatus == 'pending'}">Pending</option>
+                <option value="approved" th:selected="${oprform?.procurementdepartmentapprovalstatus == 'approved'}">Approved</option>
+                <option value="rejected" th:selected="${oprform?.procurementdepartmentapprovalstatus == 'rejected'}">Rejected</option>
+            </select>
+      </div>
+       <div class="form-group">
+           <label for="procurementdepartmentapprovaldate"> Procurement Dept Approval Date :</label>
+            <input type="date" id="procurementdepartmentapprovaldate" name="procurementdepartmentapprovaldate" th:value="${oprform?.procurementdepartmentapprovaldate}" required>
+      </div>
+      <div class="form-group">
+          <label for="file">Invoice/Receipt Upload :</label>
+            <input type="file" id="file" name="file" accept=".pdf, .docx, .doc">
+      </div>
+      <div class="form-group">
+         <label for="comments">Comments/Additional Notes :</label>
+            <input type="text" id="comments" name="comments" required th:value="${oprform?.comments}">
+      </div>
+     </div>
+
+   <!-- Five Row  -->
+    <div class="form-actions">
+  		<button type="button" id="submitBtn" onclick="submitForm()">Submit</button>
+     <div th:if="${successMessage}" class="success-message" th:text="${successMessage}"></div>
+     <button type="button" class="back-button" onclick="goback();">Back</button>
+
+    </div> 
+   </form>
+   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+
+function goback() {
+		window.location.href = '/purchase/onlinepurchaserequestgrid';
+	  }
+function goBack() {
+	window.location.href = '/dashboard';
+  }
+
+$(document).ready(function() {
+
+    // Attach event listeners ONCE
+    $('#unitprice, #onlinepurchasequantity').on('input', function() {
+        calculateTotalPrice();
+    });
+
+    $('#shippingcost, #taxamount').on('input', function() {
+        calculateFinalTotalAmount();
+    });
+
+    // Optional: trigger calculation on load if values are pre-filled
+    calculateTotalPrice();
+    calculateFinalTotalAmount();
+});
+
+function calculateTotalPrice() {
+    const unitprice = parseFloat($('#unitprice').val()) || 0;
+    const quantity = parseFloat($('#onlinepurchasequantity').val()) || 0;
+    const totalprice = unitprice * quantity;
+    $('#totalprice').val(totalprice.toFixed(2));
+
+    calculateFinalTotalAmount(); // Call this after total price calculation
+}
+
+function calculateFinalTotalAmount() {
+    const totalprice = parseFloat($('#totalprice').val()) || 0;
+    const shippingcost = parseFloat($('#shippingcost').val()) || 0;
+    const taxamount = parseFloat($('#taxamount').val()) || 0;
+
+    const finaltotal = totalprice + shippingcost + taxamount;
+    $('#finaltotalamount').val(finaltotal.toFixed(2));
+}
+
+		   
+		 $(document).ready(function() {
+			    // Auto-fill Item details when updating
+			    var existingProductid = $('#productuid').val();
+			    if (existingProductid) {
+			    	fetchproductDetails(existingProductid);
+			    }
+			});
+		    function fetchproductDetails(productuid) {
+		        if (!productuid) return;
+
+		        $.ajax({
+		            url: '/onlinepurchaserequest/getproductdetails',
+		            method: 'GET',
+		            data: { productuid: productuid },
+		            success: function(response) {
+		                if (response && response.length > 0) {
+		                    const data = response[0];
+		                    $('#productname').val(data.productname || '');
+		                    $('#unitprice').val(data.sellingprice || '');
+		                    calculateTotalPrice(); // Recalculate on fetch
+		                } else {
+		                    alert('No data found for the selected product.');
+		                }
+		            },
+		            error: function(xhr, status, error) {
+		                console.error('Error fetching product details:', error);
+		                alert('Error fetching product details. Please try again.');
+		            }
+		        });
+		    }
+    	function submitForm() {
+    		 if (!validateFormFields()) {
+    		        return; // Stop form submission if validation fails
+    		    }
+    		let form = document.getElementById('onlinepurchaserequest');
+   		    const formData = new FormData(document.getElementById('onlinepurchaserequest'));
+    	    const id = $('#id').val();
+    		let url, successMessage;
+			   if (!id) {
+    			        url = '/onlinepurchserequest/save';
+    			        successMessage = 'Online Purchase Request Form data saved successfully!';
+    				   } else {
+    					url = '/onlinepurchserequest/update';
+    					successMessage = 'Online Purchase Request Form data updated successfully!';
+    				    }
+
+    						    $.ajax({
+    						        url: url,
+    						        type: 'POST',
+    						        data: formData,
+    						        processData: false,
+    						        contentType: false,
+    						        success: function(response) {
+    						            $('#message').text(successMessage); // Display success message
+    						            resetForm();
+    						            window.location.href = '/purchase/onlinepurchaserequestgrid';
+    						        },
+    						        error: function() {
+    						            alert('Error saving Online Purchase Request Form . Please fill out the data.');
+    						        }
+    						    });
+    						}
+    						// Reset the form
+    								function resetForm() {
+    								    $('#onlinepurchaserequest')[0].reset();
+    									$('#id').val('');
+    								    $('#message').text(''); // Clear the message
+    								    $('#submitBtn').text('Submit');
+    								}    															
+    </script>
+    <script>
+    function validateFormFields() {
+        // Required field IDs
+        const requiredFields = [
+            'requestdate', 'requestingdepartment', 'requestedby', 'websitelink',
+            'onlinevendorname', 'onlinevendoremail', 'onlinevendorcontactnumber',
+            'paymentmethod', 'orderconfirmation', 'productuid', 'onlinepurchasequantity',
+            'shippingcost', 'taxamount', 'deliveryaddress', 'expecteddeliverydate',
+            'trackingnumber', 'courierservicename', 'budgetcode', 'availablebudget',
+            'fundingsource', 'financedepartmentapprovalstatus', 'financedepartmentapprovername',
+            'financedepartmentapprovaldate', 'procurementapprovername',
+            'procurementdepartmentapprovalstatus', 'procurementdepartmentapprovaldate', 'comments'
+        ];
+
+        // Check for empty fields
+        for (let i = 0; i < requiredFields.length; i++) {
+            const field = document.getElementById(requiredFields[i]);
+            if (!field.value.trim()) {
+                alert("Please fill the " + requiredFields[i] + " field.");
+                field.focus();
+                return false;
+            }
+        }
+
+        // Email validation (simple)
+        const email = document.getElementById('onlinevendoremail').value;
+        if (email.indexOf('@') === -1 || email.indexOf('.') === -1) {
+            alert("Please enter a valid email address.");
+            document.getElementById('onlinevendoremail').focus();
+            return false;
+        }
+
+        // Mobile number validation
+        const mobile = document.getElementById('onlinevendorcontactnumber').value;
+        if (mobile.length !== 10 || isNaN(mobile)) {
+            alert("Please enter a valid 10-digit mobile number.");
+            document.getElementById('onlinevendorcontactnumber').focus();
+            return false;
+        }
+
+        // All validations passed
+        return true;
+    }
+
+</script>   
+</body>
+</html>

@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Emergency Procurement Request Form</title>
+<link rel="stylesheet" href="/css/empinfo.css">
+  <link rel="stylesheet" href="/css/hrms.css"> <!-- // for side bar code  -->
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+
+  <div th:replace="~{PURCHASE.html :: sidebarFragment}"></div> <!-- // for side bar code  -->                                                                        
+    
+   <form  id="eprfform" class="form-container" style="max-width: 840px;" > 
+
+   <input type="hidden" id="id" name="id" th:value="${eprf?.id}"><br><br>
+    <h2>Emergency Procurement Request Form</h2>   
+     
+
+      <!-- First Row -->
+    
+      <div class="form-row" >
+        <div class="form-group">
+       <label for="requestdate" class="form-label">Request Date:</label> 
+                 <input type="date" id="requestdate" name="requestdate" th:value="${eprf?.requestdate}"required> 
+            </div>
+      
+      <div class="form-group">
+         <label for="reasonforemergency">Reason for Emergency:</label>
+            <textarea id="reasonforemergency" name="reasonforemergency" style="width: 238px;height: 35px;" rows="3" th:text="${eprf?.reasonforemergency}" required></textarea> 
+        </div> 
+    </div>
+
+      <!-- Second Row -->
+      <div class="form-row">
+      <div class="form-group">           
+          <label for="approvalstatus" class="form-label">Approval Status:</label> 
+                 <select  id="approvalstatus" name="approvalstatus" th:value="${eprf?.approvalstatus}" required>
+                     <option value="">Select approval status</option>
+                     <option value="Pending" th:selected="${eprf?.approvalstatus == 'Pending'}">Pending</option>
+                     <option value="Approved" th:selected="${eprf?.approvalstatus == 'Approved'}">Approved</option> 
+                     <option value="Rejected" th:selected="${eprf?.approvalstatus == 'Rejected'}">Rejected</option> 
+                 </select> 
+		 </div>
+		 </div>
+       
+
+   <!-- Third Row  -->
+    <div class="form-actions">
+      <br><br>
+      <button type="button" id="submitBtn" onclick="submitForm()">Submit</button>	
+   <button type="button" class="back-button" onclick="goBack();">Back</button>
+   <div th:if="${successMessage}" class="success-message" th:text="${successMessage}"></div>
+    </div>
+   </form>
+   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+   <script>
+       function goBack() {
+		window.location.href = '/purchase/emergencyprocurementrequestgrid';
+	   }
+</script>
+ <script>
+ 
+ 
+		function submitForm()
+		{
+			const formData=new FormData(document.getElementById('eprfform'));
+			const id = $('#id').val();
+			
+			let url, successMessage;
+			
+			if(!id){
+				url='/emergencyprocurementrequest/save';
+				successMessage='Emergency Procurement Request form saved successfully!';
+			}else{
+				url='/emergencyprocurementrequest/update';
+				successMessage='Emergency Procurement Request form updated successfully!';
+			}
+			
+			$.ajax({
+				url:url,
+				type:'POST',
+				data:formData,
+				processData:false,
+				contentType:false,
+				success: function(response){
+					alert(successMessage);
+					resetForm();
+					window.location.href= '/purchase/emergencyprocurementrequestgrid';
+				},
+				error:function(){
+					alert('Error in saving emergency procurement request form.Please try again');
+				}
+			});
+			
+		}
+		
+		function resetForm()
+		{
+			$('#eprfform')[0].reset();
+			$('#id').val('');
+		    $('#form-title').text('eprf Form');
+			$('#submitBtn').text('Submit');
+			
+		}
+		
+		function prefillForm(data)
+		{
+			$('requestdate').val(data.requestdate);
+			$('reasonforemergency').val(data.reasonforemergency);
+			$('approvalstatus').val(data.approvalstatus);
+			$('#form-title').text('Update EPRF Form');
+		    $('#submitBtn').text('Update');
+
+		}
+	</script>
+   
+</body>
+</html>
+

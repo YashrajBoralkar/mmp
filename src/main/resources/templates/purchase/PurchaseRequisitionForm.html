@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Purchase Requisition</title>
+  <link rel="stylesheet" href="/css/empinfo.css">
+  <link rel="stylesheet" href="/css/hrms.css"> <!-- // for side bar code  -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+   <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<style>
+h5{
+  margin: 10px;
+}
+</style>
+<body>
+  <div th:replace="~{INVENTORY.html :: sidebarFragment}"></div> <!-- // for side bar code  -->
+   
+  <form id="purchaesdrequisitionform" enctype="/form-data" >
+   <div class="form-container">
+      <input type="hidden" id="id" name="id" th:value="${pr?.id}" >
+
+      <h2>Purchase Requisition Form</h2>
+
+      <!-- First Row -->
+      <div class="form-row">
+        
+        <div class="form-group">        
+          <label for="productuid">Product UID:</label>
+			<select id="productuid" name="productuid" onchange="fetchItemDetails(this.value)" >
+			    <option value="">Select Product UID</option>
+			    <option th:each="uid : ${productuid}" th:value="${uid}" th:text="${uid}"></option>
+			</select>
+              
+        </div>
+        <div class="form-group">
+          <label for="productname">Product Name:</label>
+          <input type="text" id="productname" name="productname" readonly >
+   
+        </div>
+
+        <div class="form-group">
+          <label for="requestedby">Requested By:</label>
+        <input type="text" id="requestedby" name="requestedby" th:value="${pr?.requestedby}">  
+        </div>      
+        <div class="form-group">
+          <label for="reasonforrequest">Reason for Request:</label>
+        <input type='text' id="reasonforrequest" name="reasonforrequest" th:value="${pr?.reasonforrequest}">
+
+        </div>
+      </div>
+
+
+      <!-- Second Row -->
+      <div class="form-row">
+        <div class="form-group">
+          <label for="requestdate">Request Date:</label>
+          <input type="date" id="requestdate" name="requestdate" th:value="${pr?.requestdate}">
+       </div>
+        <div class="form-group">
+          <label for="department">Department:</label>
+          <input type="text" id="department" name="department" th:value="${pr?.department}">
+        </div>
+   
+        <div class="form-group">
+          <label for="quantity">Quantity:</label>
+          <input type="text" id="quantity" name="quantity" th:value="${pr?.quantity}">
+        </div>
+        
+        <div class="form-group">
+          <label for="approvedby">Approved By:</label>
+          <input type="text" id="approvedby" name="approvedby" th:value="${pr?.approvedby}">
+        </div>
+
+      </div>
+      <!-- Third Row -->
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="unitofmeasure">Unit of Measure:</label>
+          <select id="unitofmeasure" name="unitofmeasure" th:value="${pr?.unitofmeasure}">
+              <option value="Select" th:selected="${pr?.unitofmeasure == 'Select'}">Select</option>
+              <option value="Kg" th:selected="${pr?.unitofmeasure == 'Kg'}">Kg</option>
+              <option value="Dozen" th:selected="${pr?.unitofmeasure == 'Dozen'}">Dozen</option>
+              <option value="Quintal" th:selected="${pr?.unitofmeasure == 'Quintal'}">Quintal</option>
+              <option value="Ton" th:selected="${pr?.unitofmeasure == 'Ton'}">Ton</option>
+          </select>
+        </div>
+      </div>
+    
+      <div class="form-row">
+        <div class="form-group">
+          <label for="approvalstatus">Approval Status:</label>
+          <select id="approvalstatus" name="approvalstatus" th:value="${pr?.approvalstatus}">
+              <option value="Select" th:selected="${pr?.approvalstatus == 'Select'}">Select</option>
+              <option value="Approved" th:selected="${pr?.approvalstatus == 'Approved'}">Approved</option>
+              <option value="Pending" th:selected="${pr?.approvalstatus == 'Pending'}">Pending</option>
+              <option value="Rejected" th:selected="${pr?.approvalstatus == 'Rejected'}">Rejected</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="approvaldate">Approval Date:</label>
+          <input type="date" id="approvaldate" name="approvaldate" th:value="${pr?.approvaldate}">
+  
+        </div>
+
+        <div class="form-group" >
+          <label for="prioritylevel">Priority Level:</label>
+          <select id="prioritylevel" name="prioritylevel" th:value="${pr?.prioritylevel}">
+              <option value="Select" th:selected="${pr?.prioritylevel == 'Select'}">Select</option>
+              <option value="Low" th:selected="${pr?.prioritylevel == 'Low'}">Low</option>
+              <option value="Medium" th:selected="${pr?.prioritylevel == 'Medium'}">Medium</option>
+              <option value="High" th:selected="${pr?.prioritylevel == 'High'}">High</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="remarks">Remarks:</label>
+          <input type='text' id="remarks" name="remarks" th:value="${pr?.remarks}">
+        </div>
+      </div>
+   
+
+
+      <div class="form-actions">
+        <button type="button" id="submitBtn" onclick="submitForm()">Submit</button>
+        <div th:if="${successMessage}" class="success-message" th:text="${successMessage}"></div>
+      </div>
+      
+    </div>
+    </form>
+   
+   <script>
+		
+		function fetchItemDetails(productuid) {
+		            if (!productuid)  return;
+		            
+		            
+		            $.ajax({
+		                url: '/product/getproductDetails',
+		                method: 'GET',
+		                data: { productuid: productuid },
+		                success: function(response) {
+		                      $('#productname').val(response.productname);
+		                   
+		                },
+		                error: function() {
+		                    alert('Error fetching Product details. Please try again.');
+		                }
+		            });
+		        }
+
+				
+		
+        function submitForm() {
+            const formData = new FormData(document.getElementById('purchaesdrequisitionform'));
+            const id = $('#id').val();
+            let url, successMessage;
+
+            // Check if requisitionuid exists to determine if it's an update
+            if (!id) {
+				url = '/saveprform';
+               
+                successMessage = 'Purchased Form saved successfully!';
+            } else {
+				url = '/updateprform';
+                successMessage = 'Purchased Form updated successfully!';
+            }
+
+            $.ajax({
+                url: url,
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(response) {
+                    alert(successMessage);
+                    resetForm();
+                    window.location.href = '/inventory/procurementintegrationGrid';
+                },
+                error: function() {
+                    alert('Error saving Purchased Form. Please try again.');
+                }
+            });
+        }
+        
+        function resetForm() {
+            $('#purchaesdrequisitionform')[0].reset();
+            $('#requisitionuid').val('');  // Clear requisitionuid to prepare for new form
+            $('#form-title').text('Purchased Requisition Form');
+            $('#submitBtn').text('Submit');
+        }
+
+		function prefillForm(data) {
+		    // Check if the data object contains the requisitionuid
+		    $('#id').val(data.id); 
+			
+		    $('#productuid').val(data.productuid);
+		    $('#requestedby').val(data.requestedby);
+		    $('#reasonforrequest').val(data.reasonforrequest);
+		    $('#requestdate').val(data.requestdate);
+		    $('#department').val(data.department);
+		    $('#quantity').val(data.quantity);
+		    $('#unitofmeasure').val(data.unitofmeasure);
+		    $('#approvedby').val(data.approvedby);
+		    $('#approvalstatus').val(data.approvalstatus);
+		    $('#prioritylevel').val(data.prioritylevel);
+		    $('#remarks').val(data.remarks);
+
+		    $('#form-title').text('Update Purchased Form');
+		    $('#submitBtn').text('Update');
+		}
+
+    </script>
+
+</body>
+</html>

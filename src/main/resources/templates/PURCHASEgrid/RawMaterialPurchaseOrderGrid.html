@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Raw Material Purchase Order Management</title>
+    
+    <link rel="stylesheet" href="/css/hrms.css"> <!-- // for side bar code  -->
+    <link rel="stylesheet" href="/css/grid.css">
+    <link rel="stylesheet" href="/css/emplist.css">
+
+    <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<!-- ✅ Internal CSS for Button Styling -->
+  <style>
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background-color: #f0f0f0;
+      padding: 10px 20px;
+    }
+
+    .search-box {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .search-box button,
+    .back-button {
+      padding: 6px 12px;
+      font-size: 14px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .search-box button:hover,
+    .back-button:hover {
+      background-color: #0056b3;
+    }
+  </style>
+<body>
+<div th:replace="~{PURCHASE.html :: sidebarFragment}"></div> <!-- // for side bar code  -->
+
+<div class="button-container">
+    
+</div>
+
+<div class="button-grid">
+    <button onclick="loadRawMaterialPurchaseOrderManagementTable()"style="width:112%">Raw Material Purchase Order Details</button>
+<!--     <button onclick="loadLeaveTable()">Leave Information</button> -->
+<!--     <button onclick="loadShiftInfoTable()">Shift Info Details</button> -->
+</div>
+
+<div id="RawMaterialPurchaseOrder-table-container">
+    <!-- Add the button above the table -->
+<!--    <button class="styled-button" onclick="window.location.href='/empregister';">-->
+<!--        Open Employee Registration Form-->
+<!--    </button>-->
+</div> <!-- Table will be dynamically loaded here -->
+
+<script src="grid.js"></script>
+<script> function goBack() {
+	window.location.href = '/dashboard';
+	  }</script>
+<script>
+    function loadRawMaterialPurchaseOrderManagementTable() {
+        /// Create the button and table container structure immediately
+        const container = document.getElementById("RawMaterialPurchaseOrder-table-container");
+        container.innerHTML = `
+            <div class="table-header">
+				<div class="button-container" style="margin-left: 1045px;">
+								                <button class="styled-button" onclick="window.location.href='/dashboard'" style="flex-grow: 1;">
+								                    <i class="fas fa-arrow-left"></i> Back
+								                </button>
+								                <button id="open-register-btn" class="styled-button" style="flex-grow: 1; margin-left: 20px;">
+								                Raw Material Purchase Order Form
+								                </button>
+								            </div>
+			 </div>
+            <table>
+            <thead>
+            <tr>
+                <th>ID</th>
+                <th>RM Purchase Order ID</th>
+                <th>Supplier ID</th>
+                <th>Supplier Name</th>
+                <th>Raw Materials Details</th>
+                <th>Order Date</th>
+                <th>Total Value</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+
+                <tbody id="RawMaterialPurchaseOrder-table-body">
+                    <tr><td colspan="9">Loading data...</td></tr>
+                </tbody>
+            </table>
+        `;
+
+        // Add event listener to the "Register Employee" button
+        document.getElementById("open-register-btn").addEventListener("click", () => {
+            // Redirect to the employee shift info form
+            window.location.href = '/Rawmaterialpurchaseorder/form';
+        });
+
+     // Helper function to format raw material details
+        function formatMaterialDetails(rawJson) {
+            let formatted = "";
+            try {
+                const data = JSON.parse(rawJson);
+                const parts = [];
+
+                for (const material in data) {
+                    const details = data[material];
+                    const quantity = details.quantity;
+                    const price = details.price;
+                    parts.push(`${material} - Quantity: ${quantity}, Price: ${price}`);
+                }
+
+                formatted = parts.join("<br>"); // Use <br> for line breaks in HTML
+            } catch (e) {
+                formatted = rawJson; // fallback in case JSON is malformed
+            }
+
+            return formatted;
+        }
+
+        // Fetch and populate table data
+        fetch('/viewallpurchaseorderinfo')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                const headers = data.headers;
+                const rows = data.data;
+                const tbody = document.getElementById("RawMaterialPurchaseOrder-table-body");
+
+                if (rows.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="9">No data available.</td></tr>`;
+                    return;
+                }
+
+                // Generate rows from data
+                tbody.innerHTML = rows.map(row => {
+                    const formattedDetails = formatMaterialDetails(row['Raw Materials Details']); // 👈 Format here
+
+                    return `
+                        <tr>
+                            <td>${row['ID']}</td>
+                            <td>${row['RM Purchase Order ID']}</td>
+                            <td>${row['Supplier ID']}</td>
+                            <td>${row['Supplier Name']}</td>
+                            <td>${formattedDetails}</td>
+                            <td>${row['Order Date']}</td>
+                            <td>${row['Total Value']}</td>
+                            <td>
+                                <div class="action-buttons">
+                                    <a href="#" class="btn btn-delete" data-id="${row['ID']}" onclick="DeletefromRawMaterialPurchaseOrderInfo(this)">Delete</a>
+                                    <a href="/Rawmaterialpurchaseorder/edit/${row['ID']}" class="btn btn-update">Update</a>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+            })
+            .catch(error => {
+                console.error('Error fetching Raw Material Purchase Order data:', error);
+                document.getElementById("RawMaterialPurchaseOrder-table-body").innerHTML = `<tr><td colspan="9">Error loading data.</td></tr>`;
+            });
+
+    }
+
+		function DeletefromRawMaterialPurchaseOrderInfo(element) {
+	    const id = element.getAttribute('data-id'); // Retrieve the employee ID
+	    if (confirm(`Are you sure you want to delete Raw Material Purchase Order Info with ID: ${id}?`)) {
+	        // Perform the fetch request with the employee ID as a query parameter
+	        fetch(`/deleterawmaterialpurchaseorderinfo?id=${id}`, { method: 'GET' })
+	            .then(response => {
+	                if (response.redirected) {
+	                    // Redirect to the new location if the server redirects
+	                    window.location.href = response.url;
+	                } else {
+	                    console.log('Raw Material Purchase Order info deleted:', id);
+	                }
+	            })
+	            .catch(error => {
+	                console.error('Error deleting Raw Material Purchase Order info :', error);
+	            });
+	    }
+	}
+
+		
+		
+</script>
+</body>
+</html>

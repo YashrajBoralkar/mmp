@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employee Salary Structure Form</title>
+   <link rel="stylesheet" href="hrms1.css">
+    <link rel="stylesheet" href="css/sty.css">
+      <link rel="stylesheet" href="/css/hrms.css"> <!-- // for side bar code  -->
+    
+    <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+</head>
+
+<style>
+    h5 {
+        margin: 10px;
+    }
+    label {
+        font-size: 12px;
+    }
+</style>
+
+<body>
+<div th:replace="~{EmployeePayroll.html :: sidebarFragment}"></div> <!-- // for side bar code  -->
+
+
+    <form id="SalaryStructureForm" class="form-container">
+        <h2>Employee Salary Structure</h2>
+
+        <!-- Employee Details -->
+        <h5>Employee Information</h5>
+        <div class="form-row">
+            <div class="form-group">
+                <label for="employeeId">Employee ID:</label>
+                <input type="text" class="form-control" id="employeeId" name="employeeId" required>
+            </div>
+            <div class="form-group">
+                <label for="employeeName">Employee Name:</label>
+                <input type="text" class="form-control" id="employeeName" name="employeeName" required>
+            </div>
+            <div class="form-group">
+                <label for="department">Department:</label>
+                <input type="text" class="form-control" id="department" name="department" required>
+            </div>
+            <div class="form-group">
+                <label for="designation">Designation:</label>
+                <input type="text" class="form-control" id="designation" name="designation" required>
+            </div>
+        </div>
+
+        <!-- Salary Components -->
+        <h5>Salary Components</h5>
+        <div class="form-row">
+            <div class="form-group">
+                <label for="basicSalary">Basic Salary:</label>
+				<br>
+                <input type="number" class="form-control" id="basicSalary" name="basicSalary" required>
+            </div>
+            <div class="form-group">
+                <label for="hra">House Rent Allowance:</label>
+			<br>
+                <input type="number" class="form-control" id="hra" name="hra" required>
+            </div>
+            <div class="form-group">
+                <label for="conveyanceAllowance">Conveyance Allowance:</label>
+				<br>
+                <input type="number" class="form-control" id="conveyanceAllowance" name="conveyanceAllowance" required>
+            </div>
+            <div class="form-group">
+                <label for="medicalAllowance">Medical Allowance:</label>
+				<br>
+                <input type="number" class="form-control" id="medicalAllowance" name="medicalAllowance" required>
+            </div>
+            <div class="form-group">
+                <label for="specialAllowance">Special Allowance:</label>
+				<br>
+                <input type="number" class="form-control" id="specialAllowance" name="specialAllowance">
+            </div>
+        </div>
+
+        <!-- Deductions & Contributions -->
+        <h5>Deductions & Contributions</h5>
+        <div class="form-row">
+            <div class="form-group">
+                <label for="pfDeduction">Provident Fund (PF) Deduction:</label>
+                <input type="number" class="form-control" id="pfDeduction" name="pfDeduction" required>
+            </div>
+            <div class="form-group">
+                <label for="tdsDeduction">Tax Deduction (TDS):</label>
+                <input type="number" class="form-control" id="tdsDeduction" name="tdsDeduction" required>
+            </div>
+            <div class="form-group">
+                <label for="otherDeductions">Other Deductions (Optional):</label>
+                <input type="number" class="form-control" id="otherDeductions" name="otherDeductions">
+            </div>
+        </div>
+
+        <!-- Approval Information -->
+        <h5>Approval Information</h5>
+        <div class="form-row">
+            <div class="form-group">
+                <label for="approvalStatus">Approval Status:</label>
+                <select class="form-select" id="approvalStatus" name="approvalStatus" required>
+                    <option value="">Select</option>
+                    <option value="approved">Approved</option>
+                    <option value="pending">Pending</option>
+                    <option value="rejected">Rejected</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="reviewedBy">Reviewed By:</label>
+                <input type="text" class="form-control" id="reviewedBy" name="reviewedBy" required>
+            </div>
+        </div>
+
+        <!-- Form Actions -->
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary mt-3">Submit Salary Details</button>
+        </div>
+
+        <div id="salaryResult" class="alert" style="display: none;"></div>
+    </form>
+
+    
+</body>
+</html>

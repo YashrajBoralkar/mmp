@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Retail Order Management</title>
+    
+    <link rel="stylesheet" href="/css/hrms.css"> <!-- // for side bar code  -->
+    <link rel="stylesheet" href="/css/grid.css">
+    <link rel="stylesheet" href="/css/emplist.css">
+
+    <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<!-- ✅ Internal CSS for Button Styling -->
+  <style>
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background-color: #f0f0f0;
+      padding: 10px 20px;
+    }
+
+    .search-box {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .search-box button,
+    .back-button {
+      padding: 6px 12px;
+      font-size: 14px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .search-box button:hover,
+    .back-button:hover {
+      background-color: #0056b3;
+    }
+  </style>
+<body>
+<div th:replace="~{WHOLESELLERANDRETAILER.html :: sidebarFragment}"></div> <!-- // for side bar code  -->
+
+<div class="button-container">
+    
+</div>
+
+<div class="button-grid">
+    <button onclick="loadRetailOrderManagementTable()"style="width:112%">Retail Order Details</button>
+<!--     <button onclick="loadLeaveTable()">Leave Information</button> -->
+<!--     <button onclick="loadShiftInfoTable()">Shift Info Details</button> -->
+</div>
+
+<div id="RetailOrder-table-container">
+    <!-- Add the button above the table -->
+<!--    <button class="styled-button" onclick="window.location.href='/empregister';">-->
+<!--        Open Employee Registration Form-->
+<!--    </button>-->
+</div> <!-- Table will be dynamically loaded here -->
+
+<script src="grid.js"></script>
+
+<script>
+    function loadRetailOrderManagementTable() {
+        /// Create the button and table container structure immediately
+        const container = document.getElementById("RetailOrder-table-container");
+        container.innerHTML = `
+            <div class="table-header">
+				<div class="button-container" style="margin-left: 1045px;">
+								                <button class="styled-button" onclick="window.location.href='/dashboard'" style="flex-grow: 1;">
+								                    <i class="fas fa-arrow-left"></i> Back
+								                </button>
+								                <button id="open-register-btn" class="styled-button" style="flex-grow: 1; margin-left: 20px;">
+								                Retail Order Form
+								                </button>
+								            </div>
+			 </div>
+            <table>
+            <thead>
+            <tr>
+                <th>ID</th>
+                <th>Retailer ID</th>
+                <th>Company Name</th>
+                <th>Contact Person</th>
+                <th>Order Date</th>
+                <th>Product Name</th>
+                <th>Total Amount</th>
+                <th>Delivery Date</th>
+                <th>Payment Mode</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+
+                <tbody id="RetailOrder-table-body">
+                    <tr><td colspan="9">Loading data...</td></tr>
+                </tbody>
+            </table>
+        `;
+
+        // Add event listener to the "Register Employee" button
+        document.getElementById("open-register-btn").addEventListener("click", () => {
+            // Redirect to the employee shift info form
+            window.location.href = '/showretailorderform';
+        });
+
+        // Fetch and populate table data
+        fetch('/viewallretailorderinfo')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                const headers = data.headers; // Extract headers dynamically
+                const rows = data.data;      // Extract employee data
+                const tbody = document.getElementById("RetailOrder-table-body");
+
+                // Check if there are rows to display
+                if (rows.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="9">No data available.</td></tr>`;
+                    return;
+                }
+
+                // Generate rows from data
+                tbody.innerHTML = rows.map(row => `
+                    <tr>
+                <td>${row['ID']}</td>
+                <td>${row['Retailer ID']}</td>
+                <td>${row['Company Name']}</td>
+                <td>${row['Contact Person']}</td>
+                <td>${row['Order Date']}</td>
+                <td>${row['Product Name']}</td>
+                <td>${row['Total Amount']}</td>
+                <td>${row['Delivery Date']}</td>
+                <td>${row['Payment Mode']}</td>
+                <td>
+                            <div class="action-buttons">
+                                <a href="#" class="btn btn-delete" data-id="${row['ID']}" onclick="DeletefromRetailOrderInfo(this)">Delete</a>
+                                <a href="/retailorder/update/${row['ID']}" class="btn btn-update">Update</a>
+                            </div>
+                        </td>
+                    </tr>
+                `).join('');
+            })
+            .catch(error => {
+                console.error('Error fetching Retail Order data:', error);
+                document.getElementById("RetailOrder-table-body").innerHTML = `<tr><td colspan="9">Error loading data.</td></tr>`;
+            });
+    }
+
+		function DeletefromRetailOrderInfo(element) {
+	    const id = element.getAttribute('data-id'); // Retrieve the employee ID
+	    if (confirm(`Are you sure you want to delete Retail Order Info with ID: ${id}?`)) {
+	        // Perform the fetch request with the employee ID as a query parameter
+	        fetch(`/deleteretailorderinfo?id=${id}`, { method: 'GET' })
+	            .then(response => {
+	                if (response.redirected) {
+	                    // Redirect to the new location if the server redirects
+	                    window.location.href = response.url;
+	                } else {
+	                    console.log('Retail Order info deleted:', id);
+	                }
+	            })
+	            .catch(error => {
+	                console.error('Error deleting Retail Order info :', error);
+	            });
+	    }
+	}
+
+	
+//     	 function loadLeaveTable() {
+//     	        // Create the button and table container structure immediately
+//     	        const container = document.getElementById("attendance-table-container");
+//     	        container.innerHTML =`
+//     	            <div class="table-header">
+//     					<div class="button-container" style="margin-left: 1045px;">
+//     					                <button class="styled-button" onclick="window.location.href='/hrms/AttendanceGrid'" style="flex-grow: 1;">
+//     					                    <i class="fas fa-arrow-left"></i> Back
+//     					                </button>
+//     					                <button id="open-register-btn" class="styled-button" style="flex-grow: 1; margin-left: 20px;">
+//     					                    Leave Form
+//     					                </button>
+//     					            </div>
+//     					</div>
+//     	            <table>
+//     	                <thead>
+//     	                    <tr>
+//     	                        <th>ID</th>
+//     	                        <th>Employee ID</th>
+//     	                        <th>First Name</th>
+//     	                        <th>Last Name</th>
+//     	                        <th>Department</th>
+//     	                        <th>Leave Application Date</th>
+//     	                        <th>Total Days</th>
+//     	                        <th>Reasons</th>
+//     	                        <th>Action</th>
+//     	                    </tr>
+//     	                </thead>
+//     	                <tbody id="leave-table-body">
+//     	                    <tr><td colspan="9">Loading data...</td></tr>
+//     	                </tbody>
+//     	            </table>
+//     	        `;
+
+//     	        // Add event listener to the "Register Employee" button
+//     	        document.getElementById("open-register-btn").addEventListener("click", () => {
+//     	            // Redirect to the employeeattendance registration form
+//     	            window.location.href = '/leave';
+//     	        });
+
+//     	        // Fetch and populate table data
+//     	        fetch('/viewleavelist')
+//     	            .then(response => {
+//     	                if (!response.ok) {
+//     	                    throw new Error('Network response was not ok');
+//     	                }
+//     	                return response.json();
+//     	            })
+//     	            .then(data => {
+//     	                const headers = data.headers; // Extract headers dynamically
+//     	                const rows = data.data;      // Extract employee data
+//     	                const tbody = document.getElementById("leave-table-body");
+
+//     	                // Check if there are rows to display
+//     	                if (rows.length === 0) {
+//     	                    tbody.innerHTML = `<tr><td colspan="9">No data available.</td></tr>`;
+//     	                    return;
+//     	                }
+
+//     	                // Generate rows from data
+//     	                tbody.innerHTML = rows.map(row => `
+//     	                    <tr>
+//     	                        <td>${row['ID']}</td>
+//     	                        <td>${row['Employee ID']}</td>
+//     	                        <td>${row['First Name']}</td>
+//     	                        <td>${row['Last Name']}</td>
+//     	                        <td>${row['Department']}</td>
+//     	                        <td>${row['Leave App Date']}</td>
+//     	                        <td>${row['Total Days']}</td>
+//     	                        <td>${row['Reason']}</td>
+
+//     	                        <td>
+//     	                            <div class="action-buttons">
+//     	                                <a href="#" class="btn btn-delete" data-id="${row['ID']}" onclick="DeletefromLeaveINFO(this)">Delete</a>
+//     	                                <a href="/updateLeave/${row['ID']}" class="btn btn-update">Update</a>
+//     	                            </div>
+//     	                        </td>
+//     	                    </tr>
+//     	                `).join('');
+//     	            })
+//     	            .catch(error => {
+//     	                console.error('Error fetching employee attendance data:', error);
+//     	                document.getElementById("attendance-table-body").innerHTML = `<tr><td colspan="9">Error loading data.</td></tr>`;
+//     	            });
+//     	    }
+
+// 			function DeletefromLeaveINFO(element) {
+// 		    const id = element.getAttribute('data-id'); // Retrieve the employee ID
+// 		    if (confirm(`Are you sure you want to delete leave details with ID: ${id}?`)) {
+// 		        // Perform the fetch request with the employee ID as a query parameter
+// 		        fetch(`/deleteLeave?id=${id}`, { method: 'GET' })
+// 		            .then(response => {
+// 		                if (response.redirected) {
+// 		                    // Redirect to the new location if the server redirects
+// 		                    window.location.href = response.url;
+// 		                } else {
+// 		                    console.log('Leave details deleted:', id);
+// 		                }
+// 		            })
+// 		            .catch(error => {
+// 		                console.error('Error deleting leave details:', error);
+// 		            });
+// 		    }
+// 		}
+	
+	
+	
+// 		function loadShiftInfoTable() {
+// 			        // Create the button and table container structure immediately
+// 			        const container = document.getElementById("attendance-table-container");
+// 			        container.innerHTML = `
+// 			            <div class="table-header">
+// 							<div class="button-container" style="margin-left: 1045px;">
+// 											                <button class="styled-button" onclick="window.location.href='/hrms/AttendanceGrid'" style="flex-grow: 1;">
+// 											                    <i class="fas fa-arrow-left"></i> Back
+// 											                </button>
+// 											                <button id="open-register-btn" class="styled-button" style="flex-grow: 1; margin-left: 20px;">
+// 											                  Employee Shift Info
+// 											                </button>
+// 											            </div>
+// 						 </div>
+// 			            <table>
+// 			                <thead>
+// 			                    <tr>
+// 			                    <th>ID</th>
+//     	                        <th>Employee ID</th>
+//     	                        <th>First Name</th>
+//     	                        <th>Last Name</th>
+//     	                        <th>Department</th>
+//     	                        <th>Shift Date</th>
+//     	                        <th>Shift Duration</th>
+//     	                        <th>Shift Status</th>
+//     	                        <th>Action</th>
+// 			                    </tr>
+// 			                </thead>
+// 			                <tbody id="shiftinfo-table-body">
+// 			                    <tr><td colspan="9">Loading data...</td></tr>
+// 			                </tbody>
+// 			            </table>
+// 			        `;
+
+// 			        // Add event listener to the "Register Employee" button
+// 			        document.getElementById("open-register-btn").addEventListener("click", () => {
+// 			            // Redirect to the employee shift info form
+// 			            window.location.href = '/shift';
+// 			        });
+
+// 			        // Fetch and populate table data
+// 			        fetch('/viewshiftlist')
+// 			            .then(response => {
+// 			                if (!response.ok) {
+// 			                    throw new Error('Network response was not ok');
+// 			                }
+// 			                return response.json();
+// 			            })
+// 			            .then(data => {
+// 			                const headers = data.headers; // Extract headers dynamically
+// 			                const rows = data.data;      // Extract employee data
+// 			                const tbody = document.getElementById("shiftinfo-table-body");
+
+// 			                // Check if there are rows to display
+// 			                if (rows.length === 0) {
+// 			                    tbody.innerHTML = `<tr><td colspan="9">No data available.</td></tr>`;
+// 			                    return;
+// 			                }
+
+// 			                // Generate rows from data
+// 			                tbody.innerHTML = rows.map(row => `
+// 			                    <tr>
+// 					                <td>${row['ID']}</td>
+// 			                        <td>${row['Employee ID']}</td>
+// 			                        <td>${row['First Name']}</td>
+// 			                        <td>${row['Last Name']}</td>
+// 			                        <td>${row['Department']}</td>
+// 			                        <td>${row['Shift Date']}</td>
+// 			                        <td>${row['Shift Duration']}</td>
+// 			                        <td>${row['Shift Status']}</td>
+// 			                        <td>
+// 			                            <div class="action-buttons">
+// 			                                <a href="#" class="btn btn-delete" data-id="${row['ID']}" onclick="DeletefromEmpShiftinfo(this)">Delete</a>
+// 			                                <a href="/updateShift/${row['ID']}" class="btn btn-update">Update</a>
+// 			                            </div>
+// 			                        </td>
+// 			                    </tr>
+// 			                `).join('');
+// 			            })
+// 			            .catch(error => {
+// 			                console.error('Error fetching employee data:', error);
+// 			                document.getElementById("shiftinfo-table-body").innerHTML = `<tr><td colspan="9">Error loading data.</td></tr>`;
+// 			            });
+// 			    }
+
+// 					function DeletefromEmpShiftinfo(element) {
+// 				    const id = element.getAttribute('data-id'); // Retrieve the employee ID
+// 				    if (confirm(`Are you sure you want to delete employee Shift Info with ID: ${id}?`)) {
+// 				        // Perform the fetch request with the employee ID as a query parameter
+// 				        fetch(`/deleteShift?id=${id}`, { method: 'GET' })
+// 				            .then(response => {
+// 				                if (response.redirected) {
+// 				                    // Redirect to the new location if the server redirects
+// 				                    window.location.href = response.url;
+// 				                } else {
+// 				                    console.log('Employee shift info deleted:', id);
+// 				                }
+// 				            })
+// 				            .catch(error => {
+// 				                console.error('Error deleting employee shift info :', error);
+// 				            });
+// 				    }
+// 				}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+//     // Call the function to load the employee table when the page loads
+//   //  document.addEventListener("DOMContentLoaded", loadEmployeeTable);
+</script>
+
+
+
+
+</body>
+</html>

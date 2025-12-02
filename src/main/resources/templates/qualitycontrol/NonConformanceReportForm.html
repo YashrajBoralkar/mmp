@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Non Conformance Report Form</title>
+	<link rel="stylesheet" href="/css/empinfo.css">
+	<link rel="stylesheet" href="/css/hrms.css">
+	<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+	<div th:replace="~{QUALITYCONTROL.html :: sidebarFragment}"></div> <!-- // for side bar code  -->
+	
+	<input type="hidden" name="department" th:value="${nonconformancereport?.department}">
+
+
+	<form id="ncrForm" class="form-container">
+	<input type="hidden" id="id" name="id" th:value="${nonconformancereport?.id}">
+		<div class="form-section active" id="section1">
+			<h2>Non Conformance Report Form</h2>
+			<br>
+			<!-- First Row -->
+
+			<div class="form-row">
+
+				<div class="form-group">
+					<label for="department">Department :</label>
+					<select id="department" name="department" required 
+					            th:disabled="${nonconformancereport?.id != null}">
+					        <option value="">Select Department</option>
+					        <option value="Production" th:selected="${nonconformancereport?.department == 'Production'}">Production</option>
+					        <option value="Warehouse" th:selected="${nonconformancereport?.department == 'Warehouse'}">Warehouse</option>
+					        <option value="Quality Control" th:selected="${nonconformancereport?.department == 'Quality Control'}">Quality Control</option>
+					        <option value="Supplier Inspection" th:selected="${nonconformancereport?.department == 'Supplier Inspection'}">Supplier Inspection</option>
+					    </select>
+
+				</div>
+
+				<div class="form-group">
+					<label class="form-label">Inspection Date :</label>
+					<input type="date" id="inspectiondate" name="inspectiondate" class="form-control"th:value="${nonconformancereport?.inspectiondate}">
+
+				</div>
+			</div>
+
+			<!-- Second Row -->
+			<div class="form-row">
+				<div class="form-group">
+					<label for="productuid">Product ID</label>					
+					<select id="productuid" name="productuid" onchange="fetchProductDetails()"
+						th:if="${nonconformancereport == null or nonconformancereport.id == null}" required>
+						<option value="">Select Product ID</option>
+						<option th:each="uid : ${productuids}" th:value="${uid}" th:text="${uid}">
+						</option>
+					</select>				
+					<input type="text" id="productuid" name="productuid" th:value="${nonconformancereport?.productuid}"	th:unless="${nonconformancereport == null or nonconformancereport.id == null}" readonly />
+				
+				</div>
+
+				<!-- Product Name -->
+				<div class="form-group">
+					<label>Product Name</label>
+					<input type="text" id="productname" name="productname"
+						th:value="${nonconformancereport?.productname}" readonly />
+				</div>
+
+
+				<div class="form-group">
+					<label class="form-label">Description of Defect :</label>
+					<textarea id="descriptionofdefect" name="descriptionofdefect" class="form-control" th:text="${nonconformancereport?.descriptionofdefect}"></textarea>
+				</div>
+			</div>
+			
+			<!-- Third Row -->
+			<div class="form-row">
+				<div class="form-group">
+					<label class="form-label">Root Cause Analysis :</label>
+					<br>
+					<textarea id="rootcauseanalysis" name="rootcauseanalysis" class="form-control" th:text="${nonconformancereport?.rootcauseanalysis}"></textarea>
+				</div>
+
+				<div class="form-group">
+					<label class="form-label">Defect Severity :</label>
+					<br>
+					<select id="defectseverity" name="defectseverity" class="form-control" required>
+						<option value="">Select Defect Severity</option>
+						<option value="Minor" th:selected="${nonconformancereport?.defectseverity == 'Minor'}">Minor</option>
+						<option value="Major" th:selected="${nonconformancereport?.defectseverity == 'Major'}">Major</option>
+						<option value="Critical" th:selected="${nonconformancereport?.defectseverity == 'Critical'}">Critical</option>
+
+					</select>
+				</div>
+				
+				<div class="form-group">
+					<label class="form-label">Immediate Action Taken:</label>
+					<select id="immediateactiontaken" name="immediateactiontaken" class="form-control" required>
+						<option value="">Select Action Taken</option>
+						<option value="Rework" th:selected="${nonconformancereport?.immediateactiontaken == 'Rework'}">Rework</option>
+						<option value="Scrap" th:selected="${nonconformancereport?.immediateactiontaken == 'Scrap'}">Scrap</option>
+						<option value="Hold" th:selected="${nonconformancereport?.immediateactiontaken == 'Hold'}">Hold</option>
+
+					</select>
+				</div>
+
+			</div>
+
+			<!-- four Row -->
+			<div class="form-row">
+				<div class="form-group">
+					<label class="form-label">Preventive Action Suggested :</label>
+					<textarea id="preventiveactionsuggested" name="preventiveactionsuggested" class="form-control" th:text="${nonconformancereport?.preventiveactionsuggested}"></textarea>
+				</div>
+				
+				<div class="form-group">
+					<label class="form-label">Approval Status :</label>
+					<br>
+					<select id="approvalstatus" name="approvalstatus" class="form-control" required>
+						<option value="">Select status</option>
+						<option value="Approved" th:selected="${nonconformancereport?.approvalstatus == 'Approved'}">Approved</option>
+						<option value="Pending" th:selected="${nonconformancereport?.approvalstatus == 'Pending'}">Pending</option>
+						<option value="Rejected" th:selected="${nonconformancereport?.approvalstatus == 'Rejected'}">Rejected</option>
+					</select>
+				</div>
+
+				<div class="form-group">
+					<label class="form-label">Supervisor Approval Name :</label>
+					<input type="text" id="suppervisorapproval" name="suppervisorapproval" class="form-control" th:value="${nonconformancereport?.suppervisorapproval}">
+				</div>
+			</div>
+			
+		</div>
+		
+		<!-- Five Row  -->
+		<div class="form-actions">
+			<button type="button" id="submitBtn" class="btn btn-primary w-100" onclick="submitNCRForm()">Submit</button>
+			<div th:if="${successMessage}" class="success-message" th:value="${successMessage}"></div>
+			<button type="button" class="back-button" onclick="goback();">Back</button>
+
+		</div>
+	
+	</form>
+	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+	
+	<script>
+		function goback() {
+			window.location.href = '/qualitycontrol/nonconformancereportgrid';
+		}
+
+		function goBack() {
+			window.location.href = '/dashboard';
+		}
+	</script>
+	<script>
+		$(document).ready(function () {
+			var existingProductUid = $('#productuid').val();
+			if (existingProductUid) {
+				fetchProductDetails(existingProductUid); // Auto-fill product name on page load
+			}
+		});
+
+		function fetchProductDetails(productuid) {
+			// If productuid not provided, get from dropdown
+			productuid = productuid || $('#productuid').val();
+
+			if (!productuid) return;
+
+			$.ajax({
+				url: '/nonconformancereport/product/getdetails',
+				method: 'GET',
+				data: {productuid: productuid},
+				success: function (response) {
+					if (response && response.length > 0) {
+						$('#productname').val(response[0].productname || '');
+					} else {
+						$('#productname').val('');
+					}
+				},
+				error: function (xhr, status, error) {
+					console.error("Error fetching Product details:", error);
+				}
+			});
+		}
+
+		/*function validateNCRForm() {
+			let isValid = true;
+			let errorMessages = [];
+		
+			// Trimmed values
+			const values = {
+				department: $('#department').val().trim(),
+				inspectiondate: $('#inspectiondate').val().trim(),
+				batchuid: $('#batchuid').val().trim(),
+				productname: $('#productname').val().trim(),
+				descriptionofdefect: $('#descriptionofdefect').val().trim(),
+				rootcauseanalysis: $('#rootcauseanalysis').val().trim(),
+				defectseverity: $('#defectseverity').val().trim(),
+				immediateactiontaken: $('#immediateactiontaken').val().trim(),
+				preventiveactionsuggested: $('#preventiveactionsuggested').val().trim(),
+				approvalstatus: $('#approvalstatus').val().trim(),
+				suppervisorapproval: $('#suppervisorapproval').val().trim()
+			};
+		
+			// 1. Check Required Fields
+			for (let [field, value] of Object.entries(values)) {
+				if (!value) {
+					isValid = false;
+					errorMessages.push(`${field} is required.`);
+				}
+			}
+		
+			// 2. Validate String-only Fields
+			const stringOnlyFields = [
+				'department', 
+				'productname', 
+				'descriptionofdefect', 
+				'rootcauseanalysis', 
+				'preventiveactionsuggested', 
+				'suppervisorapproval'
+			];
+			const alphaRegex = /^[A-Za-z\s]+$/;
+		
+			stringOnlyFields.forEach(field => {
+				const value = values[field];
+				if (value && !alphaRegex.test(value)) {
+					isValid = false;
+					errorMessages.push(`${field} must contain only alphabets and spaces.`);
+				}
+			});
+		
+			// 3. Validate Numeric-only Fields
+			const numericOnlyFields = ['batchuid'];
+			const numericRegex = /^[0-9]+$/;
+		
+			numericOnlyFields.forEach(field => {
+				const value = values[field];
+				if (value && !numericRegex.test(value)) {
+					isValid = false;
+					errorMessages.push(`${field} must contain only numbers.`);
+				}
+			});
+		
+			// 4. Show alert if invalid
+			if (!isValid) {
+				alert("Validation failed:\n" + errorMessages.join("\n"));
+			}
+		
+			return isValid;
+		}*/
+
+
+		function validateNCRForm() {
+
+			if (
+				!$('#department').val().trim() &&
+				!$('#inspectiondate').val().trim() &&
+				!$('#productuid').val().trim() &&
+				!$('#productname').val().trim() &&
+				!$('#descriptionofdefect').val().trim() &&
+				!$('#rootcauseanalysis').val().trim() &&
+				!$('#defectseverity').val().trim() &&
+				!$('#immediateactiontaken').val().trim() &&
+				!$('#preventiveactionsuggested').val().trim() &&
+				!$('#approvalstatus').val().trim() &&
+				!$('#suppervisorapproval').val().trim()
+			) {
+				alert("⚠️ Please fill out the form before submitting.");
+				return false;
+			}
+
+			// Department
+			if (!$('#department').val().trim()) {
+				alert("⚠️ Department is required.");
+				return false;
+			}
+
+			// Inspection Date
+			if (!$('#inspectiondate').val().trim()) {
+				alert("⚠️ Inspection Date is required.");
+				return false;
+			}
+
+			// Product UID
+			if (!$('#productuid').val().trim()) {
+				alert("⚠️ Product UID is required.");
+				return false;
+			}
+
+			// Product Name
+			if (!$('#productname').val().trim()) {
+				alert("⚠️ Product Name is required.");
+				return false;
+			}
+
+			// Description of Defect
+			if (!$('#descriptionofdefect').val().trim()) {
+				alert("⚠️ Description of Defect is required.");
+				return false;
+			}
+
+			// Root Cause Analysis
+			if (!$('#rootcauseanalysis').val().trim()) {
+				alert("⚠️ Root Cause Analysis is required.");
+				return false;
+			}
+
+			// Defect Severity
+			if (!$('#defectseverity').val().trim()) {
+				alert("⚠️ Defect Severity is required.");
+				return false;
+			}
+
+			// Immediate Action Taken
+			if (!$('#immediateactiontaken').val().trim()) {
+				alert("⚠️ Immediate Action Taken is required.");
+				return false;
+			}
+
+			// Preventive Action Suggested
+			if (!$('#preventiveactionsuggested').val().trim()) {
+				alert("⚠️ Preventive Action Suggested is required.");
+				return false;
+			}
+
+			// Approval Status
+			if (!$('#approvalstatus').val().trim()) {
+				alert("⚠️ Approval Status is required.");
+				return false;
+			}
+
+			// Supervisor Approval Name
+			if (!$('#suppervisorapproval').val().trim()) {
+				alert("⚠️ Supervisor Approval Name is required.");
+				return false;
+			}
+
+			return true;
+		}
+
+
+
+		function submitNCRForm() {
+		    if (!validateNCRForm()) return; // stop if validation fails
+
+		    const formData = new FormData(document.getElementById('ncrForm'));
+		    const id = $('#id').val();
+
+		    let url, successMessage;
+
+		    if (!id) {
+		        url = '/nonconformancereport/save';
+		        successMessage = 'NCR submitted successfully!';
+		    } else {
+		        url = '/nonconformancereport/update';
+		        successMessage = 'NCR updated successfully!';
+		    }
+
+		    $.ajax({
+		        url: url,
+		        type: 'POST',
+		        data: formData,
+		        processData: false,
+		        contentType: false,
+		        success: function (response) {
+		            alert(successMessage);      // Show alert
+		            resetNCRForm();
+		            window.location.href = '/qualitycontrol/nonconformancereportgrid';
+		        },
+		        error: function (xhr, status, error) {
+		            console.error("Error:", xhr.responseText);
+		            alert('Error saving NCR. Please try again.');
+		        }
+		    });
+		}
+
+
+
+		function resetNCRForm() {
+			$('#ncrForm')[0].reset();
+			$('#id').val('');
+			$('#form-title').text('NCR Report Form');
+
+			$('#submitBtn').text('Submit NCR');
+		}
+
+		function prefillNcrForm(data) {
+			$('#id').val(data.id);
+			$('#ncruid').val(data.ncruid);
+			$('#department').val(data.department);
+			$('#inspectiondate').val(data.inspectiondate);
+			$('#productuid').val(data.productuid);
+			$('#batchNumber').val(data.batchNumber);
+			$('#descriptionofdefect').val(data.descriptionofdefect);
+			$('#rootcauseanalysis').val(data.rootcauseanalysis);
+			$('#defectseverity').val(data.defectseverity);
+			$('#immediateactiontaken').val(data.immediateactiontaken);
+			$('#preventiveactionsuggested').val(data.preventiveactionsuggested);
+			$('#approvalstatus').val(data.approvalstatus);
+			$('#suppervisorapproval').val(data.suppervisorapproval);
+
+			$('#form-title').text('NCR Report Form');
+			$('#submitBtn').text('Submit NCR');
+		}
+
+
+
+	</Script>
+</body>
+
+</html>

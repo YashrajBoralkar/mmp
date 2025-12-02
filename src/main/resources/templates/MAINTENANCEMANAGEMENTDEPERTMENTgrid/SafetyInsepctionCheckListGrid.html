@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Safety Insepction Check List</title>
+    
+    <link rel="stylesheet" href="/css/hrms.css"> <!-- // for side bar code  -->
+    <link rel="stylesheet" href="/css/grid.css">
+    <link rel="stylesheet" href="/css/emplist.css">
+
+    <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+<div th:replace="~{MAINTENANCEMANAGEMENTDEPERTMENT.html :: sidebarFragment}"></div> <!-- // for side bar code  -->
+
+<div class="button-container">
+    
+</div>
+
+<div class="button-grid">
+    <button onclick="loadsparepartsinventoryTable()"style="width:112%">Safety Insepction Check List Form</button>
+</div>
+
+<div id="sparepartsinventory-table-container">
+   
+</div> <!-- Table will be dynamically loaded here -->
+
+<script src="/js/grid.js"></script>
+
+<script>
+    function loadsparepartsinventoryTable() {
+        // Create the button and table container structure immediately
+        const container = document.getElementById("sparepartsinventory-table-container");
+        container.innerHTML =`
+            <div class="table-header">
+				<div class="button-container" style="margin-left: 1045px;">
+				                <button class="styled-button" onclick="window.location.href='/maintenancemanagementdepartment/safetyinsepctionchecklistgrid'" style="flex-grow: 1;">
+				                    <i class="fas fa-arrow-left"></i> Back
+				                </button>
+				                <button id="open-register-btn" class="styled-button" style="flex-grow: 1; margin-left: 20px;">
+				                Safety Insepction Check List
+				                </button>
+				            </div>
+				</div>
+            <table>
+                <thead>
+                    <tr>
+                    <th>Id</th>
+    				<th>Safety Insepction Check List UID</th>
+    				<th>Equipment Master UID</th>
+    				<th>Equipment Name</th>
+    				<th>Inspection Date</th>
+    				<th>Checklist Items</th>
+    				<th>Inspected By</th>
+    				<th>Remarks</th>
+    				<th>Status</h>	
+                    <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="sparepartsinventorymanagement-table-body">
+                    <tr><td colspan="9">Loading data...</td></tr>
+                </tbody>
+            </table>
+        `;
+
+        // Add event listener to the "Safety Insepction Check List Form" button
+        document.getElementById("open-register-btn").addEventListener("click", () => {
+            // Redirect to the Safety Insepction Check List Form form
+            window.location.href = '/safetyinsepctionchecklistform';
+        });
+
+        // Fetch and populate table data
+        fetch('/viewsafetyinsepctionchecklist')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            
+            .then(data => {
+                const headers = data.headers; // Extract headers dynamically
+                const rows = data.data;      // Extract Safety Insepction Check List Form data
+                const tbody = document.getElementById("sparepartsinventorymanagement-table-body");
+
+                // Check if there are rows to display
+                if (rows.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="9">No data available.</td></tr>`;
+                    return;
+                }
+
+                // Generate rows from data
+                tbody.innerHTML = rows.map(row => `
+                    <tr>
+                        <td>${row['ID']}</td>
+                        <td>${row['Safety Insepction Check List UID']}</td>
+                        <td>${row['Equipment Master UID']}</td>
+                        <td>${row['Equipment Name']}</td>
+                        <td>${row['Inspection Date']}</td>
+                        <td>${row['Checklist Items']}</td>
+                        <td>${row['Inspected By']}</td>
+                        <td>${row['Remarks']}</td>
+                        <td>${row['Status']}</td>
+                        <td>
+                            <div class="action-buttons">
+                                <a href="#" class="btn btn-delete" data-id="${row['ID']}" onclick="confirmDeleteMaintenanceHistoryLog(this)">Delete</a>
+                                <a href="/updatesafetyinsepctionchecklist/${row['ID']}" class="btn btn-update">Update</a>
+                            </div>
+                        </td>
+                    </tr>
+                `).join('');
+            })
+            .catch(error => {
+                console.error('Error fetching Safety Insepction Check List data:', error);
+                document.getElementById("sparepartsinventorymanagement-table-body").innerHTML = `<tr><td colspan="9">Error loading data.</td></tr>`;
+            });
+    }
+
+    // Example function to handle delete action
+    	function confirmDeleteMaintenanceHistoryLog(element) {
+	    const id = element.getAttribute('data-id'); // Retrieve the Safety Insepction Check List Form  ID
+	    if (confirm(`Are you sure you want to delete Safety Insepction Check List with ID: ${id}?`)) {
+	        // Perform the fetch request with the Safety Insepction Check List ID as a query parameter
+	        fetch(`/safetyinsepctionchecklistdeleteinfo?id=${id}`, { method: 'GET' })
+	            .then(response => {
+	                if (response.redirected) {
+	                    // Redirect to the new location if the server redirects
+	                    loadsparepartsinventoryTable();
+	                    window.location.href = response.url;
+	                } else {
+	                    console.log('Safety Insepction Check List Form data deleted:', id);
+	                }
+	            })
+	            .catch(error => {
+	                console.error('Error deleting Safety Insepction Check List Form data:', error);
+	            });
+	    }
+	}
+	
+	
+</script>
+
+
+
+
+</body>
+</html>

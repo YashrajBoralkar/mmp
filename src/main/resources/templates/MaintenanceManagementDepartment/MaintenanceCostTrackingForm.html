@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Maintenance Cost Tracking Form</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet" href="/css/empinfo.css">
+  <link rel="stylesheet" href="/css/hrms.css"> <!-- // for side bar code  -->
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+
+</head>
+<body>
+	 <div th:replace="~{MAINTENANCEMANAGEMENTDEPERTMENT.html:: sidebarFragment}"></div> 
+    <div class="form-section active" id="section1" style="margin-left: 20px; margin-right: 20px;">
+   <div class="form-container">
+  <h2>Maintenance Cost Tracking</h2>
+
+  <form id="maintenanceForm">
+    <input type="hidden" id="id" name="id" th:value="${cost?.id}" />
+
+    <!-- Row 1: Equipment UID & Equipment Name -->
+    <div class="form-row">
+      <div class="form-group col-md-6">
+        <label>Equipment Master UID <span class="text-danger">*</span></label>
+        <select class="form-control" id="equipmentmasteruid" name="equipmentmasteruid"
+                onchange="fetchEquipmentDetails(this.value)"
+                th:if="${cost == null or cost.id == null}" required>
+          <option value="">Select Equipment UID</option>
+          <option th:each="uid : ${equipmentmasteruid}" th:value="${uid}" th:text="${uid}"></option>
+        </select>
+        <input type="text" class="form-control" id="equipmentmasteruid" name="equipmentmasteruid"
+               th:value="${cost?.equipmentmasteruid}" onchange="fetchEquipmentDetails(this.value)" readonly
+               th:if="${cost?.id != null}" />
+      </div>
+
+      <div class="form-group col-md-6">
+        <label for="equipmentname">Equipment Name</label>
+        <input type="text" class="form-control" id="equipmentname" name="equipmentname" readonly />
+      </div>
+    </div>
+
+    <!-- Row 2: Maintenance Date & Type -->
+    <div class="form-row">
+      <div class="form-group col-md-6">
+        <label>Maintenance Date</label>
+        <input type="date" class="form-control" id="date" name="date" required
+               th:value="${cost?.date}"
+               th:attr="min=${#temporals.format(#temporals.createNow(), 'yyyy-MM-dd')},
+                        max=${#temporals.format(#temporals.createNow(), 'yyyy-MM-dd')}" />
+      </div>
+
+      <div class="form-group col-md-6">
+        <label>Type of Maintenance</label>
+        <select class="form-control" id="typeofmaintenance" name="typeofmaintenance" required>
+          <option value="">Select Type</option>
+          <option value="Preventive" th:selected="${cost?.typeofmaintenance == 'Preventive'}">Preventive</option>
+          <option value="Breakdown" th:selected="${cost?.typeofmaintenance == 'Breakdown'}">Breakdown</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Row 3: Labour Cost & Parts Cost -->
+    <div class="form-row">
+      <div class="form-group col-md-6">
+        <label>Labour Cost</label>
+        <input type="number" class="form-control" id="labourcost" name="labourcost"
+               min="0" max="999999" required th:value="${cost?.labourcost}" />
+      </div>
+
+      <div class="form-group col-md-6">
+        <label>Parts Cost</label>
+        <input type="number" class="form-control" id="partscost" name="partscost"
+               min="0" max="999999" required th:value="${cost?.partscost}" />
+      </div>
+    </div>
+
+    <!-- Row 4: Other Costs & Total Cost -->
+    <div class="form-row">
+      <div class="form-group col-md-6">
+        <label>Other Costs</label>
+        <input type="number" class="form-control" id="othercosts" name="othercosts"
+               min="0" max="999999" th:value="${cost?.othercosts}" />
+      </div>
+
+      <div class="form-group col-md-6">
+        <label>Total Cost</label>
+        <input type="number" class="form-control" id="totalcost" name="totalcost"
+               readonly th:value="${cost?.totalcost}" />
+      </div>
+    </div>
+
+    <!-- Submit Button -->
+    <div class="form-actions">
+      <button type="button" id="submitBtn" class="btn btn-primary" onclick="submitForm()">Submit</button>
+      <button type="button" id="backBtn" onclick="goBack()">Back</button>
+    </div>
+
+    <!-- Success Message -->
+    <div th:if="${successMessage}" class="success-message text-success text-center mt-2"
+         th:text="${successMessage}"></div>
+  </form>
+</div>
+
+
+<script>
+
+$(document).ready(function() {
+    // Auto-fill Item details when updating
+    var existingequipmentmasteruid = $('#equipmentmasteruid').val();
+    if (existingequipmentmasteruid) {
+    	fetchEquipmentDetails(existingequipmentmasteruid);
+    }
+});
+function fetchEquipmentDetails(equipmentmasteruid) {
+  if (!equipmentmasteruid) return; 
+
+     $.ajax({
+ 		url: '/fetchEquipmentDetailsInMaintenanceCostTracking',
+ 		method: 'GET',
+ 		data: { equipmentmasteruid: equipmentmasteruid },
+ 		success: function(response) {
+ 			$('#equipmentname').val(response.equipmentname);	
+ 	},
+ 	error:function() {
+    alert('Error fetching Equipment Master Details. Please try again.');
+ 			                }
+ 							});
+ } 
+    function calcTotal() {
+        const l = parseFloat(document.getElementById("labourcost").value) || 0;
+        const p = parseFloat(document.getElementById("partscost").value) || 0;
+        const o = parseFloat(document.getElementById("othercosts").value) || 0;
+        document.getElementById("totalcost").value = l + p + o;
+    }
+
+    document.querySelectorAll("#labourcost, #partscost, #othercosts").forEach(input => {
+        input.addEventListener("input", calcTotal);
+    });
+
+    function submitForm() {
+        let form = document.getElementById('maintenanceForm');
+
+        if (!form.checkValidity()) {
+            alert('Please fill in all required fields.');
+            return;
+        }
+
+        const formData = new FormData(form);
+        const id = $('#id').val();
+
+        let url = id ? '/updatemaintenancecosttracking' : '/savemaintenancecosttracking';
+        let successMessage = id ? 'Maintenance Cost Tracking updated successfully!' : 'Maintenance Cost Tracking saved successfully!';
+
+        $.ajax({
+            url: url,
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function () {
+                $('#message').text(successMessage);
+                resetForm();
+                window.location.href = '/maintenancemanagementdepartment/maintenancecosttrackinggrid';
+            },
+            error: function () {
+                alert('Error saving data. Please try again.');
+            }
+        });
+    }
+
+    function resetForm() {
+        $('#maintenanceForm')[0].reset();
+        $('#id').val('');
+        $('#message').text('');
+        $('#submitBtn').text('Submit');
+    }
+</script>
+
+</body>
+</html>

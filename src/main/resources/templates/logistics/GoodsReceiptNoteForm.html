@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Goods Receipt Note (GRN) Form</title>
+	<link rel="stylesheet" href="/css/empinfo.css">
+	<link rel="stylesheet" href="/css/hrms.css"> <!-- // for side bar code  -->
+	<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+	<div th:replace="~{LOGISTICS.html :: sidebarFragment}"></div> <!-- // for side bar code  -->
+
+	<form id="GRNForm" class="form-container" style="max-width: 867px;">
+		<!-- Personal Information Section -->
+		<input type="hidden" id="id" name="id" th:value="${goodsreceiptnote?.id}">
+		<input type="text" id="rawmaterialsupplieruid" name="rawmaterialsupplieruid" th:value="${poAcknowledgment?.rawmaterialsupplieruid}" hidden>
+
+		<h2>Goods Receipt Note (GRN) Form</h2>
+		<br>
+		<!-- First Row -->
+
+		<div class="form-row">
+			<div class="form-group">
+				<label for="customertype">Customer Type :</label>
+				<select name="customertype" id="customertype"
+					th:if="${goodsreceiptnote == null or goodsreceiptnote.id == null}"
+					onchange="fetchCustomerType(this.value)" required>
+					<option value="">-- Select Customer Type --</option>
+					<option value="Wholesaler" th:selected="${goodsreceiptnote?.customertype == 'Wholesaler'}">Wholesaler</option>
+					<option value="Retailer" th:selected="${goodsreceiptnote?.customertype == 'Retailer'}">Retailer</option>
+					<option value="Other" th:selected="${goodsreceiptnote?.customertype == 'Other'}">Other</option>
+
+				</select>
+				<input type="text" name="customertype" th:value="${goodsreceiptnote?.customertype}"th:if="${goodsreceiptnote?.id != null}" readonly>
+			</div>
+			<div class="form-group">
+				<label for="customeruid">Customer ID:</label>
+				<select id="customeruid" name="customeruid" onchange="fetchCustomerDetails(this.value)"th:if="${goodsreceiptnote == null or goodsreceiptnote.id == null}" required>
+					<option value="">-- Select Customer ID --</option>
+				</select>
+				<input type="text" id="customeruid" name="customeruid" th:value="${goodsreceiptnote?.customeruid}"readonly th:if="${goodsreceiptnote?.id != null}">
+
+			</div>
+			<div class="form-group">
+				<label for="customername">Customer Name:</label>
+				<input type="text" id="customername" name="customername" th:value="${goodsreceiptnote?.customername}"readonly>
+			</div>
+
+			<div class="form-group">
+				<label for="salesorderuid">Sales Order ID:</label>
+				<select id="salesorderuid" name="salesorderuid" onchange="fetchQuantity(this.value)" th:if="${goodsreceiptnote == null or goodsreceiptnote.id == null}" required>
+					<option value="">-- Select Sales Order ID --</option>
+				</select>
+				<input type="text" name="salesorderuid" th:value="${goodsreceiptnote?.salesorderuid}" readonly th:if="${goodsreceiptnote?.id != null}">
+
+			</div>
+
+		</div>
+
+		<!---->
+		<div class="form-row">
+			<div class="form-group">
+			    <label for="productuid">Product ID </label>
+			    <!-- Show dropdown only for new entry -->
+			    <select id="productuid" name="productuid" onchange="fetchProductName(this.value)" 
+			            th:if="${goodsreceiptnote == null or goodsreceiptnote.id == null}" required>
+			        <option value="">-- Select Product ID --</option>
+			    </select>
+			    <!-- Show readonly text input for existing record -->
+			    <input type="text" id="productuid" name="productuid" 
+			           th:value="${goodsreceiptnote?.productuid}" readonly 
+			           th:if="${goodsreceiptnote?.id != null}">
+			</div>
+
+			<div class="form-group">
+			    <label for="productname">Product Name</label>
+			    <input type="text" id="productname" name="productname"  readonly>
+			</div>
+			
+			<div class="form-group">
+				<label for="deliveredquantity">Delivered Quantity: </label>
+				<input type="number" id="deliveredquantity" name="deliveredquantity" readonly th:value="${goodsreceiptnote?.deliveredquantity}" required>
+			</div>
+			
+			<div class="form-group">
+				<label for="deliveryby">Delivery By: </label>
+				<input type="text" id="deliveryby" name="deliveryby" pattern="[A-Za-z\s]+" title="Only letters and spaces allowed" th:value="${goodsreceiptnote?.deliveryby}" required>
+			</div>
+
+		</div>
+
+		<!-- Second Row -->
+		<div class="form-row">
+			<div class="form-group">
+				<label for="receiptdate">Receipt Date </label>
+				<input type="date" id="receiptdate" name="receiptdate" th:value="${goodsreceiptnote?.receiptdate}"
+					required>
+			</div>
+			
+			<div class="form-group">
+				<label for="warehouseuid">Warehouse ID </label>
+				<select id="warehouseuid" name="warehouseuid" onchange="fetchWarehouse(this.value)" th:if="${goodsreceiptnote == null or goodsreceiptnote.id == null}" required>
+					<option value="">-- Select Warehouse ID --</option>
+					<option th:each="uid : ${Warehouseuid}" th:value="${uid}" th:text="${uid}"></option>
+				</select>
+				<input type="text" id="warehouseuid" name="warehouseuid" th:value="${goodsreceiptnote?.warehouseuid}" readonly th:if="${goodsreceiptnote?.id != null}">
+			</div>
+
+			<div class="form-group">
+				<label for="address">Warehouse Address</label>
+				<input type="text" id="address" name="address" readonly>
+			</div>
+
+			<div class="form-group">
+				<label for="quantityreceived">Quantity Received </label>
+				<input type="number" id="quantityreceived" name="quantityreceived" th:value="${goodsreceiptnote?.quantityreceived}" min="0" required>
+			</div>
+			
+			</div>
+		<!-- four Row -->
+
+		<div class="form-row">
+			<div class="form-group">
+				<label for="remarks">Remarks</label>
+				<input type="text" id="remarks" name="remarks" th:value="${goodsreceiptnote?.remarks}">
+			</div>
+			<div class="form-group">
+
+				<label for="receivedby">Received By </label>
+				<input type="text" id="receivedby" name="receivedby" th:value="${goodsreceiptnote?.receivedby}"required>
+			</div>
+			<div class="form-group">
+				<label for="verifiedby">Verified By </label>
+				<input type="text" id="verifiedby" name="verifiedby" th:value="${goodsreceiptnote?.verifiedby}" required>
+			</div>
+			<div class="form-group">
+				<label for="approvalstatus">Approval Status </label>
+				<select id="approvalstatus" name="approvalstatus" th:value="${goodsreceiptnote?.approvalstatus}"
+					required>
+					<option value="">-- Select --</option>
+					<option value="Accepted" th:selected="${goodsreceiptnote?.approvalstatus == 'Accepted'}">Accepted</option>
+					<option value="Partial" th:selected="${goodsreceiptnote?.approvalstatus == 'Partial'}">Partial</option>
+					<option value="Rejected" th:selected="${goodsreceiptnote?.approvalstatus == 'Rejected'}">Rejected</option>
+				</select>
+			</div>
+		</div>
+		<!-- Five Row  -->
+		
+			<div id="message" class="success-message" style="display:none;"></div>
+		<div class="form-actions">
+			<button type="button" id="submitBtn" onclick="submitGRNForm()">Submit</button>
+			<button type="button" class="back-button" onclick="goBack();">Back</button>
+
+		</div>
+	</form>
+
+	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+	<script>
+
+		function goBack() {
+			window.location.href = '/logistics/goodsreceiptnotegrid';
+		}
+
+		$(document).ready(function () {
+			// Auto-fill Item details when updating
+			var existingSupplierid = $('#supplieruid').val();
+			if (existingSupplierid) {
+				fetchSupplier(existingSupplierid);
+			}
+		});
+
+		function fetchSupplier(supplieruid) {
+			if (!supplieruid) return;
+
+			$.ajax({
+				url: '/logistics/getSupplierDetailsingoodsreceiptnote',
+				method: 'GET',
+				data: {supplieruid: supplieruid},
+				success: function (response) {
+
+					$('#suppliername').val(response[0].suppliername);
+
+
+				},
+				error: function () {
+					alert('Error fetching Supplier details. Please try again.');
+				}
+			});
+		}
+
+		$(document).ready(function () {
+			// Auto-fill Item details when updating
+			var existingproductuid = $('#productuid').val();
+			if (existingproductuid) {
+				fetchProduct(existingproductuid);
+			}
+		});
+
+		function fetchProductName(productuid) {
+		    if (!productuid) {
+		        $('#productname').val('');
+		        return;
+		    }
+
+		    $.ajax({
+		        url: '/grn/productname',
+		        method: 'GET',
+		        data: { productuid: productuid },
+				success: function (response) {
+				    console.log("Product name:", response);
+				    $('#productname').val(response);
+				},
+		        error: function () {
+		            alert('Error fetching product name. Please try again.');
+		        }
+		    });
+		}
+
+
+		$(document).ready(function () {
+			// Auto-fill Item details when updating
+			var existingwarehouseuid = $('#warehouseuid').val();
+			if (existingwarehouseuid) {
+				fetchWarehouse(existingwarehouseuid);
+			}
+		});
+
+		function fetchWarehouse(warehouseuid) {
+			if (!warehouseuid) return;
+
+			$.ajax({
+				url: '/logistics/getWarehouseInfoingoodsreceiptnote',
+				method: 'GET',
+				data: {warehouseuid: warehouseuid},
+				success: function (response) {
+					if (response) {
+						$('#address').val(response.address);
+					}
+				},
+				error: function () {
+					alert('Error fetching warehouse details. Please try again.');
+				}
+			});
+		}
+
+		function submitGRNForm() {
+		    const form = document.getElementById('GRNForm');
+
+		    // Validate form
+		    if (!form.checkValidity()) {
+		        form.reportValidity();
+		        return;
+		    }
+
+		    const formData = new FormData(form);
+		    const id = $('#id').val();
+		    let url, successMessage;
+
+		    if (!id) {
+		        url = '/goodsreceiptnote/save';
+		        successMessage = '✅ Goods Receipt Note saved successfully!';
+		    } else {
+		        url = '/goodsreceiptnote/update';
+		        successMessage = '✅ Goods Receipt Note updated successfully!';
+		    }
+
+		    $.ajax({
+		        url: url,
+		        type: 'POST',
+		        data: formData,
+		        processData: false,
+		        contentType: false,
+		        success: function (response) {
+		            // ✅ Show success message below buttons
+		          	alert(successMessage);
+		          	resetGRNForm();
+		            window.location.href = '/logistics/goodsreceiptnotegrid';
+		        },
+		        error: function () {
+		            alert('❌ Error saving GRN details. Please try again.');
+		        }
+		    });
+		}
+
+		function resetGRNForm() {
+			$('#id').val('');
+
+			// Clear manually filled fields that might not reset properly
+			$('#suppliername').val('');
+			$('#productname').val('');
+			$('#address').val('');
+			$('#customername').val('');
+			$('#deliveredquantity').val('');
+			$('#quantityreceived').val('');
+			$('#remarks').val('');
+			$('#receivedby').val('');
+			$('#verifiedby').val('');
+			$('#approvalstatus').val('');
+			$('#address').val('');
+			$('#productuid').val('');
+			$('#productname').val('');
+			$('#warehouseuid').val('');
+			$('#supplieruid').val('');
+			$('#deliveryby').val('');
+
+			// Clear dynamically populated dropdowns
+			$('#customeruid').empty().append('<option value="">-- Select Customer Type --</option>');
+			$('#salesorderuid').empty().append('<option value="">-- Select Customer ID --</option>');
+
+		}
+		
+		$(document).ready(function () {
+			// Set today's date 
+			const today = new Date().toISOString().split('T')[0];
+			$('#receiptdate').val(today).attr('max', today).attr('min', today);
+
+			// Prevent users from selecting other dates
+			$('#receiptdate').on('change', function () {
+				if ($(this).val() !== today) {
+					alert('You can only select today’s date.');
+					$(this).val(today);
+				}
+			});
+			// Validation for text fields (No special characters or numbers allowed)
+			function validateTextField(selector) {
+				$(selector).on('input', function () {
+					let value = $(this).val();
+					if (!/^[a-zA-Z\s]*$/.test(value)) {
+						alert('Only alphabets and spaces are allowed.');
+						$(this).val(value.replace(/[^a-zA-Z\s]/g, '')); // Remove special characters and numbers
+					}
+				});
+			}
+
+			validateTextField('#remarks');
+			validateTextField('#receivedby');
+			validateTextField('#verifiedby');
+		});
+
+		// Validate Quantity Received (must be a number >= 0)
+		/*$('#quantityreceived').on('input', function () {
+			let value = parseFloat($(this).val());
+			if (!isNaN(value) && value < 0) {
+				alert('Quantity Received cannot be less than 0.');
+				$(this).val('');
+			}
+		});*/
+
+		$(document).ready(function () {
+			var id = $('#id').val();
+			if (!id) {
+				$('#quantityreceived').val(null);
+			}
+		});
+
+		function fetchCustomerType(customertype) {
+			if (!customertype) return;
+			resetGRNForm();
+			$.ajax({
+				url: "/grn/customeruid",
+				type: 'GET',
+				data: {customertype: customertype},
+				success: function (response) {
+					const dropdown = $('#customeruid'); // assuming your dropdown has id="customeruid"
+					dropdown.empty(); // Clear existing options
+
+					dropdown.append('<option value="">-- Select Customer ID --</option>'); // Optional default option
+
+					// Assuming response is a List<String>
+					response.forEach(function (uid) {
+						dropdown.append('<option value="' + uid + '">' + uid + '</option>');
+					});
+				},
+				error: function () {
+					alert('Error saving Sales Order Form. Please try again.');
+				}
+			});
+		}
+
+		function fetchCustomerDetails(customeruid) {
+			if (!customeruid || customeruid == "") {
+				$('#customername').val("");
+				return;
+			}
+
+			$.ajax({
+				url: '/grn/customer/GETdetails',
+				method: 'GET',
+				data: {customeruid: customeruid},
+				success: function (response) {
+					$('#customername').val(response.companyname);
+				},
+				error: function () {
+					alert('ERROR FETCHING CUSTOMER DETAILS. PLEASE TRY AGAIN.');
+				}
+			});
+			fetchSalesOrderUid(customeruid);
+		}
+
+		function fetchSalesOrderUid(customeruid) {
+
+			$.ajax({
+				url: '/grn/salesorderuids', // ← Make sure this is the correct endpoint
+				method: 'GET',
+				data: {customeruid: customeruid},
+				success: function (response) {
+					const dropdown = $('#salesorderuid');
+					dropdown.empty();
+					dropdown.append('<option value="">-- Select Sales Order ID --</option>');
+
+					response.forEach(function (uid) {
+						dropdown.append('<option value="' + uid + '">' + uid + '</option>');
+					});
+				},
+				error: function () {
+					alert('ERROR FETCHING SALES ORDER ID. PLEASE TRY AGAIN.');
+				}
+			});
+
+		}
+		/*$('#salesorderuid').on('change', function () {
+			if ($(this).val() !== null) {
+				alert('uid selected.' + $(this).val());
+				
+			}
+		});*/
+
+		function fetchQuantity(salesorderuid) {
+		    if (!salesorderuid || salesorderuid == "") {
+		        $('#deliveredquantity').val("");
+		        return;
+		    }
+
+		    $.ajax({
+		        url: '/grn/deliveredquantity',
+		        method: 'GET',
+		        data: { salesorderuid: salesorderuid },
+		        success: function (response) {
+		            $('#deliveredquantity').val(response[0]);
+		            fetchProductUIDsBySalesOrder(salesorderuid); // fetch product UIDs after setting quantity
+		        },
+		        error: function () {
+		            alert('ERROR FETCHING delivery quantity. PLEASE TRY AGAIN.');
+		        }
+		    });
+		}
+
+		function fetchProductUIDsBySalesOrder(salesorderuid) {
+		    if (!salesorderuid) {
+		        $('#productuid').empty().append('<option value="">-- Select Product ID --</option>');
+		        return;
+		    }
+
+		    $.ajax({
+		        url: '/grn/productuids',
+		        method: 'GET',
+		        data: { salesorderuid: salesorderuid },
+		        success: function (response) {
+		            const dropdown = $('#productuid');
+		            dropdown.empty();
+		            dropdown.append('<option value="">-- Select Product ID --</option>');
+		            response.forEach(function (uid) {
+		                dropdown.append('<option value="' + uid + '">' + uid + '</option>');
+		            });
+		        },
+		        error: function () {
+		            alert('Error fetching Product IDs. Please try again.');
+		        }
+		    });
+		}
+		$(document).ready(function () {
+		    var existingProductUid = $('#productuid').val();
+		    if (existingProductUid && !$('#productname').val()) {
+		        fetchProductName(existingProductUid);
+		    }
+		});
+
+
+	</script>
+
+</body>
+
+</html>

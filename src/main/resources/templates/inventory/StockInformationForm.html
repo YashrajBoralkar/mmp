@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Stock Information Form</title>
+ <link rel="stylesheet" href="/css/empinfo.css">
+     <link rel="stylesheet" href="/css/hrms.css"> <!-- // for side bar code  -->
+   <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  
+</head>
+<body>
+
+  	 <div th:replace="~{INVENTORY.html :: sidebarFragment}"></div> 
+  <div class="form-container"> 	                                                                         
+ <form id="stockdetails">
+
+
+    <input type="hidden" id="id" name="id" th:value="${stockdetails?.id}">
+    <h2>Stock Information Form</h2><br><br>
+
+    <div class="form-section active" id="section1">
+
+      <!-- Product UID -->
+      <div class="form-row">
+        <div class="form-group">
+          <label for="productuid">Product ID :</label>
+          <select id="productuid" name="productuid" onchange="fetchProductDetails(this.value)" 
+                  th:if="${stockdetails == null or stockdetails.id == null}" required>
+            <option value="">Select Product ID</option>
+            <option th:each="uid : ${productuid}" th:value="${uid}" th:text="${uid}"></option>
+          </select>
+          <input type="text" id="productuids" name="productuid" th:value="${stockdetails?.productuid}" 
+                 readonly th:if="${stockdetails?.id != null}">
+          <span id="productuid-error" class="error-message"></span>
+        </div>
+          <div class="form-group">
+          <label>Product Name :</label>
+          <input type="text" id="productname" name="productname" readonly />
+        </div>
+            <div class="form-group">
+          <label>Per Unit Price :</label>
+          <input type="number" id="unitprice" name="unitprice" readonly />
+        </div>
+      </div>
+
+      <!-- Product Name & Unit Price -->
+      <div class="form-row">
+        <div class="form-group">
+        <label for="globalrealtimequantity">Global Realtime Quantity:</label>
+        <input type="number" id="globalrealtimequantity" name="globalrealtimequantity"
+               placeholder="Enter Global Quantity" oninput="calculateTotalStockQuantity()" readonly>
+      </div>
+      <div class="form-group">
+        <label for="productquantity">Product Quantity:</label>
+        <input type="number" id="productquantity" name="productquantity"
+               placeholder="Enter 100 only"
+               oninput="validateProductQtyAndCalculate()" th:value="${stockdetails?.productquantity}" required>
+        <span id="productquantity-error" class="error-message" style="color: black;"></span>
+      </div>
+            <div class="form-group">
+        <label for="totalstockquantity">Total Stock Count:</label>
+        <input type="number" id="totalstockquantity" name="totalstockquantity" readonly>
+      </div>
+       
+      </div>
+
+      <!-- Stock Price -->
+       <div class="form-row">
+      <div class="form-group">
+        <label for="stockprice">Stock Price:</label>
+        <input type="number" id="stockprice" name="stockprice" class="form-control" readonly>
+      </div>
+     <div class="form-group">
+          <label for="manufacturingdate">Manufacturing Date:</label>
+          <input type="date" id="manufacturingdate" name="manufacturingdate" class="form-control"
+                 th:value="${stockdetails?.manufacturingdate}" required>
+        </div>
+        <div class="form-group">
+          <label for="expirydate">Expiry Date:</label>
+          <input type="date" id="expirydate" name="expirydate" class="form-control"
+                 th:value="${stockdetails?.expirydate}" required>
+        </div>
+        </div><br>
+      <!-- Buttons -->
+      <div class="form-actions">
+        <button type="button" id="submitBtn" onclick="submitForm()">Submit</button>
+        <button type="button" onclick="window.location.href='/inventory/batchlotgrid'" style="margin-left: 10px;">Back</button>
+      </div>
+    </div>
+  </form>
+  </div>
+
+  <script>
+	function validateProductQtyAndCalculate() {
+	    const globalQty = parseFloat(document.getElementById("globalrealtimequantity").value);
+	    const productQtyInput = document.getElementById("productquantity");
+	    const totalQtyInput = document.getElementById("totalstockquantity");
+
+	    const productQty = productQtyInput.value.trim();
+
+	    // ❌ Remove inline error showing — no message here
+	    if (!productQty || isNaN(productQty) || parseFloat(productQty) <= 0) {
+	        totalQtyInput.value = "";
+	        document.getElementById("stockprice").value = "";
+	        return;
+	    }
+
+	    if (!isNaN(globalQty)) {
+	        const totalQty = Math.floor(globalQty / parseFloat(productQty));
+	        totalQtyInput.value = totalQty;
+	        calculateStockPrice();
+	    } else {
+	        totalQtyInput.value = "";
+	        document.getElementById("stockprice").value = "";
+	    }
+	}
+
+
+    function calculateTotalStockQuantity() {
+        const globalQty = parseFloat(document.getElementById("globalrealtimequantity").value);
+        const productQty = parseFloat(document.getElementById("productquantity").value);
+        const totalField = document.getElementById("totalstockquantity");
+
+        if (!isNaN(globalQty) && !isNaN(productQty) && productQty > 0) { 
+            totalField.value = Math.floor(globalQty / productQty);
+            calculateStockPrice();
+        } else {
+            totalField.value = "";
+            document.getElementById("stockprice").value = "";
+        }
+    }
+
+    function calculateStockPrice() {
+        const unitPrice = parseFloat(document.getElementById("unitprice").value);
+        const totalStockQty = parseFloat(document.getElementById("totalstockquantity").value);
+        const productQty = parseFloat(document.getElementById("productquantity").value);
+
+        if (!isNaN(unitPrice) && !isNaN(totalStockQty) && !isNaN(productQty)) {
+            document.getElementById("stockprice").value = unitPrice * totalStockQty * productQty;
+        } else {
+            document.getElementById("stockprice").value = "";
+        }
+    }
+
+	function fetchProductDetails(productuid) {
+	  // 🔹 Clear previous values immediately
+	  $('#productname').val('');
+	  $('#unitprice').val('');
+	  $('#globalrealtimequantity').val('');
+	  $('#productquantity').val('');
+	  $('#totalstockquantity').val('');
+	  $('#stockprice').val('');
+	  $('#productquantity-error').text('');
+
+	  if (!productuid) return;
+
+	  $.ajax({
+	    url: '/getStockproductdetails',
+	    method: 'GET',
+	    data: { productuid: productuid },
+	    success: function (response) {
+	      if (response && response.length > 0) {
+	        const ProductDetail = response[0];
+	        $('#productname').val(ProductDetail.productname || '');
+	        $('#unitprice').val(ProductDetail.sellingprice || '');
+	        $('#globalrealtimequantity').val(ProductDetail.globalrealtimequantity || '');
+	        calculateTotalStockQuantity(); // Recalculate totals for new product
+	      }
+	      else {
+              alert("No details found for the selected Product ID.");
+          }
+	    }
+	  });
+	}
+
+
+	function submitForm() {
+	// Proceed with form submission
+    const formData = new FormData(document.getElementById('stockdetails'));
+    const id = $('#id').val();
+    let url, successMessage;
+    if (!id) {
+        url = '/stockdetails';
+        successMessage = "✅ Stock information saved successfully!";
+    } else {
+        url = '/stockdetails/update';
+        successMessage = "✅ Stock information updated successfully!";
+    }
+    
+    $.ajax({
+      url: url,
+      type: 'POST',
+      data: formData,
+      processData: false,
+      contentType: false,
+      success: function () {
+        alert(successMessage);
+        resetForm();
+        window.location.href = '/inventory/batchlotgrid';
+      },
+      error: function () {
+        alert('Error saving stock info.');
+      }
+    });
+  }
+
+  function resetForm() {
+    $('#stockdetails')[0].reset();
+    $('#id').val('');
+    $('#form-title').text('Stock Information Form');
+    $('#submitBtn').text('Submit');
+  }
+
+    $(document).ready(function () {
+      const existingProductuid = $('#productuids').val();
+      if (existingProductuid) {
+        fetchProductDetails(existingProductuid);
+      }
+    });
+  </script>
+</body>
+</html>

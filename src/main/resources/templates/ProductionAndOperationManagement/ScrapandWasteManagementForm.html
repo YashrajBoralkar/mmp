@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Scrap And Waste Management Form</title>
+<link rel="stylesheet" href="/css/sty.css">
+  <link rel="stylesheet" href="/css/hrms.css"> <!-- // for side bar code  --> 
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+
+  <div th:replace="~{PRODUCTIONANDOPERATION.html :: sidebarFragment}"></div> <!-- // for side bar code  -->                                                                        
+    
+   <form  id="swmForm"  class="form-container">
+    <!-- Personal Information Section -->
+    <h2>Scrap And Waste Management Form</h2>   
+    <br>
+    	<input type="hidden" id="id" name="id" th:value = "${updateswm?.id}">       
+
+      <!-- First Row -->
+    
+      <div class="form-row" >
+        <div class="form-group">
+        <label for="productuid">Product ID :</label>
+		<select  id="productuid"  name="productuid" onchange="fetchProductDetails(this.value)"  th:if="${updateswm == null or updateswm.id == null}">
+				<option value="">Select Product ID</option>
+			    <option th:each="uid : ${Productuid}" th:value="${uid}" th:text="${uid}"></option>	
+			 </select>										   		 			        
+			 <input type="text" id="productuid" name="productuid" th:value="${updateswm?.productuid}" readonly th:if="${updateswm?.id != null}">
+	</div>
+	<div class="form-group">	
+          <label for="productname">Product Name :</label>
+			<input type="text" id="productname" name="productname" readonly>
+        </div>       
+        </div>
+        
+       <div class="form-row" >
+      <div class="form-group">
+        <label for="scraptype">Scrap Type :</label>
+			<select id="scraptype" name="scraptype" th:value="${updateswm?.scraptype}" required>
+                <option value="">Select Scrap Type</option>
+                <option value="Materialscrap" th:selected="${updateswm?.scraptype == 'Materialscrap'}">Material scrap</option>
+                <option value="Processwaste" th:selected="${updateswm?.scraptype == 'Processwaste'}">Process waste</option>
+                <option value="Packagingscrap" th:selected="${updateswm?.scraptype == 'Packagingscrap'}">Packaging scrap</option>
+            </select>
+    </div>
+    <div class="form-group">
+     <label for="quantityscrapped">Quantity Scrapped :</label>
+			<input type="number" id="quantityscrapped" name="quantityscrapped" th:value="${updateswm?.quantityscrapped}" required>       
+    </div>
+      </div>
+
+      <!-- Second Row -->
+      <div class="form-row">
+        <div class="form-group">
+         <label for="recyclingmethod">Recycling Method :</label>
+         <br>
+			<select id="recyclingmethod" name="recyclingmethod" th:value="${updateswm?.recyclingmethod}" required>
+                <option value="">Select recycling method</option>
+                <option value="Melting" th:selected="${updateswm?.recyclingmethod == 'Melting'}">Melting</option>
+                <option value="Reuse" th:selected="${updateswm?.recyclingmethod == 'Reuse'}">Reuse</option>
+                <option value="Disposal" th:selected="${updateswm?.recyclingmethod == 'Disposal'}">Disposal</option>
+            </select>
+ </div>
+      <div class="form-group">
+        <label for="environmentalimpactassessment">Environmental Impact Assessment :</label>
+	<input type="text" id="environmentalimpactassessment" name="environmentalimpactassessment" th:value="${updateswm?.environmentalimpactassessment}" required>
+ </div>          
+    </div>
+
+		<div class="form-row">
+			<div class="form-group">
+             <div id="wastedisposalcampany" >
+			<label> 
+			    <input type="radio" name="disposalMethod" value="Third-party" style="position: relative;top: 20px;margin-left: 125px;"th:checked="${updateswm?.wastedisposalcampany != null and updateswm?.wastedisposalcampany != 'Own Agency'}"	onclick="toggleInput(true)"> Third-party Disposal Agency :
+			</label>
+			</div>
+			<div class="form-group">
+		<label>
+			<input type="radio" style="position: relative;top: 21px;" name="disposalMethod" value="Own Agency" onclick="toggleInput(false)"> Own Agency :
+				</label>
+				</div>
+				<br>
+				
+			<div class="form-group">
+			<div id="environmentalInput">
+			  <input type="text" id="agencyInput" name="wastedisposalcampany" th:value="${updateswm?.wastedisposalcampany}" placeholder="Enter third-party agency details...">
+				</div>
+		</div>
+		</div>
+		</div>
+		
+    <div class="form-actions">
+      <button type="button" id="submitBtn" onclick="SubmitForm()"> Submit </button>
+    <button type="button" class="back-button" onclick="goback();">Back</button>
+    		<div th:if="${successMessage}" class="success-message" th:text="${successMessage}"></div> 
+    </div>
+   </form>
+   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+   	<script>
+		function goback() {
+		window.location.href = '/productionandoperationmanagement/scrapandwastemanagementgrid';
+	  }	
+	</script>
+<script>
+	function toggleInput(isThirdParty) {
+	        const inputDiv = document.getElementById("environmentalInput");
+	        const inputField = document.getElementById("agencyInput");
+
+	        if (isThirdParty) {
+	            inputDiv.classList.remove("hidden");
+	            inputField.removeAttribute("readonly");
+	            inputField.value = "";
+	            inputField.placeholder = "Enter third-party agency details...";
+	        } else {
+	            inputDiv.classList.remove("hidden");
+	            inputField.value = "Own Agency";
+	            inputField.setAttribute("readonly", true);
+	        }
+			}
+</script>
+<script>
+$(document).ready(function() {
+    // Auto-fill Item details when updating
+    var existingproductuid = $('#productuid').val();
+    if (existingproductuid) {
+    	fetchProductDetails(existingproductuid);
+    }
+});
+function fetchProductDetails(productuid) {
+	  if (!productuid) return; 
+
+	     $.ajax({
+	 		url: '/getproductinfodetails',
+	 		method: 'GET',
+	 		data: { productuid: productuid },
+	 		success: function(response) {
+	 			$('#productname').val(response.productname);	
+	 	},
+	 	error:function() {
+	    alert('Error fetching Product Details. Please try again.');
+	 			                }
+	 							});
+	 } 
+	 
+	 
+		    function SubmitForm() {
+		        const formData = new FormData(document.getElementById('swmForm'));
+		        const id = $('#id').val();
+		        let url,successMessage;
+		        
+		        if (!id) {
+		            url = '/savescrapandwastemanagementform';
+		            successMessage = 'Scrap and Waste Management Data submitted successfully!';
+		        } else {
+		            url = '/updatescrapandwastemanagementdata';
+		            successMessage = 'Scrap and Waste Management updated successfully!';
+		        }
+
+
+		        $.ajax({
+		            url: url,
+		            type: 'POST',
+		            data: formData,
+		            processData: false,
+		            contentType: false,
+		            success: function (response) {
+		                $('#message').text(successMessage);
+		                resetForm();
+		                window.location.href = '/productionandoperationmanagement/scrapandwastemanagementgrid';
+		            },
+		            error: function () {
+		                alert('Error saving Scrap & Waste Management. Please try again.');
+		            }
+		        });
+		    }
+
+		    function resetForm() {
+		        $('#swmForm')[0].reset();
+		        $('#id').val('');
+		        $('#message').text('');
+		        $('#submitBtn').text('Submit');
+		    }
+		   
+		    		
+		</script>  
+</body>
+</html>

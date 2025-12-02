@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer Order Form</title>
+    <link rel="stylesheet" href="/css/empinfo.css">
+    <link rel="stylesheet" href="/css/hrms.css">
+    <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div th:replace="~{WHOLESELLERANDRETAILER.html :: sidebarFragment}"></div> <!-- // for side bar code  -->
+
+    <form id="CustomerOrderForm" enctype="multipart/form-data" class="form-container">
+
+        <input type="hidden" id="id" name="id" th:value="${order?.id}" />
+        <h2>Customer Order Form</h2>
+        <br>
+
+        <!-- First Row -->
+
+        <div class="form-row">
+            <!-- Customer Type -->
+            <div class="form-group">
+                <label for="customertype">Customer Type:</label>
+                <select id="customertype" name="customertype" class="form-control" required>
+                    <option value="">Select Customer Type</option>
+                    <option value="Wholesaler" th:selected="${order?.customertype == 'Wholesaler'}">Wholesaler</option>
+                    <option value="Retailer" th:selected="${order?.customertype == 'Retailer'}">Retailer</option>
+                    <option value="Other" th:selected="${order?.customertype == 'Other'}">Other</option>
+                </select>
+
+            </div>
+
+            <!-- Customer UID -->
+            <div class="form-group">
+                <label for="customeruid">Customer ID:</label>
+                <select id="customeruid" name="customeruid" class="form-control" required>
+                    <option value="">-- Select Customer ID --</option>
+                    <option th:if="${order?.customeruid != null}" th:value="${order.customeruid}" th:text="${order.customeruid}" selected></option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="companyname">Company Name:</label>
+                <input type="text" id="companyname" name="companyname" readonly th:value="${customer?.companyname}" />
+            </div>
+
+            
+        </div>
+        
+        <!-- Second Row -->
+        <div class="form-row">       
+        <div class="form-group">
+                <label for="orderdate">Order Date:</label>
+                <input type="date" id="orderdate" name="orderdate" required th:value="${order?.orderdate}" />
+            </div>
+            
+            <div class="form-group">
+                <label for="productuid">Product ID :</label>
+                <select id="productuid" name="productuid" onchange="fetchProductDetails(this.value)" th:if="${order == null or order.id == null}" required>
+                    <option value="">-- Select Product ID --</option>
+                    <option th:each="uid : ${productuid}" th:value="${uid}" th:text="${uid}"></option>
+                </select>
+                <input type="text" id="productuid" name="productuid" th:value="${order?.productuid}" readonly th:if="${order?.id != null}">
+            </div>
+            
+            <div class="form-group">
+                <label>Product Name :</label>
+                <input type="text" id="productname" name="productname" readonly />
+            </div>
+            
+        </div>
+
+        <!-- Third Row -->
+        <div class="form-row">
+            
+            <div class="form-group">
+                <label>Unit Price :</label>
+                <input type="text" id="unitprice" name="unitprice" readonly />
+            </div>
+            <div class="form-group">
+
+                <label for="quantity">Quantity :</label>
+                <input type="number" step="0.01" id="quantity" name="quantity" required th:value="${order?.quantity}" oninput="calculateTotal()" min="1" />
+            </div>
+            
+             <div class="form-group">
+                <label for="discount">Discount (%):</label>
+                <input type="number" step="0.01" id="discount" name="discount" th:value="${order?.discount}" oninput="calculateTotal()" min="0" max="100" />
+            </div>
+        </div>
+
+        <!-- Fourth Row -->
+        <div class="form-row">
+            <div class="form-group">
+                <label for="totalvalue">Total Value:</label>
+                <input type="text" step="0.01" id="totalvalue" name="totalvalue" readonly th:value="${order?.totalvalue}" />
+            </div>
+            
+            <div class="form-group">
+
+                <label for="paymentstatus">Payment Status :</label>
+                <select id="paymentstatus" name="paymentstatus" required>
+                    <option value="" disabled selected>Select Payment Status</option>
+                    <option value="Paid" th:selected="${order?.paymentstatus == 'Paid'}">Paid</option>
+                    <option value="Pending" th:selected="${order?.paymentstatus == 'Pending'}">Pending</option>
+                </select>
+            </div>
+        </div>
+
+
+        <!-- Five Row  -->
+        <div class="form-actions">
+            <div class="button-group">
+                <button type="button" id="submitBtn" onclick="submitForm()">Submit</button>
+                <button type="button" class="back-button" onclick="goback();">Back</button>
+            </div>
+            <div th:if="${successMessage}" class="success-message" th:text="${successMessage}"></div>
+        </div>
+
+    </form>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script>
+    function goback() {
+        window.location.href = '/wholesellerandretailer/customerordergrid';
+    }
+    function goBack() {
+        window.location.href = '/dashboard';
+    }
+    </script>
+       
+    <script>
+        $(document).ready(function () {
+            // Set today's date in yyyy-mm-dd format
+            const today = new Date().toISOString().split('T')[0];
+
+            // Set default value, min, and max to today for inspectiondate
+            $('#orderdate').val(today).attr('min', today).attr('max', today);
+
+            // Prevent manual change to other date
+            $('#orderdate').on('change', function () {
+                if ($(this).val() !== today) {
+                    alert("Only today's date is allowed.");
+                    $(this).val(today);
+                }
+            });
+        });
+    </script>
+
+    <script>
+        function submitForm() {
+            const customertype = $('#customertype').val();
+            const customeruid = $('#customeruid').val();
+            const orderdate = $('#orderdate').val();
+            const productuid = $('#productuid').val();
+            const quantity = $('#quantity').val();
+            const discount = $('#discount').val();
+            const paymentstatus = $('#paymentstatus').val();
+            const unitprice = $('#unitprice').val();
+
+            // Validation checks
+            // Customer Type validation
+            if (!customertype) {
+                alert("Please select a Customer Type.");
+                return;
+            }
+
+            // Customer UID validation
+            if (!customeruid) {
+                alert("Please select a Customer ID.");
+                return;
+            }
+
+            if (!orderdate) {
+                alert("Order Date is required.");
+                return;
+            }
+
+            if (!productuid) {
+                alert("Product UID is required.");
+                return;
+            }
+
+            if (!unitprice || parseFloat(unitprice) <= 0) {
+                alert("Unit Price is missing or invalid. Please select a valid product.");
+                return;
+            }
+
+            if (!quantity || parseFloat(quantity) <= 0) {
+                alert("Quantity must be greater than 0.");
+                return;
+            }
+
+
+
+            if (discount === '' || isNaN(discount) || parseFloat(discount) < 0 || parseFloat(discount) > 100) {
+                alert("Discount must be a number between 0 and 100.");
+                return;
+            }
+
+
+            if (!paymentstatus) {
+                alert("Please select a Payment Status.");
+                return;
+            }
+
+            const formData = new FormData(document.getElementById('CustomerOrderForm'));
+            const id = $('#id').val();
+            let url, successMessage;
+
+            if (!id) {
+                url = '/wholesaleorder/save';
+                successMessage = 'Order saved successfully!';
+            } else {
+                url = '/wholesaleorder/update';
+                successMessage = 'Order updated successfully!';
+            }
+
+            $.ajax({
+                url: url,
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function (response) {
+                    alert(successMessage);
+                    resetForm();
+                    window.location.href = '/wholesellerandretailer/customerordergrid';
+                },
+                error: function () {
+                    alert('Error saving order. Please try again.');
+                }
+            });
+        }
+
+        function resetForm() {
+            $('#CustomerOrderForm')[0].reset();
+            $('#id').val('');
+            $('#message').text('');
+            $('#submitBtn').text('Submit');
+        }
+
+        $(document).ready(function () {
+            // Auto-fill Item details when updating
+            var existingcustomeruid = $('#customeruid').val();
+            if (existingcustomeruid) {
+                fetchWholesalerDetails(existingcustomeruid);
+            }
+
+        });
+
+        function toggleDiscount() {
+            let type = $('#customertype').val();
+            if (type === 'Wholesaler') {
+                $('#discount').prop('disabled', false); // enable
+            } else {
+                $('#discount').prop('disabled', true).val('0'); // disable & reset
+            }
+        }
+
+        $(document).ready(function () {
+            // Call on page load (update time)
+            toggleDiscount();
+
+            // Call whenever customer type changes
+            $("#customertype").change(function () {
+                toggleDiscount();
+            });
+        });
+
+        $("#customertype").change(function () {
+            let type = $(this).val();
+
+            // Enable discount only for Wholeseller
+            if (type === 'Wholesaler') {
+                $('#discount').prop('disabled', false);
+            } else {
+                $('#discount').prop('disabled', true).val('0'); // disable & reset value
+            }
+
+            // Fetch Customer UIDs
+            $.ajax({
+                url: '/customerorder/fetchCustomerUIDs',
+                data: { type: type },
+                success: function (uids) {
+                    let $select = $("#customeruid");
+                    $select.empty();
+                    if (uids.length === 0) {
+                        $select.append("<option>No Customer available for the selected type</option>");
+                    } else {
+                        $select.append("<option value=''>-- Select ID --</option>");
+                        $.each(uids, function (i, uid) {
+                            $select.append("<option value='" + uid + "'>" + uid + "</option>");
+                        });
+                    }
+                },
+                error: function () {
+                    alert("Error fetching Customer IDs");
+                }
+            });
+        });
+
+
+        // When UID is selected, auto-fill company + contact
+        $("#customeruid").change(function () {
+            let uid = $(this).val();
+            if (uid) {
+                $.ajax({
+                    url: '/customerorder/fetchCustomerDetails',
+                    data: { uid: uid },
+                    success: function (data) {
+                        $("#companyname").val(data.companyname);
+                        $("#contactperson").val(data.contactperson);
+                        $("#phonenumber").val(data.phonenumber);
+                        $("#email").val(data.email);
+                    }
+                });
+            }
+        });
+
+
+        $(document).ready(function () {
+            var existingProductuid = $('#productuid').val();
+            if (existingProductuid) {
+                fetchProductDetails(existingProductuid);
+            }
+        });
+
+        function fetchProductDetails(productuid) {
+            if (!productuid) {
+                alert("Please select a Product ID.");
+                return;
+            }
+
+            $.ajax({
+                url: '/wholesaleorder/fetchProductDetails',
+                method: 'GET',
+                data: { productuid: productuid },
+                success: function (response) {
+                    if (response && response.length > 0) {
+                        const ProductDetail = response[0];
+                        $('#productname').val(ProductDetail.productname || '');
+                        $('#unitprice').val(ProductDetail.sellingprice || '');
+                        calculateTotal();
+                    } else {
+                        alert("No details found for the selected Product ID.");
+                    }
+                },
+                error: function (xhr, status, error) {
+                    alert("An error occurred while fetching the Product details.");
+                }
+            });
+        }
+
+        function calculateTotal() {
+            let unitPrice = parseFloat(document.getElementById('unitprice').value) || 0;
+            let quantity = parseInt(document.getElementById('quantity').value) || 0;
+            let discount = parseFloat(document.getElementById('discount').value) || 0;
+
+            if (quantity < 0) {
+                alert("Quantity cannot be negative.");
+                quantity = 0;
+                document.getElementById('quantity').value = 0;
+            }
+
+            if (discount < 0) {
+                alert("Discount cannot be negative.");
+                discount = 0;
+                document.getElementById('discount').value = 0;
+            }
+
+            let total = unitPrice * quantity;
+
+            if (discount > 0 && discount <= 100) {
+                total = total - (total * (discount / 100));
+            }
+
+            document.getElementById('totalvalue').value = total.toFixed(2);
+        }
+    </script>
+    <script>
+		function freezeFieldsIfUpdate() {
+		       var orderId = $('#id').val();
+		       if (orderId) { // If updating existing order
+		           $('#customertype').prop('disabled', true); // disable customer type
+		           $('#customeruid').prop('disabled', true);   // disable customer UID
+		           $('#companyname').prop('readonly', true);   // readonly company name
+		       }
+		   }
+
+		   $(document).ready(function() {
+		       freezeFieldsIfUpdate();
+		   });
+</script>
+</body>
+
+</html>

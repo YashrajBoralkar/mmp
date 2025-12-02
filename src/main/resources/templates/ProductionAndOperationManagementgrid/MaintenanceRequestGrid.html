@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Maintenance Request Form</title>
+    
+    <link rel="stylesheet" href="/css/hrms.css"> <!-- // for side bar code  -->
+    <link rel="stylesheet" href="/css/grid.css">
+    <link rel="stylesheet" href="/css/emplist.css">
+
+    <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<!-- ✅ Internal CSS for Button Styling -->
+  <style>
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background-color: #f0f0f0;
+      padding: 10px 20px;
+    }
+
+    .search-box {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .search-box button,
+    .back-button {
+      padding: 6px 12px;
+      font-size: 14px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .search-box button:hover,
+    .back-button:hover {
+      background-color: #0056b3;
+    }
+  </style>
+<body>
+<div th:replace="~{PRODUCTIONANDOPERATION.html :: sidebarFragment}"></div> <!-- // for side bar code  -->
+
+<div class="button-container">
+    
+</div>
+
+<div class="button-grid">
+    <button onclick="loadmaintenancerequestTable()"style="width:112%">Maintenance Request Form</button>
+</div>
+
+<div id="maintenancerequest-table-container">
+   
+</div> <!-- Table will be dynamically loaded here -->
+
+<script src="/js/grid.js"></script>
+<script> function goBack() {
+	window.location.href = '/dashboard';
+	  }</script>
+<script>
+    function loadmaintenancerequestTable() {
+        // Create the button and table container structure immediately
+        const container = document.getElementById("maintenancerequest-table-container");
+        container.innerHTML =`
+            <div class="table-header">
+				<div class="button-container" style="margin-left: 1045px;">
+				                <button class="styled-button" onclick="window.location.href='/productionandoperationmanagementgrid/maintanancerequestgrid'" style="flex-grow: 1;">
+				                    <i class="fas fa-arrow-left"></i> Back
+				                </button>
+				                <button id="open-register-btn" class="styled-button" style="flex-grow: 1; margin-left: 20px;">
+				                Maintenance Request Form
+				                </button>
+				            </div>
+				</div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Maintenance Request ID</th>
+                        <th>Equipment Master UID</th>
+        				<th>Equipment Name</th>
+                        <th>Maintenance Type</th>
+                        <th>Issue Description</th>
+                        <th>Spare Parts Required</th>
+                        <th>Estimated Repair Cost</th>
+                        <th>Estimated Completion Date</th>
+                        <th>Requested Status</th>
+                        <th>Requested By (Employee UID)</th>
+                        <th>Requested By Name</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="maintenancerequestmanagement-table-body">
+                    <tr><td colspan="9">Loading data...</td></tr>
+                </tbody>
+            </table>
+        `;
+
+        // Add event listener to the "Maintenance Request" button
+        document.getElementById("open-register-btn").addEventListener("click", () => {
+            // Redirect to the Maintenance Request registration form
+            window.location.href = '/maintenancerequestform';
+        });
+
+        // Fetch and populate table data
+        fetch('/viewmaintenancerequestlist')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            
+            .then(data => {
+                const headers = data.headers; // Extract headers dynamically
+                const rows = data.data;      // Extract employee data
+                const tbody = document.getElementById("maintenancerequestmanagement-table-body");
+
+                // Check if there are rows to display
+                if (rows.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="9">No data available.</td></tr>`;
+                    return;
+                }
+
+                // Generate rows from data
+                tbody.innerHTML = rows.map(row => `
+                    <tr>
+                        <td>${row['ID']}</td>
+                        <td>${row['Maintenance Request ID']}</td>
+                        <td>${row['Equipment Master UID']}</td>
+                        <td>${row['Equipment Name']}</td>
+                        <td>${row['Maintenance Type']}</td>
+                        <td>${row['Issue Description']}</td>
+                        <td>${row['Spare Parts Required']}</td>
+                        <td>${row['Estimated Repair Cost']}</td>
+                        <td>${row['Estimated Completion Date']}</td>
+                        <td>${row['Requested Status']}</td>
+                        <td>${row['Requested By (Employee UID)']}</td>
+                        <td>${row['Requested By Name']}</td>
+                        <td>
+                            <div class="action-buttons">
+                                <a href="#" class="btn btn-delete" data-id="${row['ID']}" onclick="confirmDeletemaintenancerequest(this)">Delete</a>
+                                <a href="/updatemaintenancerequest/${row['ID']}" class="btn btn-update">Update</a>
+                            </div>
+                        </td>
+                    </tr>
+                `).join('');
+            })
+            .catch(error => {
+                console.error('Error fetching Maintenance Request data:', error);
+                document.getElementById("maintenancerequestmanagement-table-body").innerHTML = `<tr><td colspan="9">Error loading data.</td></tr>`;
+            });
+    }
+
+    // Example function to handle delete action
+    	function confirmDeletemaintenancerequest(element) {
+	    const id = element.getAttribute('data-id'); // Retrieve the Maintenance Request  ID
+	    if (confirm(`Are you sure you want to delete Maintenance Request with ID: ${id}?`)) {
+	        // Perform the fetch request with the Maintenance Request ID as a query parameter
+	        fetch(`/maintenancerequestdeleteinfo?id=${id}`, { method: 'GET' })
+	            .then(response => {
+	                if (response.redirected) {
+	                    // Redirect to the new location if the server redirects
+	                    loadmaintenancerequestTable();
+	                    window.location.href = response.url;
+	                } else {
+	                    console.log('Maintenance Request data deleted:', id);
+	                }
+	            })
+	            .catch(error => {
+	                console.error('Error deleting Maintenance Request data:', error);
+	            });
+	    }
+	}
+	
+	
+</script>
+
+
+
+
+</body>
+</html>

@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spare Parts Inventory Form</title>
+    
+    <link rel="stylesheet" href="/css/hrms.css"> <!-- // for side bar code  -->
+    <link rel="stylesheet" href="/css/grid.css">
+    <link rel="stylesheet" href="/css/emplist.css">
+
+    <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+<div th:replace="~{MAINTENANCEMANAGEMENTDEPERTMENT.html :: sidebarFragment}"></div> <!-- // for side bar code  -->
+
+<div class="button-container">
+    
+</div>
+
+<div class="button-grid">
+    <button onclick="loadsparepartsinventoryTable()"style="width:112%">Spare Parts Inventory Form</button>
+</div>
+
+<div id="sparepartsinventory-table-container">
+   
+</div> <!-- Table will be dynamically loaded here -->
+
+<script src="/js/grid.js"></script>
+
+<script>
+    function loadsparepartsinventoryTable() {
+        // Create the button and table container structure immediately
+        const container = document.getElementById("sparepartsinventory-table-container");
+        container.innerHTML =`
+            <div class="table-header">
+				<div class="button-container" style="margin-left: 1045px;">
+				                <button class="styled-button" onclick="window.location.href='/maintenancemanagementdepartment/sparepartsinventorygrid'" style="flex-grow: 1;">
+				                    <i class="fas fa-arrow-left"></i> Back
+				                </button>
+				                <button id="open-register-btn" class="styled-button" style="flex-grow: 1; margin-left: 20px;">
+				                Spare Parts Inventory Form
+				                </button>
+				            </div>
+				</div>
+            <table>
+                <thead>
+                    <tr>
+                    <th>Id</th>
+    				<th>Spare Parts Inventory UID</th>
+    				<th>Spare Parts Name</th>
+    				<th>Spare Parts Description</th>			
+    				<th>Category</th>
+    				<th>unit of Measure</th>
+    				<th>Current Stock Level </th>
+    				<th>Minimum Stock level </th>
+    				<th>Location</th>	
+    				<th>Supplier Name</th>
+    				<th>Last Used Date</th>	
+                    <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="sparepartsinventorymanagement-table-body">
+                    <tr><td colspan="9">Loading data...</td></tr>
+                </tbody>
+            </table>
+        `;
+
+        // Add event listener to the "Spare Parts Inventory Form" button
+        document.getElementById("open-register-btn").addEventListener("click", () => {
+            // Redirect to the Spare Parts Inventory Form form
+            window.location.href = '/sparepartsinventoryform';
+        });
+
+        // Fetch and populate table data
+        fetch('/viewsparepartsinventory')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            
+            .then(data => {
+                const headers = data.headers; // Extract headers dynamically
+                const rows = data.data;      // Extract Spare Parts Inventory Form data
+                const tbody = document.getElementById("sparepartsinventorymanagement-table-body");
+
+                // Check if there are rows to display
+                if (rows.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="9">No data available.</td></tr>`;
+                    return;
+                }
+
+                // Generate rows from data
+                tbody.innerHTML = rows.map(row => `
+                    <tr>
+                        <td>${row['ID']}</td>
+                        <td>${row['Spare Parts Inventory UID']}</td>
+                        <td>${row['Spare Parts Name']}</td>
+                        <td>${row['Spare Parts Description']}</td>
+                        <td>${row['Category']}</td>
+                        <td>${row['unit of Measure']}</td>
+                        <td>${row['Current Stock Level']}</td>
+                        <td>${row['Minimum Stock level']}</td>
+                        <td>${row['Location']}</td>
+                        <td>${row['Supplier Name']}</td>
+                        <td>${row['Last Used Date']}</td>
+                        <td>
+                            <div class="action-buttons">
+                                <a href="#" class="btn btn-delete" data-id="${row['ID']}" onclick="confirmDeletesparepartsinventory(this)">Delete</a>
+                                <a href="/updatesparepartsinventory/${row['ID']}" class="btn btn-update">Update</a>
+                            </div>
+                        </td>
+                    </tr>
+                `).join('');
+            })
+            .catch(error => {
+                console.error('Error fetching Spare Parts Inventory data:', error);
+                document.getElementById("sparepartsinventorymanagement-table-body").innerHTML = `<tr><td colspan="9">Error loading data.</td></tr>`;
+            });
+    }
+
+    // Example function to handle delete action
+    	function confirmDeletesparepartsinventory(element) {
+	    const id = element.getAttribute('data-id'); // Retrieve the Spare Parts Inventory Form  ID
+	    if (confirm(`Are you sure you want to delete Spare Parts Inventory with ID: ${id}?`)) {
+	        // Perform the fetch request with the Spare Parts Inventory ID as a query parameter
+	        fetch(`/sparepartsinventorydeleteinfo?id=${id}`, { method: 'GET' })
+	            .then(response => {
+	                if (response.redirected) {
+	                    // Redirect to the new location if the server redirects
+	                    loadsparepartsinventoryTable();
+	                    window.location.href = response.url;
+	                } else {
+	                    console.log('Spare Parts Inventory Form data deleted:', id);
+	                }
+	            })
+	            .catch(error => {
+	                console.error('Error deleting Spare Parts Inventory Form data:', error);
+	            });
+	    }
+	}
+	
+	
+</script>
+
+
+
+
+</body>
+</html>

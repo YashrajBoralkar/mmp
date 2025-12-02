@@ -1,0 +1,394 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Work Order Form</title>
+<link rel="stylesheet" href="/css/empinfo.css">
+	 <link rel="stylesheet" href="/css/hrms.css"> 
+<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+<style>
+    #materialQuantityLabel label {
+        display: block;
+        font-size: 18px;
+        font-weight: 600;
+        margin-bottom: 10px;
+        color: #333;
+    }
+
+    #materialQuantityTable table {
+        width: 100%;
+        border-collapse: collapse;
+        border: 1px solid #ddd;
+        background-color: #f9f9f9;
+    }
+
+    #materialQuantityTable th,
+    #materialQuantityTable td {
+        padding: 10px;
+        border: 1px solid #ccc;
+        text-align: left;
+    }
+
+    #materialQuantityTable th {
+        background-color: #f0f0f0;
+        font-weight: bold;
+    }
+
+    #materialQuantityTable input[type="text"] {
+        width: 100%;
+        border: none;
+        background-color: transparent;
+        font-size: 14px;
+        color: #333;
+    }
+</style>
+
+
+<!-- ✅ SweetAlert2 -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+</head>
+
+<body onload="disableOnUpdate()">
+    <div th:replace="~{PRODUCTIONANDOPERATION.html :: sidebarFragment}"></div>
+
+    <form id="pqcForm" class="form-container">
+        <h2>Work Order Form</h2>
+        <input type="hidden" id="id" name="id" th:value="${updatewo?.id}">
+
+        <!-- Product & Production Planning -->
+        <div class="form-row">
+            <div class="form-group">
+                <label for="productuid">Product ID :</label>
+                <select id="productuid" name="productuid" required onchange="fetchProductionPlanningByProduct(this.value)">
+                    <option value="">Select Product</option>
+                    <option th:each="product : ${products}" 
+                            th:value="${product.productuid}" 
+                            th:text="${product.productuid}" 
+                            th:selected="${updatewo?.productuid == product.productuid}">
+                    </option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="productionplanninguid">Production Planning ID :</label>
+                <select id="productionplanninguid" name="productionplanninguid" required onchange="fetchRawMaterials(this.value)">
+                    <option value="">Select Production Planning</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Raw Material Table -->
+       <!-- 🔁 Raw Material Quantity Section -->
+<div class="form-row">
+    <div class="form-group" style="width: 100%;">
+        <div id="materialQuantityLabel"></div>
+
+        <div id="materialQuantityTable" style="display:none; margin-top:10px;">
+            <table style="width:100%; border-collapse: collapse;">
+                <thead>
+                    <tr>
+                        <th style="border:1px solid #ccc; padding:8px;">Raw Material UID</th>
+                        <th style="border:1px solid #ccc; padding:8px;">Raw Material Name</th>
+                    </tr>
+                </thead>
+                <tbody id="materialQuantityTableBody"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Hidden fields to send selected material info -->
+<input type="hidden" id="rawmaterialuids" name="rawmaterialuids" />
+<input type="hidden" id="rawmaterialnames" name="rawmaterialnames" />
+
+
+        <!-- Work Order Details -->
+        <div class="form-row">
+            <div class="form-group">
+                <label for="workordertype">Work Order Type :</label>
+                <select id="workordertype" name="workordertype" required>
+                    <option value="">Select Work Order Type</option>
+                    <option value="Assembly" th:selected="${updatewo?.workordertype == 'Assembly'}">Assembly</option>
+                    <option value="Processing" th:selected="${updatewo?.workordertype == 'Processing'}">Processing</option>
+                    <option value="Packaging" th:selected="${updatewo?.workordertype == 'Packaging'}">Packaging</option>
+                </select>
+            </div>
+			
+			<div class="form-group">
+			    <label for="plannedquantity">Planned Quantity :</label>
+			    <input type="number" id="plannedquantity" name="plannedquantity" 
+			           th:value="${updatewo?.plannedquantity}" required min="1">
+			</div>
+
+			
+            <div class="form-group">
+                <label for="workorderdate">Work Order Date :</label>
+                <input type="date" id="workorderdate" name="workorderdate" th:value="${updatewo?.workorderdate}" >
+            </div>
+            <div class="form-group">
+                <label for="workcenter">Work Center :</label>
+                <input type="text" id="workcenter" name="workcenter" th:value="${updatewo?.workcenter}" required>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="prioritylevel">Priority Level :</label>
+                <select id="prioritylevel" name="prioritylevel" required>
+                    <option value="">Select Priority Level</option>
+                    <option value="High" th:selected="${updatewo?.prioritylevel == 'High'}">High</option>
+                    <option value="Medium" th:selected="${updatewo?.prioritylevel == 'Medium'}">Medium</option>
+                    <option value="Low" th:selected="${updatewo?.prioritylevel == 'Low'}">Low</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="machinerequired">Machine Required :</label>
+                <input type="number" id="machinerequired" name="machinerequired" th:value="${updatewo?.machinerequired}" required min="1">
+            </div>
+            <div class="form-group">
+                <label for="rawmaterialconsumption">Raw Material Consumption :</label>
+                <input type="text" id="rawmaterialconsumption" name="rawmaterialconsumption" th:value="${updatewo?.rawmaterialconsumption}">
+            </div>
+            <div class="form-group">
+                <label for="labourassigned">Labour Assigned :</label>
+                <input type="text" id="labourassigned" name="labourassigned" th:value="${updatewo?.labourassigned}" required>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="completionstatus">Completion Status :</label>
+                <select id="completionstatus" name="completionstatus" required>
+                    <option value="">Select Completion Status</option>
+                    <option value="Completed" th:selected="${updatewo?.completionstatus == 'Completed'}">Completed</option>
+                    <option value="In-Progress" th:selected="${updatewo?.completionstatus == 'In-Progress'}">In Progress</option>
+                    <option value="On Hold" th:selected="${updatewo?.completionstatus == 'On Hold'}">On Hold</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="completedate">Completion Date :</label>
+                <input type="date" id="completedate" name="completedate" th:value="${updatewo?.completedate}" required>
+            </div>
+            <div class="form-group">
+                <label for="reviewedby">Reviewed By :</label>	
+               <!-- CREATE MODE -->	
+				<select id="reviewedby" name="reviewedby" th:if="${updatewo == null or updatewo.id == null}" required>
+					<option value="">Select reviewed by</option>
+					<option th:each="entry : ${reviewedbyMap}" th:value="${entry.key + ' - ' + entry.value}"	th:text="${entry.key + ' - ' + entry.value}">
+					</option>
+				</select>
+			<!-- EDIT MODE -->
+			<input type="text" id="reviewedby" name="reviewedby" th:value="${updatewo.reviewedby}" th:if="${updatewo.id != null}"readonly />
+                
+            </div>
+        </div>
+
+		<div class="form-actions">
+		            <button type="button" id="submitBtn" onclick="submitWorkOrderForm()">Submit</button>
+		            <button type="button" class="back-button" onclick="goback();">Back</button>
+		            <div id="message">
+						
+					</div>
+		 </div>
+    </form>
+	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+	<script> 
+  function goBack() {
+	window.location.href = '/dashboard';
+	  }
+</script>
+	<script>
+	    function goback() {
+	        window.location.href = '/productionandoperationmanagement/workordergrid';
+	    }
+
+	   
+
+	    function fetchProductionPlanningByProduct(productuid) {
+	        if (!productuid) {
+	            $('#productionplanninguid').html('<option value="">Select Production Planning</option>');
+	            return;
+	        }
+	        $.ajax({
+	            url: '/getproductionplanningbyproduct',
+	            method: 'GET',
+	            data: { productuid: productuid },
+	            success: function (response) {
+	                if (response.length === 0) {
+	                    alert('No Production Planning found for selected Product UID.');
+	                    $('#productionplanninguid').html('<option value="">Select Production Planning</option>');
+	                    return;
+	                }
+	                let options = '<option value="">Select Production Planning</option>';
+	                response.forEach(item => {
+	                    options += `<option value="${item.productionplanninguid}">${item.productionplanninguid}</option>`;
+	                });
+	                $('#productionplanninguid').html(options);
+	                $('#rawMaterialTable tbody').html('');
+	            },
+	            error: function () {
+	                alert('Error fetching Production Planning data.');
+	            }
+	        });
+	    }
+
+	   function fetchRawMaterials(productionplanninguid) {
+    if (!productionplanninguid) return;
+
+    $.ajax({
+        url: '/getapprovedrawmaterials',
+        method: 'GET',
+        data: { productionplanninguid: productionplanninguid },
+        success: function (response) {
+            if (response.length === 0) {
+                alert('No Raw Materials found for this Production Planning UID.');
+                $('#materialQuantityLabel').html('');
+                $('#materialQuantityTable').hide();
+                $('#materialQuantityTableBody').html('');
+                return;
+            }
+
+            let rows = '';
+            const uids = [];
+            const names = [];
+
+            response.forEach(item => {
+                rows += `
+                    <tr>
+                        <td style="border:1px solid #ccc; padding:8px;">
+                            <input type="text" class="form-control" name="rawmaterialuid" value="${item.rawmaterialuid}" readonly>
+                        </td>
+                        <td style="border:1px solid #ccc; padding:8px;">
+                            <input type="text" class="form-control" name="rawmaterialname" value="${item.rawmaterialname}" readonly>
+                        </td>
+                    </tr>`;
+                uids.push(item.rawmaterialuid);
+                names.push(item.rawmaterialname);
+            });
+
+            $('#materialQuantityLabel').html('<label> Raw Material Details:</label>');
+            $('#materialQuantityTableBody').html(rows);
+            $('#materialQuantityTable').show();
+
+            // Store raw material data in hidden fields
+            $('#rawmaterialuids').val(uids.join(','));
+            $('#rawmaterialnames').val(names.join(','));
+        },
+        error: function () {
+            alert('Error fetching Raw Material data.');
+        }
+    });
+}
+
+
+	    function disableOnUpdate() {
+	        const id = $('#id').val();
+	        if (id) {
+	            $('#productuid').prop('disabled', true);
+	            $('#productionplanninguid').prop('disabled', true);
+	            $('#productMessage').show();
+	            $('#planningMessage').show();
+	            const productUid = '[[${updatewo?.productuid}]]';
+	            $('#productuid').html(`<option value="${productUid}" selected>${productUid}</option>`);
+	            
+	            const planningUid = '[[${updatewo?.productionplanninguid}]]';
+	            $('#productionplanninguid').html(`<option value="${planningUid}" selected>${planningUid}</option>`);
+	         // Set Product UID selected
+	            if (productUid) {
+	                $('#productuid').val(productUid);
+	            }
+
+	            if (planningUid) {
+	                fetchRawMaterials(planningUid);
+	            }
+	        }
+	    }
+
+	    function submitWorkOrderForm() {
+	        if (!validateForm()) return;
+
+	        const formData = new FormData(document.getElementById('pqcForm'));
+	        const id = $('#id').val();
+	        const url = id ? '/updateworkorderform' : '/saveworkorderform';
+	        $.ajax({
+	            url: url,
+	            type: 'POST',
+	            data: formData,
+	            processData: false,
+	            contentType: false,
+	            success: function () {
+	                const msg = id ? '✅ Work Order updated successfully!' : '✅ Work Order submitted successfully!';
+	                Swal.fire({
+	                    icon: 'success',
+	                    title: msg,
+	                    showConfirmButton: false,
+	                    timer: 2000
+	                }).then(() => {
+	                    window.location.href = '/productionandoperationmanagement/workordergrid';
+	                });
+	            },
+	            error: function () {
+	                Swal.fire({
+	                    icon: 'error',
+	                    title: '❌ Error submitting Work Order!',
+	                    text: 'Please try again later.'
+	                });
+	            }
+	        });
+	    }
+
+		function validateForm() {
+		    const id = $('#id').val();
+		    const productuid = $('#productuid').val();
+		    const productionplanninguid = $('#productionplanninguid').val();
+		    const workordertype = $('#workordertype').val();
+		    const workorderdate = $('#workorderdate').val();
+		    const workcenter = $('#workcenter').val().trim();
+		    const prioritylevel = $('#prioritylevel').val();
+		    const machinerequired = $('#machinerequired').val();
+		    const rawmaterialconsumption = $('#rawmaterialconsumption').val().trim();
+		    const labourassigned = $('#labourassigned').val().trim();
+		    const completionstatus = $('#completionstatus').val();
+		    const completedate = $('#completedate').val();
+		    const reviewedby = $('#reviewedby').val();
+		    const plannedquantity = $('#plannedquantity').val();
+
+		    if (!plannedquantity || plannedquantity <= 0) { 
+		        alert('Planned Quantity must be greater than 0.'); 
+		        return false; 
+		    }
+
+		    if (!id) {
+		        if (!productuid) { alert('Please select a valid Product UID.'); return false; }
+		        if (!productionplanninguid) { alert('Please select a valid Production Planning UID.'); return false; }
+		    }
+			
+
+		    if (!workordertype) { alert('Please select Work Order Type.'); return false; }
+		    if (!workorderdate) { alert('Please select Work Order Date.'); return false; }
+		    if (!prioritylevel) { alert('Please select Priority Level.'); return false; }
+		    if (!machinerequired || machinerequired <= 0) { alert('Machine Required must be greater than 0.'); return false; }
+		    if (!workcenter) { alert('Work Center is required.'); return false; }
+		    if (!rawmaterialconsumption) { alert('Raw Material Consumption is required.'); return false; }
+		    if (!labourassigned) { alert('Labour Assigned is required.'); return false; }
+		    if (!completionstatus) { alert('Please select Completion Status.'); return false; }
+			
+			if (!completedate) { alert('Please select completedate'); return false; }
+
+			if (new Date(completedate) <= new Date(workorderdate)) {
+					        alert("completedate must be AFTER workorderdate");
+					        return false;
+					    }
+		    if (!reviewedby) { alert('Please select Reviewed By.'); return false; }
+
+		    return true;
+		}
+	</script>
+
+</body>
+</html>

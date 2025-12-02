@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Supplier Invoice Submission Form</title>
+  <link rel="stylesheet" href="/css/empinfo.css">
+  <link rel="stylesheet" href="/css/hrms.css">
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+  <div th:replace="~{SUPPLIER.html :: sidebarFragment}"></div>
+
+  <form id="invoicesubmissionform" class="form-container">
+    
+    <input type="hidden" id="id" name="id" th:value="${invoice?.id}">
+
+    <h2>Supplier Invoice Submission Form</h2>
+    <div class="form-row">
+     <div class="form-group">
+        <label for="rawmaterialpurchaseorderuid">Raw Material PO ID:</label>
+        <select id="rawmaterialpurchaseorderuid" 
+                th:value="${rawmaterialpurchaseorderuid}" 
+                th:disabled="${invoice?.id != null}" 
+                required>
+            <option value="">-- Select --</option>
+            <option th:each="uid : ${rawmaterialuids}" 
+                    th:value="${uid}" 
+                    th:text="${uid}" 
+                    th:selected="${invoice?.rawmaterialpurchaseorderuid == uid}"></option>
+        </select>
+        <input type="hidden" name="rawmaterialpurchaseorderuid" 
+               th:value="${invoice?.rawmaterialpurchaseorderuid}" 
+               th:if="${invoice?.id != null}">
+    </div>
+
+    <div class="form-group">
+        <label for="suppliername">Supplier Name:</label>
+        <input type="text" id="suppliername" name="suppliername" readonly>
+    </div>
+    </div>
+  
+    <div class="form-row">
+     <div class="form-group">
+        <label for="totalvalue">Total Amount:</label>
+        <input type="number" id="totalvalue" name="totalvalue" readonly>
+    </div>
+
+    <div class="form-group">
+        <label for="materialnames">Raw Material Names:</label>
+        <textarea id="materialnames" name="materialnames" readonly></textarea>
+    </div>
+
+        <div class="form-group">
+            <label for="paymentterms">Payment Terms:</label>
+            <input type="text" id="paymentterms" name="paymentterms" th:value="${invoice?.paymentterms}" required>
+        </div>
+        </div>
+        
+	<div class="form-row">
+        <div class="form-group">
+            <label for="bankaccountnumber">Bank Account Number:</label>
+            <br>
+            <input type="number" id="bankaccountnumber" name="bankaccountnumber" th:value="${invoice?.bankaccountnumber}" required>
+        </div>
+    
+    
+        <div class="form-group">
+            <label for="totalamount">Total Amount (Including Taxes):</label>
+            <input type="number" id="totalamount" name="totalamount" th:value="${invoice?.totalamount}" required>
+        </div>
+
+        <div class="form-group">
+            <label for="paymentduedate">Payment Due Date:</label>
+            <br>
+            <input type="date" id="paymentduedate" name="paymentduedate" th:value="${invoice?.paymentduedate}" required>
+        </div>
+        </div>
+        
+<div class="form-row">
+        <div class="form-group">
+            <label for="invoiceapprovalstatus">Invoice Approval Status:</label>
+            <select id="invoiceapprovalstatus" name="invoiceapprovalstatus" th:value="${invoice?.invoiceapprovalstatus}" required>
+                <option value="">Select Status</option>
+                <option value="Pending" th:selected="${invoice?.invoiceapprovalstatus == 'Pending'}">Pending</option>
+                <option value="Approved" th:selected="${invoice?.invoiceapprovalstatus == 'Approved'}">Approved</option>
+                <option value="Rejected" th:selected="${invoice?.invoiceapprovalstatus == 'Rejected'}">Rejected</option>
+            </select>
+        </div>
+   
+
+    <div class="form-group">
+        <label for="invoicedate">Invoice Date:</label>
+        <br>
+        <input type="date" id="invoicedate" name="invoicedate" th:value="${invoice?.invoicedate}" required>
+    </div>
+
+    <div class="form-row">
+        <div class="form-group">
+            <label for="approvalauthority">Approval Authority:</label>
+            <br>
+            <select id="approvalauthority" name="approvalauthority" th:value="${invoice?.approvalauthority}" class="form-control" required>
+                <option value="">-- Select Approval Authority --</option>
+                <option th:each="auth : ${approvalAuthorities}"
+                        th:value="${auth.code}"
+                        th:text="${auth.name}"
+                        th:selected="${auth.code == invoice?.approvalauthority}"></option>
+            </select>
+        </div>
+    </div>
+     </div>
+
+    <div class="form-actions">
+        <button type="button" id="submitBtn" onclick="submitForm()">Submit</button>
+        <button type="button" class="back-button" onclick="goback();">Back</button>
+        <div th:if="${successMessage}" class="success-message" th:text="${successMessage}"></div>
+        
+    </div>
+  </form>
+
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script> 
+function goBack() {
+	window.location.href = '/dashboard';
+	}
+</script>
+  <script>
+    // ✅ Date validation function
+	function validateDates() {
+	    const invoiceDateInput = document.getElementById("invoicedate");
+	    const paymentDueDateInput = document.getElementById("paymentduedate");
+
+	    const invoiceDate = new Date(invoiceDateInput.value);
+	    const paymentDueDate = new Date(paymentDueDateInput.value);
+
+	    // Remove time portion for accurate comparison
+	    invoiceDate.setHours(0, 0, 0, 0);
+	    paymentDueDate.setHours(0, 0, 0, 0);
+
+	    if (invoiceDateInput.value && paymentDueDateInput.value) {
+	        if (paymentDueDate < invoiceDate) {  
+	            alert("⚠️ Invalid Date!\n\nPayment Due Date must be the same or later than the Invoice Date.");
+	            paymentDueDateInput.value = ""; 
+	            paymentDueDateInput.focus();   
+	            return false;
+	        }
+	    }
+	    return true;
+	}
+
+	// Proceed with form submission
+    function submitForm() {
+	const formData = new FormData(document.getElementById('invoicesubmissionform'));
+    const id = $('#id').val();
+    let url, successMessage;
+    if (!id) {
+        url = '/supplierinvoicesubmission/save';
+        successMessage = 'Supplier Invoice saved successfully!';
+    } else {
+        url = '/supplierinvoicesubmission/update';
+        successMessage = 'Supplier Invoice updated successfully!';
+    }
+    
+    $.ajax({
+      url: url,
+      type: 'POST',
+      data: formData,
+      processData: false,
+      contentType: false,
+      success: function () {
+        alert(successMessage);
+        resetForm();
+        window.location.href = '/supplier/supplierinvoicesubmissiongrid';
+      },
+      error: function () {
+        alert('Error saving supplier invoice.');
+      }
+    });
+	}
+	
+    function resetForm() {
+        $('#invoicesubmissionform')[0].reset();
+        $('#id').val('');
+        $('#message').text('');
+        $('#form-title').text('Supplier Invoice Submission Form');
+        $('#submitBtn').text('Submit');
+    }
+
+
+  </script>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const existingUID = document.getElementById("rawmaterialpurchaseorderuid").value;
+        if (existingUID) {
+            fetch(`/supplierinvoicesubmission/rawmaterialpodetails?uid=${existingUID}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (!data.error) {
+                        document.getElementById("suppliername").value = data.suppliername || '';
+                        document.getElementById("totalvalue").value = data.totalvalue || '';
+                        document.getElementById("materialnames").value = data.materialnames ? data.materialnames.split(',').join('\n') : '';
+                        document.getElementById("totalamount").value = data.totalvalue || ''; 
+                    }
+                });
+        }
+    });
+  </script>
+
+  <script>
+    // Auto-populate fields when Raw Material Purchase Order UID is selected
+    document.addEventListener('DOMContentLoaded', function () {
+        const poSelect = document.getElementById('rawmaterialpurchaseorderuid');
+        const supplierNameInput = document.getElementById('suppliername');
+        const totalAmountInput = document.getElementById('totalvalue');
+        const materialNamesInput = document.getElementById('materialnames');
+        const totalAmountField = document.getElementById('totalamount');
+
+        poSelect.addEventListener('change', function () {
+            const uid = this.value;
+
+            supplierNameInput.value = '';
+            totalAmountInput.value = '';
+            materialNamesInput.value = '';
+            totalAmountField.value = '';
+
+            if (!uid) return;
+
+            fetch(`/supplierinvoicesubmission/rawmaterialpodetails?uid=${uid}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        alert(data.error);
+                    } else {
+                        supplierNameInput.value = data.suppliername || '';
+                        totalAmountInput.value = data.totalvalue || '';
+                        materialNamesInput.value = data.materialnames ? data.materialnames.split(',').join('\n') : '';
+                        totalAmountField.value = data.totalamount || '';
+                    }
+                })
+                .catch(error => {
+                    alert("Unable to fetch purchase order details. Please try again.");
+                    console.error("Fetch error:", error);
+                });
+        });
+    });
+
+    function goback() {
+		window.location.href = '/supplier/supplierinvoicesubmissiongrid';
+		}
+	
+  </script>
+</body>
+</html>

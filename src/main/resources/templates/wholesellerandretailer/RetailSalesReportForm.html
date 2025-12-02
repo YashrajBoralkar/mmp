@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Add / Edit Report</title>
+</head>
+<body>
+<h1 th:text="${report.id == null} ? 'Add New Retail Sales Report' : 'Edit Retail Sales Report'"></h1>
+
+<form th:action="@{/saveOrUpdate}" th:object="${report}" method="post">
+    <input type="hidden" th:field="*{id}" />
+
+    <label>Report Generation Date:</label>
+    <input type="date" th:field="*{rdate}" id="rdate" required readonly/><br/>
+
+    <label>Invoice Start Date:</label>
+    <input type="date" id="startdate" th:field="*{startdate}" required/><br/>
+
+    <label>Invoice End Date:</label>
+    <input type="date" id="enddate" th:field="*{enddate}" required onchange="validateDatesAndFetch()"/><br/>
+
+    <label>Select Invoice:</label>
+    <select id="invoiceDropdown" th:field="*{retailinvoiceuid}" onchange="loadDetails(this.value)">
+        <option value="">--Select--</option>
+        <option th:each="inv : ${invoices}" th:value="${inv.retailinvoiceuid}" th:text="${inv.retailinvoiceuid}"
+                th:selected="${inv.retailinvoiceuid == report.retailinvoiceuid}">
+        </option>
+    </select><br/>
+
+    <div id="invoiceDetails" style="margin-top: 10px;"></div>
+
+    <label>Remarks:</label>
+    <textarea th:field="*{remark}"></textarea><br/>
+
+    <button type="submit" th:text="${report.id == null} ? 'Add Report' : 'Update Report'"></button>
+    <a href="/retailsalesreport" style="margin-left: 10px;">Back to Reports</a>
+</form>
+
+<script>
+    // Auto-fill today's date in rdate field and lock it
+    window.onload = function () {
+        const today = new Date().toISOString().split('T')[0];
+        const rdateField = document.getElementById("rdate");
+        rdateField.value = today;
+        rdateField.setAttribute("min", today);
+        rdateField.setAttribute("max", today);
+    };
+
+    function validateDatesAndFetch() {
+        const start = document.getElementById("startdate").value;
+        const end = document.getElementById("enddate").value;
+
+        if (!start || !end) return;
+
+        if (new Date(end) < new Date(start)) {
+            alert("Invoice End Date cannot be before Start Date.");
+            document.getElementById("enddate").value = "";
+            return;
+        }
+
+        fetchInvoices(start, end);
+    }
+
+    function fetchInvoices(start, end) {
+        fetch(`/fetch-invoices?startdate=${start}&enddate=${end}`)
+            .then(res => res.json())
+            .then(data => {
+                const dropdown = document.getElementById("invoiceDropdown");
+                dropdown.innerHTML = '<option value="">--Select--</option>';
+                data.forEach(inv => {
+                    dropdown.innerHTML += `<option value="${inv.retailinvoiceuid}">${inv.retailinvoiceuid}</option>`;
+                });
+            });
+    }
+
+    function loadDetails(uid) {
+        if (!uid) return;
+        fetch(`/invoice-details?uid=${uid}`)
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById("invoiceDetails").innerHTML =
+                    `<p><strong>Retailer:</strong> ${data.retailername}</p>
+                     <p><strong>Invoice Date:</strong> ${data.invoicedate}</p>
+                     <p><strong>Product:</strong> ${data.productname}</p>
+                     <p><strong>Quantity Sold:</strong> ${data.quantitysold}</p>
+                     <p><strong>Discount:</strong> ${data.discountapplied}</p>
+                     <p><strong>Total Amount:</strong> ${data.totalammount}</p>`;
+            });
+    }
+</script>
+
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    var selectedUid = /*[[${report.retailinvoiceuid}]]*/ '';
+    if (selectedUid) {
+        loadDetails(selectedUid);
+    }
+    /*]]>*/
+</script>
+
+</body>
+</html>

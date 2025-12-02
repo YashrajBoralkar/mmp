@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employee Management</title>
+    
+    <link rel="stylesheet" href="/css/hrms.css"> <!-- // for side bar code  -->
+    <link rel="stylesheet" href="/css/grid.css">
+    <link rel="stylesheet" href="/css/emplist.css">
+
+    <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<style>
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background-color: #f0f0f0;
+      padding: 10px 20px;
+    }
+
+    .search-box {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .search-box button,
+    .back-button {
+      padding: 6px 12px;
+      font-size: 14px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .search-box button:hover,
+    .back-button:hover {
+      background-color: #0056b3;
+    }
+  </style>
+
+<body>
+<div th:replace="~{HRMS.html :: sidebarFragment}"></div> <!-- // for side bar code  -->
+
+<div class="button-container">
+    
+</div>
+
+<div class="button-grid">
+    <button onclick="loadEmployeeTable()">Employee Registration</button>
+    <button onclick="loadEmployeeInfoTable()">Employee Information</button>
+    <button onclick="loadEmployeePayrollTable()">Employee Bank Details</button>
+</div>
+
+<div id="employee-table-container">
+    <!-- Add the button above the table -->
+<!--    <button class="styled-button" onclick="window.location.href='/empregister';">-->
+<!--        Open Employee Registration Form-->
+<!--    </button>-->
+</div> <!-- Table will be dynamically loaded here -->
+
+<script src="grid.js"></script>
+<script> 
+function goBack() {
+	window.location.href = '/dashboard';
+	}
+</script>
+<script>
+    function loadEmployeeTable() {
+        // Create the button and table container structure immediately
+        const container = document.getElementById("employee-table-container");
+        container.innerHTML = `
+            <div class="table-header">
+				<div class="button-container" style="margin-left: 1045px;">
+				                <button class="styled-button" onclick="window.location.href='/hrms/EmpGrid'" style="flex-grow: 1;">
+				                    <i class="fas fa-arrow-left"></i> Back
+				                </button>
+				                <button id="open-register-btn" class="styled-button" style="flex-grow: 1; margin-left: 20px;">
+				                    Register Employee
+				                </button>
+				            </div>
+				</div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Employee ID</th>
+                        <th>First Name</th>
+                        <th>Last Name</th>
+                        <th>Department Name</th>
+                        <th>Contact Number</th>
+                        <th>Email</th>
+                        <th>Current City</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="employee-table-body">
+                    <tr><td colspan="9">Loading data...</td></tr>
+                </tbody>
+            </table>
+        `;
+
+        // Add event listener to the "Register Employee" button
+        document.getElementById("open-register-btn").addEventListener("click", () => {
+            // Redirect to the employee registration form
+            window.location.href = '/empregister';
+        });
+
+        // Fetch and populate table data
+        fetch('/hrms/grid/employee/list')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                const headers = data.headers; // Extract headers dynamically
+                const rows = data.data;      // Extract employee data
+                const tbody = document.getElementById("employee-table-body");
+
+                // Check if there are rows to display
+                if (rows.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="9">No data available.</td></tr>`;
+                    return;
+                }
+
+                // Generate rows from data
+                tbody.innerHTML = rows.map(row => `
+                    <tr>
+                        <td>${row['ID']}</td>
+                        <td>${row['Employee ID']}</td>
+                        <td>${row['First Name']}</td>
+                        <td>${row['Last Name']}</td>
+                        <td>${row['Department Name']}</td>
+                        <td>${row['Contact Number']}</td>
+                        <td>${row['Email']}</td>
+                        <td>${row['Current City']}</td>
+                        <td>
+                            <div class="action-buttons">
+                                <a href="#" class="btn btn-delete" data-id="${row['ID']}" onclick="confirmDelete(this)">Delete</a>
+                                <a href="/updateemployee/${row['ID']}" class="btn btn-update">Update</a>
+                            </div>
+                        </td>
+                    </tr>
+                `).join('');
+            })
+            .catch(error => {
+                console.error('Error fetching employee data:', error);
+                document.getElementById("employee-table-body").innerHTML = `<tr><td colspan="9">Error loading data.</td></tr>`;
+            });
+    }
+
+    // Example function to handle delete action
+    	function confirmDelete(element) {
+	    const id = element.getAttribute('data-id'); // Retrieve the employee ID
+	    if (confirm(`Are you sure you want to delete employee with ID: ${id}?`)) {
+	        // Perform the fetch request with the employee ID as a query parameter
+	        fetch(`/delete_employee?id=${id}`, { method: 'GET' })
+	            .then(response => {
+	                if (response.redirected) {
+	                    // Redirect to the new location if the server redirects
+	                    window.location.href = response.url;
+	                } else {
+	                    console.log('Employee deleted:', id);
+	                }
+	            })
+	            .catch(error => {
+	                console.error('Error deleting employee:', error);
+	            });
+	    }
+	}
+	
+	
+    //Empolyee Information	
+	function loadEmployeeInfoTable() {
+	        // Create the button and table container structure immediately
+	        const container = document.getElementById("employee-table-container");
+	        container.innerHTML = `
+	            <div class="table-header">
+					<div class="button-container" style="margin-left: 1045px;">
+									                <button class="styled-button" onclick="window.location.href='/hrms/EmpGrid'" style="flex-grow: 1;">
+									                    <i class="fas fa-arrow-left"></i> Back
+									                </button>
+									                <button id="open-register-btn" class="styled-button" style="flex-grow: 1; margin-left: 20px;">
+									                  Employeement Info
+									                </button>
+									            </div>
+				 </div>
+	            <table>
+	                <thead>
+	                    <tr>
+							<th>ID</th>
+	                        <th>Employee ID</th>
+	                        <th> Department</th>
+	                        <th> Designation</th>
+	                        <th> Manager</th>
+	                        <th>Office Address</th>
+	                        <th>Date of Joining</th>
+	                        <th>Shift Info Details</th>
+	                        <th>Work Hours</th>
+	                        <th>Actions</th>
+	                    </tr>
+	                </thead>
+	                <tbody id="employee-table-body">
+	                    <tr><td colspan="9">Loading data...</td></tr>
+	                </tbody>
+	            </table>
+	        `;
+
+	        // Add event listener to the "Register Employee" button
+	        document.getElementById("open-register-btn").addEventListener("click", () => {
+	            // Redirect to the employee registration form
+	            window.location.href = '/employementForm';
+	        });
+
+	        // Fetch and populate table data
+	        fetch('/viewAllDetails')
+	            .then(response => {
+	                if (!response.ok) {
+	                    throw new Error('Network response was not ok');
+	                }
+	                return response.json();
+	            })
+	            .then(data => {
+	                const headers = data.headers; // Extract headers dynamically
+	                const rows = data.data;      // Extract employee data
+	                const tbody = document.getElementById("employee-table-body");
+
+	                // Check if there are rows to display
+	                if (rows.length === 0) {
+	                    tbody.innerHTML = `<tr><td colspan="9">No data available.</td></tr>`;
+	                    return;
+	                }
+
+	                // Generate rows from data
+	                tbody.innerHTML = rows.map(row => `
+	                    <tr>
+							<td>${row['ID']}</td>
+	                        <td>${row['Employee ID']}</td>
+	                        <td>${row['Department']}</td>
+	                        <td>${row['Designation']}</td>
+	                        <td>${row['Manager']}</td>
+	                        <td>${row['Office Address']}</td>
+	                        <td>${row['Date of Joining']}</td>
+	                        <td>${row['Shift Info Details']}</td>
+	                        <td>${row['Work Hours']}</td>
+	                        <td>
+	                            <div class="action-buttons">
+	                                <a href="#" class="btn btn-delete" data-id="${row['ID']}" onclick="DeletefromEmpINFO(this)">Delete</a>
+	                                <a href="/update/${row['ID']}" class="btn btn-update">Update</a>
+	                            </div>
+	                        </td>
+	                    </tr>
+	                `).join('');
+	            })
+	            .catch(error => {
+	                console.error('Error fetching employee data:', error);
+	                document.getElementById("employee-table-body").innerHTML = `<tr><td colspan="9">Error loading data.</td></tr>`;
+	            });
+	    }
+
+			function DeletefromEmpINFO(element) {
+		    const id = element.getAttribute('data-id'); // Retrieve the employee ID
+		    if (confirm(`Are you sure you want to delete employee info with ID: ${id}?`)) {
+		        // Perform the fetch request with the employee ID as a query parameter
+		        fetch(`/delete_empinfo?id=${id}`, { method: 'GET' })
+		            .then(response => {
+		                if (response.redirected) {
+		                    // Redirect to the new location if the server redirects
+		                    window.location.href = response.url;
+		                } else {
+		                    console.log('Employee Info deleted:', employeeId);
+		                }
+		            })
+		            .catch(error => {
+		                console.error('Error deleting employee info:', error);
+		            });
+		    }
+		}
+	
+	
+	
+		function loadEmployeePayrollTable() {
+			        // Create the button and table container structure immediately
+			        const container = document.getElementById("employee-table-container");
+			        container.innerHTML = `
+			            <div class="table-header">
+							<div class="button-container" style="margin-left: 1045px;">
+											                <button class="styled-button" onclick="window.location.href='/hrms/EmpGrid'" style="flex-grow: 1;">
+											                    <i class="fas fa-arrow-left"></i> Back
+											                </button>
+											                <button id="open-register-btn" class="styled-button" style="flex-grow: 1; margin-left: 20px;">
+											                  Bank Info Save
+											                </button>
+											            </div>
+						 </div>
+			            <table>
+			                <thead>
+			                    <tr>
+									<th>ID</th>
+			                        <th>Employee ID</th>
+			                        <th>First Name</th>
+			                        <th>Last Name</th>
+			                        <th>Department</th>
+			                        <th>Bank Name</th>
+			                        <th>Branch Name</th>
+			                        <th>Tax Residency</th>
+			                        <th>Actions</th>
+			                    </tr>
+			                </thead>
+			                <tbody id="employee-table-body">
+			                    <tr><td colspan="9">Loading data...</td></tr>
+			                </tbody>
+			            </table>
+			        `;
+
+			        // Add event listener to the "Register Employee" button
+			        document.getElementById("open-register-btn").addEventListener("click", () => {
+			            // Redirect to the employee registration form
+			            window.location.href = '/addpayroll';
+			        });
+
+			        // Fetch and populate table data
+			        fetch('/payrollList')
+			            .then(response => {
+			                if (!response.ok) {
+			                    throw new Error('Network response was not ok');
+			                }
+			                return response.json();
+			            })
+			            .then(data => {
+			                const headers = data.headers; // Extract headers dynamically
+			                const rows = data.data;      // Extract employee data
+			                const tbody = document.getElementById("employee-table-body");
+
+			                // Check if there are rows to display
+			                if (rows.length === 0) {
+			                    tbody.innerHTML = `<tr><td colspan="9">No data available.</td></tr>`;
+			                    return;
+			                }
+
+			                // Generate rows from data
+			                tbody.innerHTML = rows.map(row => `
+			                    <tr>
+									<td>${row['ID']}</td>
+			                        <td>${row['Employee ID']}</td>
+			                        <td>${row['First Name']}</td>
+			                        <td>${row['Last Name']}</td>
+			                        <td>${row['Department']}</td>
+			                        <td>${row['Bank Name']}</td>
+			                        <td>${row['Branch Name']}</td>
+			                        <td>${row['Tax Residency']}</td>
+			                        <td>
+			                            <div class="action-buttons">
+			                                <a href="#" class="btn btn-delete" data-id="${row['ID']}" onclick="DeletefromEmpPayroll(this)">Delete</a>
+			                                <a href="/update/Payroll/${row['ID']}" class="btn btn-update">Update</a>
+			                            </div>
+			                        </td>
+			                    </tr>
+			                `).join('');
+			            })
+			            .catch(error => {
+			                console.error('Error fetching employee data:', error);
+			                document.getElementById("employee-table-body").innerHTML = `<tr><td colspan="9">Error loading data.</td></tr>`;
+			            });
+			    }
+
+					function DeletefromEmpPayroll(element) {
+				    const id = element.getAttribute('data-id'); // Retrieve the employee ID
+				    if (confirm(`Are you sure you want to delete employee with ID: ${id}?`)) {
+				        // Perform the fetch request with the employee ID as a query parameter
+				        fetch(`/deletePayroll?id=${id}`, { method: 'GET' })
+				            .then(response => {
+				                if (response.redirected) {
+				                    // Redirect to the new location if the server redirects
+				                    window.location.href = response.url;
+				                } else {
+				                    console.log('Employee deleted:',id);
+				                }
+				            })
+				            .catch(error => {
+				                console.error('Error deleting employee:', error);
+				            });
+				    }
+				}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+    // Call the function to load the employee table when the page loads
+  //  document.addEventListener("DOMContentLoaded", loadEmployeeTable);
+</script>
+
+
+
+
+</body>
+</html>

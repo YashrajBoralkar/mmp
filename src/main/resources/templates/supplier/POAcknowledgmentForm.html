@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>PO Acknowledgment Form</title>
+	<link rel="stylesheet" href="/css/empinfo.css">
+	<link rel="stylesheet" href="/css/hrms.css">
+	<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+</head>
+
+  <style>
+	    /* Label styling */
+	    #materialQuantityLabel label {
+	        display: block;
+	        font-size: 18px;
+	        font-weight: 100;
+	        margin-bottom: 10px;
+	        color: #333;
+	    }
+
+	    /* Table wrapper styling */
+	    #materialQuantityTable {
+	        margin-top: 10px;
+	        border: 1px solid #ddd;
+	        padding: 10px;
+	        background-color: #f9f9f9;
+	        border-radius: 5px;
+	    }
+
+	    /* Table styling */
+	    #materialQuantityTable table {
+	        width: 100%;
+	        border-collapse: collapse;
+	    }
+
+	    #materialQuantityTable th,
+	    #materialQuantityTable td {
+	        padding: 10px;
+	        border: 1px solid #ccc;
+	        text-align: left;
+	    }
+
+	    #materialQuantityTable th {
+	        background-color: #f0f0f0;
+	        font-weight: 100;
+	    }
+
+	    /* Input field style */
+	    #materialQuantityTable input[type="text"] {
+	        width: 100%;
+	        border: none;
+	        background-color: transparent;
+	        font-size: 14px;
+	        color: #333;
+	    }
+	  </style>
+
+
+<body>
+	<div th:replace="~{SUPPLIER.html :: sidebarFragment}"></div> <!-- // for side bar code  -->
+
+	<form id="POAcknowledgmentForm" class="form-container">
+		<!-- Personal Information Section -->
+		<input type="hidden" id="id" name="id" th:value="${poAcknowledgment?.id}">
+		    <input type="hidden" id="rawmaterialdetails" name="rawmaterialdetails"> <!-- Store JSON -->
+		
+		
+		<h2>PO Acknowledgment Form</h2>
+
+		<br>
+		<br>
+		<!-- First Row -->
+
+	<div class="form-row">
+		<div class="form-group">
+      <label for="poDropdown">Purchase Order :</label>
+    <!-- Create Mode -->
+    <select id="poDropdown" name="rawmaterialpurchaseorderuid"
+            onchange="fetchPoDetails(this.value)"
+            th:if="${poAcknowledgment == null or poAcknowledgment.id == null}">
+        <option value="">-- Select PO --</option>
+        <option th:each="po : ${rpuid}"
+                th:value="${po}"
+                th:text="${po}">
+        </option>
+    </select>
+
+    <!-- Edit Mode -->
+    <input type="text" id="poDropdown" name="rawmaterialpurchaseorderuid" th:if="${poAcknowledgment != null and poAcknowledgment.id != null}" th:value="${poAcknowledgment.rawmaterialpurchaseorderuid}" readonly />
+</div>
+
+			<div class="form-group">
+				<label>Supplier Name :</label>
+				<input type="text" id="suppliername" name="suppliername" th:value="${poAcknowledgment?.suppliername}"readonly />
+			</div>
+
+			<input type="text" id="rawmaterialuid" name="rawmaterialuid" th:value="${poAcknowledgment?.rawmaterialuid}" hidden>
+			<input type="text" id="rawmaterialsupplieruid" name="rawmaterialsupplieruid" th:value="${poAcknowledgment?.rawmaterialsupplieruid}" hidden>
+
+<!-- Materials Table -->
+
+</div>
+	<div class="form-row">
+	  <div class="form-group" id="materialQuantityLabel">
+	    
+	    <!-- 🔹 This label is hidden initially -->
+	    <div id="materialLabelWrapper" style="display: none;">
+	      <label>Raw Material Details</label>
+	    </div>
+
+	    <!-- 🔹 This table is hidden initially -->
+	    <div id="materialQuantityTable" style="display: none;">
+	      <table>
+	        <thead>
+	          <tr>
+	            <th>Raw Material ID</th>
+	            <th>Raw Material Name</th>
+	            <th>Ordered Quantity</th>
+	          </tr>
+	        </thead>
+	        <tbody id="materialsTableBody">
+	          <!-- Filled dynamically via JS -->
+	        </tbody>
+	      </table>
+	    </div>
+	  </div>
+	</div>
+		</div>
+
+		<!-- Second Row -->
+		<div class="form-row">
+			<div class="form-group">
+				<label>Purchase Order Date :</label>
+				<br>
+				<input type="date" id="podate" name="podate" readonly />
+			</div>
+			
+			<div class="form-group">
+				<label for="deliverydateconfirmation">Delivery Date Confirmation:</label>
+				<br>
+				<input type="date" id="deliverydateconfirmation" name="deliverydateconfirmation"th:value="${poAcknowledgment?.deliverydateconfirmation}" required />
+			</div>
+		<div class="form-group">
+				<label for="supplierrepresentativename">Supplier Representative Name :</label>
+				<input type="text" id="supplierrepresentativename" name="supplierrepresentativename" th:value="${poAcknowledgment?.supplierrepresentativename}" readonly required />
+			</div>
+			
+		</div>
+		<br>
+		<!-- Third Row -->
+		<div class="form-row">
+			<div class="form-group">
+				<label for="supplierrepresentativecontact">Representative Contact Number :</label>
+				<input type="text" id="supplierrepresentativecontact" name="supplierrepresentativecontact" maxlength="10" required th:value="${poAcknowledgment?.supplierrepresentativecontact}" readonly />
+			</div>	
+					<div class="form-group">
+				<label for="acceptancestatus">Acceptance Status :</label>
+				<br>
+				<select id="acceptancestatus" name="acceptancestatus" onchange="toggleReasonForRejection()" required>
+					<option value="">Select Acceptance Status </option>
+					<option th:selected="${poAcknowledgment?.acceptancestatus == 'Accepted'}" value="Accepted">Accepted</option>
+					<option th:selected="${poAcknowledgment?.acceptancestatus == 'Rejected'}" value="Rejected">Rejected</option>
+				</select>
+			</div>
+			
+			<div class="form-group">
+  			  <label for="reasonofrejection">Reason for Rejection :</label>
+              <br>
+          <input type="text" id="reasonofrejection" name="reasonofrejection" th:value="${poAcknowledgment?.reasonofrejection}" required>
+        </div>
+
+			
+		</div>
+
+		<div class="form-actions">
+			<button type="button" id="submitBtn" onclick="validateAndSubmitForm()">Submit</button>
+			<div id="message" th:if="${successMessage}" class="success-message" th:text="${successMessage}"></div>
+			<button type="button" class="back-button" onclick="goback();">Back</button>
+
+		</div>
+	</form>
+	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+	
+<script> 
+function goBack() {
+	window.location.href = '/dashboard';
+	}
+</script>
+	<script>
+
+		function validateAndSubmitForm() {
+			if (!validateForm()) {
+				return; // Stop if validation fails
+			}
+			submitForm(); // Proceed to submit the form
+		}
+
+		function validateForm() {
+			let isValid = true;
+			const podate = $('#podate').val();
+			// Validate PO UID
+			const rawmaterialpurchaseorderuid = $('#poDropdown').val();
+			if (!rawmaterialpurchaseorderuid) {
+				alert("Rawmaterial Purchase Order ID is required.");
+				isValid = false;
+				return isValid; // Stop further validation
+			}
+
+			// Validate Delivery Date Confirmation
+			const deliverydateconfirmation = $('#deliverydateconfirmation').val();
+			if (!deliverydateconfirmation) {
+				alert("Delivery Date Confirmation is required.");
+				isValid = false;
+				return isValid; // Stop further validation
+			}
+			
+			const poDateObj = new Date(podate);
+				const deliveryDateObj = new Date(deliverydateconfirmation);
+
+				if (deliveryDateObj < poDateObj) {
+					alert("Delivery Date Confirmation cannot be before the PO Date.");
+					isValid = false;
+					return isValid;
+				}
+
+			// Validate Acceptance Status
+			const acceptancestatus = $('#acceptancestatus').val();
+			if (!acceptancestatus) {
+				alert("Acceptance Status is required.");
+				isValid = false;
+				return isValid; // Stop further validation
+			}
+
+			
+			
+
+			// Validate Supplier Representative Name
+			const supplierrepresentativename = $('#supplierrepresentativename').val();
+			if (!supplierrepresentativename) {
+				alert("Supplier Representative Name is required.");
+				isValid = false;
+				return isValid; // Stop further validation
+			}
+
+			// Validate Supplier Representative Contact
+			const supplierrepresentativecontact = $('#supplierrepresentativecontact').val();
+			if (!supplierrepresentativecontact) {
+				alert("Supplier Representative Contact is required.");
+				isValid = false;
+				return isValid; // Stop further validation
+			}
+
+			return isValid;
+		}		
+
+		function fetchPoDetails(poUid) {
+		    const wrapper = document.getElementById("materialQuantityTable");
+		    const label = document.getElementById("materialLabelWrapper");
+		    const tbody = document.getElementById("materialsTableBody");
+
+		    if (!poUid) {
+		        wrapper.style.display = "none";
+		        label.style.display = "none";
+		        tbody.innerHTML = "";
+		        $('#rawmaterialdetails').val('');
+		        return;
+		    }
+
+		    fetch('/getPoDetailsinpoack/' + poUid)
+		        .then(response => response.json())
+		        .then(data => {
+
+		            tbody.innerHTML = "";
+		            let rawMaterialDetails = {};
+
+		            if (data && data.length > 0) {
+
+		                // ✅ Fill supplier details from the first row
+		                $('#suppliername').val(data[0].suppliername || '');
+		                $('#rawmaterialsupplieruid').val(data[0].rawmaterialsupplieruid || '');
+		                $('#supplierrepresentativename').val(data[0].contactperson || '');
+		                $('#supplierrepresentativecontact').val(data[0].mobilenumber || '');
+		                $('#podate').val(data[0].orderdate || '');
+
+		                // ✅ Fill material table
+		                data.forEach(material => {
+
+		                    const row = `
+		                        <tr>
+		                            <td>${material.rawmaterialuid}</td>
+		                            <td>${material.rawmaterialname}</td>
+		                            <td>
+		                                <input type="text" value="${material.orderedquantity}" readonly />
+		                            </td>
+		                        </tr>
+		                    `;
+
+		                    tbody.insertAdjacentHTML("beforeend", row);
+
+		                    // ✅ Build JSON for backend
+		                    rawMaterialDetails[material.rawmaterialname] = {
+		                        rawmaterialuid: material.rawmaterialuid,
+		                        quantity: material.orderedquantity,
+		                        price: material.price
+		                    };
+		                });
+
+		                // ✅ Store JSON
+		                $('#rawmaterialdetails').val(JSON.stringify(rawMaterialDetails));
+
+		                wrapper.style.display = "block";
+		                label.style.display = "block";
+
+		            } else {
+		                tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:#999;">No materials found</td></tr>`;
+		                wrapper.style.display = "block";
+		                label.style.display = "block";
+		                $('#rawmaterialdetails').val('');
+		            }
+		        })
+		        .catch(err => {
+		            console.error("Error fetching PO details:", err);
+		            alert("Failed to fetch PO details.");
+		            wrapper.style.display = "none";
+		            label.style.display = "none";
+		            $('#rawmaterialdetails').val('');
+		        });
+		}
+
+		
+
+		function submitForm() {
+			const formData = new FormData(document.getElementById('POAcknowledgmentForm'));
+			const id = $('#id').val();
+
+			for (let [key, value] of formData.entries()) {
+				console.log(`${key}: ${value}`);
+			}
+			
+			let url, successMessage;
+
+			if (!id) {
+				url = '/poacknowledgmentform/save';
+				successMessage = 'PO Acknowledgment details saved successfully!';
+			} else {
+				url = '/poacknowledgment/update';
+				successMessage = 'PO Acknowledgment details updated successfully!';
+			}
+
+			$.ajax({
+				url: url,
+				type: 'POST',
+				data: formData,
+				processData: false,
+				contentType: false,
+				success: function (response) {
+					alert(successMessage);
+					resetForm();
+					window.location.href = '/supplier/poacknowledgementgrid';
+				},
+				error: function () {
+					alert('Error saving PO Acknowledgment. Please fill out all required fields.');
+				}
+			});
+		}
+
+		function resetForm() {
+			$('#POAcknowledgmentForm')[0].reset();
+			$('#id').val('');
+			$('#message').text('');
+			$('#form-title').text('Add New PO Acknowledgment');
+			$('#submitBtn').text('Submit');
+		}
+
+
+		$(document).ready(function () {
+			// Auto-fill Item details when updating
+			var existingpouid = $('#poDropdown').val();
+			if (existingpouid) {
+				fetchPoDetails(existingpouid);
+			}
+		});
+// 		function fetchPoDetails(rawmaterialpurchaseorderuid) {
+// 			if (!rawmaterialpurchaseorderuid) return;
+
+// 			$.ajax({
+// 				url: '/poacknowledgement/getRpdetails',
+// 				method: 'GET',
+// 				data: {rawmaterialpurchaseorderuid: rawmaterialpurchaseorderuid},
+// 				success: function (response) {
+// 					console.log(response.rawmaterialuid);
+// 					if (response) {
+// 						$('#podate').val(response.podate || '');
+// 						$('#rawmaterialuid').val(response.rawmaterialuid || '');
+// 						$('#materialdetails').val(response.materialdetails || '');
+// 						$('#suppliername').val(response.suppliername || '');
+// 						$('#supplieruid').val(response.rawmaterialsupplieruid || '');
+// 						$('#podate').val(response.orderdate || '');
+// 						$('#supplierrepresentativename').val(response.contactperson || '');
+// 						$('#supplierrepresentativecontact').val(response.mobilenumber || '');
+// 					} else {
+// 						alert('No data found for the selected PO.');
+// 					}
+// 				},
+// 				error: function (xhr, status, error) {
+// 					console.error('Error fetching PO details:', error);
+// 					alert('Error fetching PO details. Please try again.');
+// 				}
+// 			});
+// 		}
+
+		// Initialize the form
+		$(document).ready(function () {
+			toggleReasonForRejection(); // Set initial visibility of reason for rejection section
+		});
+
+	</script>
+	<script>
+		$(document).ready(function () {
+			// Validate Supplier Representative Contact on input
+			$('#supplierrepresentativecontact').on('input', function () {
+				let contact = $(this).val().replace(/\D/g, ''); // Remove non-numeric characters
+				if (contact.length >= 10) {
+					alert('Phone number cannot exceed 10 digits.');
+					contact = contact.slice(0, 10); // Trim extra digits
+				}
+				$(this).val(contact);
+			});
+
+			function validateForm() {
+				let isValid = true;
+
+				// Validate Supplier Representative Contact
+				const supplierContact = $('#supplierrepresentativecontact').val().trim();
+				const phoneRegex = /^[0-9]{10}$/; // Regular expression for 10-digit number
+
+				if (!supplierContact) {
+					alert('Supplier Representative Contact is required.');
+					$('#supplierrepresentativecontact').focus();
+					isValid = false;
+					return isValid;
+				} else if (!phoneRegex.test(supplierContact)) {
+					alert('Supplier Representative Contact must be a valid 10-digit phone number.');
+					$('#supplierrepresentativecontact').focus();
+					isValid = false;
+					return isValid;
+				}
+
+				return isValid; // Proceed if all validations pass
+			}
+
+			function validateAndSubmitForm() {
+				if (!validateForm()) {
+					return; // Stop if validation fails
+				}
+				submitForm(); // Proceed to submit the form
+			}
+
+
+
+		});
+
+		function goback() {
+			window.location.href = '/supplier/poacknowledgementgrid';
+		}
+
+	</script>
+
+</body>
+
+</html>

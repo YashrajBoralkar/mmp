@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Appraisal Form</title>
+  <link rel="stylesheet" href="/css/empinfo.css">
+  <link rel="stylesheet" href="/css/hrms.css"> <!-- Sidebar CSS -->
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+<div th:replace="~{HRMS.html :: sidebarFragment}"></div> 
+<!-- Sidebar -->
+
+<div class="form-container">
+  <form id="appraisalForm" enctype="multipart/form-data">
+    <input type="hidden" id="id" name="id" th:value="${appraisal?.id}">
+    <h2>Appraisal Form</h2>
+    <br>
+    <!-- First Row -->
+    <div class="form-row">
+      <div class="form-group">
+        <label for="employeeuid">Employee ID:</label>
+        <select id="employeeuid" name="employeeuid" onchange="fetchEmployeDetails(this.value)" 
+                th:if="${appraisal == null or appraisal.id == null}">
+          <option value="">Select Employee ID</option>
+          <option th:each="uid : ${employeeuid}"
+                  th:value="${uid}"
+                  th:text="${uid}"
+                  th:selected="${uid == appraisal?.employeeUID}">
+          </option>
+        </select>
+        <input type="text" id="employeeuid" name="employeeuid"
+               th:value="${appraisal?.employeeUID}"
+               onchange="fetchEmployeDetails(this.value)"
+               th:if="${appraisal?.id != null}" readonly>
+      </div>
+      </div>
+	
+	<div class="form-row">
+      <div class="form-group">
+        <label>First Name:</label>
+        <input type="text" id="first_name" name="first_name" readonly>
+      </div>
+
+      <div class="form-group">
+        <label>Last Name:</label>
+        <input type="text" id="last_name" name="last_name" readonly>
+      </div>
+
+      <div class="form-group">
+        <label>Department Name:</label>
+        <input type="text" id="departmentname" name="departmentname" readonly>
+      </div>
+    </div>
+
+
+    <!-- Second Row -->
+    <div class="form-row">
+      <div class="form-group">
+        <label for="appraisalPeriod">Appraisal Period</label>
+        <select id="appraisalPeriod" name="appraisalPeriod" th:value="${appraisal?.appraisalPeriod}">
+          <option value="">Select</option>
+          <option value="H1" th:selected="${appraisal?.appraisalPeriod == 'H1'}">H1 (Jan-Jun)</option>
+          <option value="H2" th:selected="${appraisal?.appraisalPeriod == 'H2'}">H2 (Jul-Dec)</option>
+          <option value="Annual" th:selected="${appraisal?.appraisalPeriod == 'Annual'}">Annual</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="startDate">Start Date</label>
+        <input type="date" id="startDate" name="startDate" th:value="${appraisal?.startDate}">
+      </div>
+
+      <div class="form-group">
+        <label for="endDate">End Date</label>
+        <input type="date" id="endDate" name="endDate" th:value="${appraisal?.endDate}">
+      </div>
+    </div>
+
+    <!-- Third Row -->
+    <div class="form-row">
+      <div class="form-group">
+        <label for="keyAchievements">Key Achievements</label>
+        <input type="text" id="keyAchievements" name="keyAchievements" th:value="${appraisal?.keyAchievements}">
+      </div>
+
+      <div class="form-group">
+        <label for="areasForImprovement">Areas for Improvement</label>
+        <input type="text" id="areasForImprovement" name="areasForImprovement" th:value="${appraisal?.areasForImprovement}">
+      </div>
+
+      <div class="form-group">
+        <label for="goalAchieved">Goals Achieved</label>
+        <input type="text" id="goalAchieved" name="goalAchieved" th:value="${appraisal?.goalAchieved}">
+      </div>
+    </div>
+    <!-- Fourth Row -->
+    <div class="form-row">
+      <div class="form-group">
+        <label for="rating">Rating (Skill Assessment)</label>
+        <select id="rating" name="rating" th:value="${appraisal?.rating}">
+          <option value="">Select Rating</option>
+          <option value="1" th:selected="${appraisal?.rating == '1'}">1 - Poor</option>
+          <option value="2" th:selected="${appraisal?.rating == '2'}">2 - Needs Improvement</option>
+          <option value="3" th:selected="${appraisal?.rating == '3'}">3 - Satisfactory</option>
+          <option value="4" th:selected="${appraisal?.rating == '4'}">4 - Good</option>
+          <option value="5" th:selected="${appraisal?.rating == '5'}">5 - Excellent</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="reviewerComments">Reviewer Comments</label>
+        <input type="text" id="reviewerComments" name="reviewerComments" th:value="${appraisal?.reviewerComments}">
+      </div>
+
+      <div class="form-group">
+        <label for="managerComments">Manager Comments</label>
+        <input type="text" id="managerComments" name="managerComments" th:value="${appraisal?.managerComments}">
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <button type="button" onclick="submitAppraisalForm()">Submit</button>
+      <button type="button" class="back-button" onclick="goBack();">Back</button> 
+      <div th:if="${successMessage}" class="success-message" th:text="${successMessage}"></div>   
+    </div>
+  </form>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script> 
+function goBack() {
+	window.location.href = '/dashboard';
+	}
+</script>
+<script>
+$(document).ready(function() {
+    var existingemployeeuid = $('#employeeuid').val();
+    if (existingemployeeuid) {
+        fetchEmployeDetails(existingemployeeuid);
+    }
+});
+
+function fetchEmployeDetails(employeeuid) {
+    if (!employeeuid) return;
+    $.ajax({
+        url: '/appraisal/details',
+        method: 'GET',
+        data: { employeeuid: employeeuid },
+        success: function(response) {
+            $('#first_name').val(response.firstName);
+            $('#last_name').val(response.lastName);
+            $('#departmentname').val(response.departmentName);
+        },
+        error: function() {
+            alert('Error fetching employee details. Please try again.');
+        }
+    });
+}
+
+function goBack() {
+    window.location.href = '/hrms/GoalGrid';
+}
+
+function validateAppraisalForm() {
+    let employeeuid = $('#employeeuid').val();
+    let appraisalPeriod = $('#appraisalPeriod').val();
+    let startDate = $('#startDate').val();
+    let endDate = $('#endDate').val();
+    let keyAchievements = $('#keyAchievements').val();
+    let areasForImprovement = $('#areasForImprovement').val();
+    let goalAchieved = $('#goalAchieved').val();
+    let reviewerComments = $('#reviewerComments').val();
+    let managerComments = $('#managerComments').val();
+    let rating = $('#rating').val();
+
+    const textOnlyRegex = /^[A-Za-z\s.,'-]*$/;
+    const textWithNumbersRegex = /^[A-Za-z0-9\s.,'%()-]*$/;
+
+    if (!employeeuid) { alert("⚠️ Please select an Employee UID."); return false; }
+    if (!appraisalPeriod) { alert("⚠️ Please select an Appraisal Period."); return false; }
+    if (!startDate) { alert("⚠️ Please enter the Start Date."); return false; }
+    if (!endDate) { alert("⚠️ Please enter the End Date."); return false; }
+    if (new Date(startDate) > new Date(endDate)) { alert("⚠️ End Date cannot be earlier than Start Date."); return false; }
+
+    // ✅ Updated Key Achievements validation
+    if (!keyAchievements.trim() || !textWithNumbersRegex.test(keyAchievements)) {
+        alert("⚠️ Key Achievements should contain only letters, numbers, %, and valid punctuation.");
+        return false;
+    }
+
+    if (!areasForImprovement.trim() || !textOnlyRegex.test(areasForImprovement)) {
+        alert("⚠️ Areas for Improvement should contain only letters and valid punctuation.");
+        return false;
+    }
+
+    if (!goalAchieved.trim() || !textWithNumbersRegex.test(goalAchieved)) {
+        alert("⚠️ Goals Achieved should contain only letters, numbers, %, and valid punctuation.");
+        return false;
+    }
+
+    if (!reviewerComments.trim() || !textOnlyRegex.test(reviewerComments)) {
+        alert("⚠️ Reviewer Comments should contain only letters and valid punctuation.");
+        return false;
+    }
+
+    if (!managerComments.trim() || !textOnlyRegex.test(managerComments)) {
+        alert("⚠️ Manager Comments should contain only letters and valid punctuation.");
+        return false;
+    }
+
+    if (!rating) { alert("⚠️ Please select a Rating."); return false; }
+
+    return true;
+}
+
+function submitAppraisalForm() {
+    if (!validateAppraisalForm()) return;
+
+    const formData = new FormData(document.getElementById('appraisalForm'));
+    const id = $('#id').val();
+    const url = id ? '/appraisal/update' : '/submitAppraisal';
+
+    $.ajax({
+        url: url,
+        type: 'POST',
+        data: formData,
+        processData: false,
+        contentType: false,
+        success: function() {
+            alert("✅ Appraisal saved successfully!");
+            window.location.href = '/hrms/GoalGrid';
+        },
+        error: function() {
+            alert('❌ Error saving appraisal. Please try again.');
+        }
+    });
+}
+</script>
+</body>
+</html>

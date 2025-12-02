@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Maintenance Work Order Form</title>
+	<link rel="stylesheet" href="/css/empinfo.css">
+  <link rel="stylesheet" href="/css/hrms.css"> <!-- // for side bar code  -->
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+
+</head>
+<body>
+	 <div th:replace="~{MAINTENANCEMANAGEMENTDEPERTMENT.html :: sidebarFragment}"></div> 
+  <div class="form-section active" id="section1" style="margin-left: 20px; margin-right: 20px;">
+  <div class="form-container">
+  <div class="container">
+    <h2>Maintenance Work Order Form</h2>
+    <form id="maintenanceworkorderform">
+      <input type="hidden" id="id" name="id" th:value="${order?.id}" />
+
+      <!-- Row 1: Work Type and Equipment UID -->
+      <div class="form-row">
+        <div class="form-group">
+          <label>Work Type <span class="text-danger">*</span></label>
+          <select class="form-control" id="worktype" name="worktype" th:value="${order?.worktype}" required>
+            <option value="">Select Type</option>
+            <option value="Preventive" th:selected="${order?.worktype == 'Preventive'}">Preventive</option>
+            <option value="Breakdown" th:selected="${order?.worktype == 'Breakdown'}">Breakdown</option>
+            <option value="Other" th:selected="${order?.worktype == 'Other'}">Other</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Equipment Master UID <span class="text-danger">*</span></label>
+          <select class="form-control" id="equipmentmasteruid" name="equipmentmasteruid"
+                  onchange="fetchEquipmentDetails(this.value)"
+                  th:if="${order == null or order.id == null}" required>
+            <option value="">Select Equipment Master UID</option>
+            <option th:each="id : ${equipmentmasteruid}" th:value="${id}" th:text="${id}"
+                    th:selected="${order?.equipmentmasteruid == id}">
+            </option>
+          </select>
+
+          <input type="text" class="form-control" id="equipmentmasteruid" name="equipmentmasteruid"
+                 th:value="${order?.equipmentmasteruid}" onchange="fetchEquipmentDetails(this.value)" readonly
+                 th:if="${order?.id != null}">
+        </div>
+      </div>
+
+      <!-- Row 2: Equipment Name and Request Date -->
+      <div class="form-row">
+        <div class="form-group">
+          <label for="equipmentname">Equipment Name</label>
+          <input type="text" class="form-control" id="equipmentname" name="equipmentname" readonly />
+        </div>
+
+        <div class="form-group">
+          <label>Request Date <span class="text-danger">*</span></label>
+          <input type="date" class="form-control" id="requestedate" name="requestedate"
+                 th:value="${order?.requestedate}" required />
+        </div>
+      </div>
+
+      <!-- Row 3: Task Description (full width) -->
+      <div class="form-row">
+        <div class="form-group">
+          <label>Task Description <span class="text-danger">*</span></label>
+          <textarea class="form-control" id="taskdescription" name="taskdescription"
+                    rows="3" required th:text="${order?.taskdescription}" style="width: 367px; height: 37px;"></textarea>
+          <div class="text-danger" id="task-description-error"></div>
+        </div>
+		 <div class="form-group ">
+          <label>Priority Level <span class="text-danger">*</span></label>
+          <select class="form-control" id="prioritylevel" name="prioritylevel" required>
+            <option value="">-- Select Priority --</option>
+            <option value="Low" th:selected="${order?.prioritylevel == 'Low'}">Low</option>
+            <option value="Medium" th:selected="${order?.prioritylevel == 'Medium'}">Medium</option>
+            <option value="High" th:selected="${order?.prioritylevel == 'High'}">High</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Row 4: Priority Level and Estimated Completion Date -->
+      <div class="form-row">
+        <div class="form-group ">
+          <label>Estimated Completion Date <span class="text-danger">*</span></label>
+          <input type="date" class="form-control" id="estimatedcompletiondate" name="estimatedcompletiondate"
+                 th:value="${order?.estimatedcompletiondate}" required />
+        </div>
+		<div class="form-group">
+          <label>Status <span class="text-danger">*</span></label>
+          <select class="form-control" id="status" name="status" required>
+            <option value="">-- Select Status --</option>
+            <option value="Open" th:selected="${order?.status == 'Open'}">Open</option>
+            <option value="In Progress" th:selected="${order?.status == 'In Progress'}">In Progress</option>
+            <option value="Closed" th:selected="${order?.status == 'Closed'}">Closed</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Status Message -->
+      <div id="status-message" class="text-success text-center mb-3"></div>
+
+      <!-- Buttons -->
+      <div class="form-actions text-center">
+        <button type="submit" id="submitBtn" class="btn btn-primary" onclick="submitForm()">Submit</button>
+	    <button type="button" id="backBtn" onclick="goBack()">Back</button>
+
+      </div>
+    </form>
+  </div>
+</div>
+
+	</div>
+
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+$(document).ready(function() {
+    // Auto-fill Item details when updating
+    var existingequipmentmasteruid = $('#equipmentmasteruid').val();
+    if (existingequipmentmasteruid) {
+    	fetchEquipmentDetails(existingequipmentmasteruid);
+    }
+});
+        // Fetch Equipment Name via AJAX
+        function fetchEquipmentDetails(equipmentmasteruid) {
+            if (!equipmentmasteruid) return;
+
+            $.ajax({
+                url: '/fetchEquipmentMasterDetailsInMaintenanceWorkOrder',
+                method: 'GET',
+                data: { equipmentmasteruid: equipmentmasteruid },
+                success: function (response) {
+                    $('#equipmentname').val(response.equipmentname || '');
+                },
+                error: function () {
+                    alert('Error fetching equipment master details.');
+                }
+            });
+        }
+
+        // Form submission via AJAX
+        function submitForm() {
+        	let form = document.getElementById('maintenanceworkorderform');
+		    
+		    if (!form.checkValidity()) {
+		        alert('Please fill in all required fields.');
+		        return;
+		    }
+
+		   
+		    const formData = new FormData(document.getElementById('maintenanceworkorderform'));
+				    const id = $('#id').val();
+
+				    let url, successMessage;
+
+				    if (!id) {
+				        url = '/savemaintenanceworkorder';
+				        successMessage = 'Maintenance work order Form data saved successfully!';
+				    } else {
+				        url = '/updatemaintenanceworkorder';
+				        successMessage = 'Maintenance work order Form data updated successfully!';
+				    }
+
+				    $.ajax({
+				        url: url,
+				        type: 'POST',
+				        data: formData,
+				        processData: false,
+				        contentType: false,
+				        success: function(response) {
+				            $('#message').text(successMessage); // Display success message
+				            resetForm();
+				            window.location.href = '/maintenancemanagementdepartment/maintenanceworkordergrid';
+				        },
+				        error: function() {
+				            alert('Error saving Maintenance Work order Form . Please fill out the data.');
+				        }
+				    });
+				}
+				// Reset the form
+						function resetForm() {
+							$('#maintenanceworkorderform')[0].reset();
+							$('#id').val('');
+						    $('#message').text(''); // Clear the message
+						    $('#submitBtn').text('Submit');
+						}
+
+</script>
+
+</body>
+</html>

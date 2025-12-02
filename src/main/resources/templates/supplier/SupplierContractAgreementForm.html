@@ -1,0 +1,350 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Supplier Contract Agreement</title>
+   <link rel="stylesheet" href="/css/empinfo.css">
+  <link rel="stylesheet" href="/css/hrms.css"> 
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+<div th:replace="~{SUPPLIER.html :: sidebarFragment}"></div> <!-- // for side bar code  -->
+
+
+   <form id="supplierContractForm" class="form-container"  >
+    
+    <input type="hidden" id="id" name="id" th:value="${supplierContract?.id}">
+
+      <h2>Supplier Contract Agreement Form</h2>
+
+      <!-- First Row -->
+    
+	  <div class="form-row">        
+	         <div class="form-group">  
+	         
+	           <label for="rawmaterialsupplieruid">RM Supplier ID :</label>
+	         <select id="rawmaterialsupplieruid" name="rawmaterialsupplieruid" onchange="fetchSupplierDetail(this.value)" th:if="${supplierContract == null or supplierContract.id == null}" required>
+	             <option value="">--Select Supplier ID--</option>
+	             <option th:each="uid : ${rawmaterialsupplieruid}"th:value="${uid}" th:text="${uid}"></option>
+	         </select> 
+	         <input type="text" id="rawmaterialsupplieruid" name="rawmaterialsupplieruid" th:value="${supplierContract?.rawmaterialsupplieruid}" onchange="fetchSupplierDetail(this.value)" th:if="${ supplierContract.id != null}" readonly required>
+	         </div>
+	         </div>
+
+
+		<div class="form-row"> 
+	         <div class="form-group">
+	      
+	           <label>Supplier Name:</label>
+	         <input type="text" id="suppliername" name="suppliername" readonly />  
+	         </div> 
+			 
+			 <div class="form-group">
+			            <label for="scopeofsupply">Scope of Supply:</label>
+			          <input type="text" id="scopeofsupply" name="scopeofsupply" readonly />  
+			          </div>  
+			              
+	      <div class="form-group">
+          <label for="contractstartdate">Contract Start Date:</label>
+        <input type="date" id="contractstartdate" name="contractstartdate" th:value="${supplierContract?.contractstartdate}" required>
+        </div>
+	       </div>
+	
+
+      <!-- Second Row -->
+      <div class="form-row">
+     	<div class="form-group">
+           <label for="contractenddate">Contract End Date:</label>
+           <br>
+           <input type="date" id="contractenddate" name="contractenddate" th:value="${supplierContract?.contractenddate}" required>
+  			 </div>
+   
+        <div class="form-group">
+          <label for="pricingagreement">Pricing Agreement:</label>
+          <br>
+          <input type="text" id="pricingagreement" name="pricingagreement" required  th:value="${supplierContract?.pricingagreement}">
+        </div>
+        
+        <div class="form-group">
+          <label for="qualitycompliancestandards">Quality Compliance Standards: </label>
+          <input type="text" id="qualitycompliancestandards" name="qualitycompliancestandards" required  th:value="${supplierContract?.qualitycompliancestandards}">
+        </div>
+       
+        <div>
+        <br>
+        <br></div>
+        
+      </div>
+
+      <!-- four Row -->
+       <div class="form-row">
+         <div class="form-group">
+          <label for="paymentterms">Payment Terms:</label>
+         <input type="text" id="paymentterms" name="paymentterms" required th:value="${supplierContract?.paymentterms}">
+        </div>
+        
+        <div class="form-group">
+          <label for="terminationclause">Termination Clause:</label>
+          <input type="text" id="terminationclause" name="terminationclause" required  th:value="${supplierContract?.terminationclause}">
+        </div>
+      
+        <div class="form-group">
+          <label for="renewalterms">Renewal Terms:</label>
+          <input type="text" id="renewalterms" name="renewalterms" required  th:value="${supplierContract?.renewalterms}">
+        </div>
+        
+       </div>
+
+     <div class="form-row">
+     
+     <div class="form-group">
+          <label for="supplierrepresentativename">Supplier Representative Name:</label>
+          <input type="text" id="supplierrepresentativename" name="supplierrepresentativename" th:value="${supplierContract?.supplierrepresentativename}" required>
+        </div>
+        
+      <div class="form-group">
+        <label for="companyrepresentativename">Company Representative Name:</label>
+        <input type="text" id="companyrepresentativename" name="companyrepresentativename" th:value="${supplierContract?.companyrepresentativename}" required>
+      </div>
+   
+      <div class="form-group">
+        <label for="dateofapproval">Date of Approval:</label>
+        <br>
+        <input type="date" id="dateofapproval" name="dateofapproval" th:value="${supplierContract?.dateofapproval}" required>
+
+      </div>
+      <br>
+     </div>
+
+  <div class="form-actions">
+      <button type="button" id="submitBtn" onclick="submitForm()">Submit</button>
+        <div th:if="${successMessage}" class="success-message" th:text="${successMessage}"></div>
+        
+          <button type="button" class="back-button" onclick="goback();">Back</button> 
+    </div>
+   </form>
+   
+   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+   <script>
+    function goBack() {
+    	window.location.href = '/dashboard';
+      }
+   
+   function goback() {
+		window.location.href = '/supplier/poacknowledgementgrid';
+	  }
+	
+	    document.addEventListener("DOMContentLoaded", function () {
+	        // Removed date min restriction for flexibility
+	        document.getElementById("contractstartdate").addEventListener("change", validateDates);
+	        document.getElementById("contractenddate").addEventListener("change", validateDates);
+	    });
+
+	    function validateDates() {
+	        let startDate = document.getElementById("contractstartdate").value;
+	        let endDate = document.getElementById("contractenddate").value;
+
+	        if (startDate && endDate && endDate <= startDate) {
+	            alert("Contract End Date must be greater than Contract Start Date.");
+	            document.getElementById("contractenddate").value = "";
+	        }
+	    }
+		function validateSupplierUID() {
+		    var supplierSelect = document.getElementById("rawmaterialsupplieruid");
+		    if (supplierSelect && supplierSelect.tagName === "SELECT") {
+		        if (!supplierSelect.value) {
+		            alert("Please select a Supplier UID before submitting.");
+		            return false; // Prevent form submission
+		        }
+		    }
+		    return true; // Allow form submission
+		}
+       
+
+		      function validateForm(event) {
+		          let startDate = document.getElementById("contractstartdate").value;
+		          let endDate = document.getElementById("contractenddate").value;
+
+		          if (!startDate || !endDate) {
+		              alert("Please select both Contract Start Date and Contract End Date.");
+		              event.preventDefault();
+		              return false;
+		          }
+
+		          if (endDate <= startDate) {
+		              alert("Contract End Date must be greater than Contract Start Date.");
+		              event.preventDefault();
+		              return false;
+		          }
+
+		          return true;
+		      }
+			  
+			  
+			  function validateForm() {
+			      const textFields = [
+			          "pricingagreement", 
+			          "qualitycompliancestandards", 
+			          "paymentterms", 
+			          "terminationclause", 
+			          "renewalterms", 
+			          "supplierrepresentativename", 
+			          "companyrepresentativename"
+			      ];
+
+			      let isValid = true;
+
+			      textFields.forEach(field => {
+			          let inputField = document.getElementById(field);
+			          // Check only if field is empty, no restriction on characters
+			          if (!inputField.value.trim()) {
+			              alert(`Please fill in the ${field.replace(/([A-Z])/g, ' $1')}.`);
+			              isValid = false;
+			          }
+			      });
+
+			      return isValid;
+			  }
+
+
+			  function submitForm() {
+			      // Check Supplier UID manually
+			      var supplierElement = document.getElementById("rawmaterialsupplieruid");
+			      if (supplierElement && supplierElement.tagName === "SELECT") {
+			          if (!supplierElement.value) {
+			              alert("Please select a Supplier UID before submitting.");
+			              return;
+			          }
+			      }
+
+			      // Check Contract Start Date
+			      var startDate = document.getElementById("contractstartdate").value;
+			      if (!startDate) {
+			          alert("Please select a Contract Start Date before submitting.");
+			          return;
+			      }
+
+			      // Check Contract End Date
+			      var endDate = document.getElementById("contractenddate").value;
+			      if (!endDate) {
+			          alert("Please select a Contract End Date before submitting.");
+			          return;
+			      }
+
+			      if (endDate <= startDate) {
+			          alert("Contract End Date must be greater than Contract Start Date.");
+			          return;
+			      }
+
+			      // Check Date of Approval
+			      var dateOfApproval = document.getElementById("dateofapproval").value;
+			      if (!dateOfApproval) {
+			          alert("Please select a Date of Approval before submitting.");
+			          return;
+			      }
+
+			      // Validate text fields (no regex restriction, just not empty)
+			      if (!validateForm()) {
+			          return;
+			      }
+
+			      const form = document.getElementById('supplierContractForm');
+			      const formData = new FormData(form);
+			      const id = $('#id').val();
+
+			      let url, successMessage;
+			      if (!id) {
+			          url = "/suppliercontractagreement/save";
+			          successMessage = "Supplier Contract saved successfully!";
+			      } else {
+			          url = "/suppliercontractagreement/update";
+			          successMessage = "Supplier Contract updated successfully!";
+			      }
+
+			      $.ajax({
+			          url: url,
+			          type: 'POST',
+			          data: formData,
+			          processData: false,
+			          contentType: false,
+			          success: function () {
+			              alert(successMessage);
+			              form.reset();
+			              window.location.href = '/supplier/suppliercontractagreementgrid';
+			          },
+			          error: function (xhr) {
+			              alert('Error saving supplier contract record. Please try again.');
+			              console.error(xhr.responseText);
+			          }
+			      });
+			  }
+
+
+		   function resetForm() {
+		            $('#supplierContractForm')[0].reset();
+		            $('#id').val('');
+		            $('#form-title').text('supplierContractForm');
+		            $('#submitBtn').text('Submit');
+		        }
+
+		        function prefillForm(data) {
+		            $('#id').val(data.id);
+		            $('#contractstartdate').val(data.contractstartdate);
+		            $('#contractenddate').val(data.contractenddate);
+		            $('#scopeofsupply').val(data.scopeofsupply);
+		            $('#pricingagreement').val(data.pricingagreement);
+		            $('#qualitycompliancestandards').val(data.qualitycompliancestandards);
+		            $('#paymentterms').val(data.paymentterms);
+		            $('#terminationclause').val(data.terminationclause);
+					$('#renewalterms').val(data.renewalterms);
+					$('#supplierrepresentativename').val(data.supplierrepresentativename);					
+					$('#companyrepresentativename').val(data.companyrepresentativename);
+					$('#correctiveaction').val(data.correctiveaction);
+					$('#dateofapproval').val(data.dateofapproval);
+
+			     
+		            $('#form-title').text('Update supplier contract');
+		            $('#submitBtn').text('Update');
+		        }
+				
+		      //Data fetching while form updating
+		        $(document).ready(function() {
+		          // Auto-fill Return details when updating
+		          var existingSupplierUid = $('#rawmaterialsupplieruid').val();
+		          if (existingSupplierUid) {
+		        	  fetchSupplierDetail(existingSupplierUid);
+		          }
+		      });
+			  function fetchSupplierDetail() {
+			      const rawmaterialsupplieruid = $('#rawmaterialsupplieruid').val();
+
+			      if (!rawmaterialsupplieruid) return;
+
+			      $.ajax({
+			        url: '/supplier/getsupplieruidinfo',
+			        method: 'GET',
+			        data: { rawmaterialsupplieruid: rawmaterialsupplieruid },
+			        success: function (response) {
+			          console.log("Response from server:", response);
+			          if (response && response.length > 0) {
+			            const supplierDetail = response[0];
+			            $('#suppliername').val(supplierDetail.suppliername || '');
+						$('#scopeofsupply').val(supplierDetail.materialname || '');
+			          } else {
+			            $('#suppliername').val('');
+			            alert("No details found for the selected Supplier UID.");
+			          }
+			        },
+			        error: function (xhr, status, error) {
+			          console.error("Error fetching Supplier details:", error);
+			          alert("An error occurred while fetching the Supplier details.");
+			        }
+			      });
+			    }
+    		  
+    </script>
+</body>
+</html>

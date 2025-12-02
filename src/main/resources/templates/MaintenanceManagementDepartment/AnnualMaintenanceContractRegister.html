@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Annual Maintenance Contract Form</title>
+    <link rel="stylesheet" href="/css/empinfo.css">
+  <link rel="stylesheet" href="/css/hrms.css"> <!-- // for side bar code  -->
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+     <div th:replace="~{MAINTENANCEMANAGEMENTDEPERTMENT.html :: sidebarFragment}"></div> 
+    
+<div class="form-container">
+  <div class="form-section active" id="section1" style="margin-left: 20px; margin-right: 20px;">
+    <form id="amcForm">
+      <h2>Annual Maintenance Contract Form</h2>
+      <br>
+
+      <input type="hidden" id="id" name="id" th:value="${updateamc?.id}" />
+
+      <!-- Row 1: Vendor Name & Start Date -->
+      <div class="form-row">
+        <div class="form-group col-md-6">
+          <label for="vendorname">Vendor Name</label>
+          <input type="text" id="vendorname" name="vendorname" class="form-control"
+            th:value="${updateamc?.vendorname}" required>
+        </div>
+
+        <div class="form-group col-md-6">
+          <label for="amcstartdate">Start Date</label>
+          <input type="date" id="amcstartdate" name="amcstartdate" class="form-control"
+            th:value="${updateamc?.amcstartdate}" required>
+        </div>
+      </div>
+
+      <!-- Row 2: End Date & Equipment Covered -->
+      <div class="form-row">
+        <div class="form-group col-md-6">
+          <label for="amcenddate">End Date</label>
+          <input type="date" id="amcenddate" name="amcenddate" class="form-control"
+            th:value="${updateamc?.amcenddate}" required>
+        </div>
+
+        <div class="form-group col-md-6">
+          <label>Equipment Master UID</label>
+          <select id="equipmentmasteruid" name="equipmentmasteruid" onchange="fetchEquipmentDetails(this.value)" 
+                  th:if="${updateamc == null or updateamc.id == null}" required>
+            <option value="">Select Equipment UID</option>
+            <option th:each="uid : ${equipmentmasteruid}" th:value="${uid}" th:text="${uid}"></option>
+          </select>
+          <input type="text" id="equipmentmasteruid" name="equipmentmasteruid" 
+                 th:value="${updateamc?.equipmentmasteruid}" 
+                 onchange="fetchEquipmentDetails(this.value)" 
+                 readonly th:if="${updateamc?.id != null}">
+        </div>
+
+        <div class="form-group">
+          <label>Equipment Name</label>
+          <input type="text" id="equipmentname" name="equipmentname" readonly>
+        </div>
+      </div>
+
+      <!-- Row 3: Terms and Conditions & Contact Person -->
+      <div class="form-row">
+        <div class="form-group col-md-6">
+          <label for="termsandcondition">Terms and Conditions</label>
+          <input type="text" id="termsandcondition" name="termsandcondition" class="form-control"
+            th:value="${updateamc?.termsandcondition}" >
+        </div>
+
+        <div class="form-group col-md-6">
+          <label for="contactperson">Contact Person</label>
+          <input type="text" id="contactperson" name="contactperson" class="form-control"
+            th:value="${updateamc?.contactperson}" >
+        </div>
+      </div>
+
+      <!-- Submit Button -->
+      <div class="form-actions">
+          <button type="button" id="submitBtn" class="btn btn-primary" onclick="SubmitForm()">Submit</button>
+
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+
+$(document).ready(function() {
+    // Auto-fill Item details when updating
+    var existingequipmentmasteruid = $('#equipmentmasteruid').val();
+    if (existingequipmentmasteruid) {
+    	fetchEquipmentDetails(existingequipmentmasteruid);
+    }
+});
+function fetchEquipmentDetails(equipmentmasteruid) {
+  if (!equipmentmasteruid) return; 
+
+     $.ajax({
+ 		url: '/fetchEquipmentDetailsInAnnualMaintenanceContractRegister',
+ 		method: 'GET',
+ 		data: { equipmentmasteruid: equipmentmasteruid },
+ 		success: function(response) {
+ 			$('#equipmentname').val(response.equipmentname);	
+ 	},
+ 	error:function() {
+    alert('Error fetching Equipment Master Details. Please try again.');
+ 			                }
+ 							});
+ } 
+
+</script>
+<script>
+
+
+// Submit handler
+function SubmitForm() {
+    const form = document.getElementById('amcForm');
+    
+
+    const formData = new FormData(form);
+    const id = form.querySelector('input[type="hidden"]').value;
+    let url = id ? '/updateannualmaintenancecontractregister' : '/SaveAnnualMaintenanceContractRegister';
+    let successMessage = id ? ' updated successfully!' : 'annual maintenance contract saved successfully!';
+
+    $.ajax({
+        url: url,
+        type: 'POST',
+        data: formData,
+        processData: false,
+        contentType: false,
+        success: function () {
+            alert(successMessage);
+            resetForm();
+            window.location.href = '/maintenancemanagementdepartment/annualmaintenancecontractregistergrid';
+        },
+        error: function () {
+            alert('Error saving. Please try again.');
+        }
+    });
+
+    return true;
+}
+
+function resetForm() {
+    $('#amcForm')[0].reset();
+    $('#id').val('');
+    $('#message').text('');
+    $('#submitBtn').text('Submit');
+}
+</script>
+
+</body>
+</html>

@@ -1,0 +1,464 @@
+
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Raw Material Quality Inspection Form</title>
+    <link rel="stylesheet" href="/css/empinfo.css">
+  <link rel="stylesheet" href="/css/hrms.css"> 
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+<!-- <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"> -->
+    <!-- <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> -->
+<style>
+	/* Label styling */
+	#materialQuantityLabel label {
+	    display: block;
+	    font-size: 18px;
+	    font-weight: 100;
+	    margin-bottom: 10px;
+	    color: #333;
+	}
+
+	/* Table wrapper styling */
+	#materialQuantityTable {
+	    margin-top: 10px;
+	    border: 1px solid #ddd;
+	    padding: 10px;
+	    background-color: #f9f9f9;
+	    border-radius: 5px;
+	}
+
+	/* Table styling */
+	#materialQuantityTable table {
+	    width: 100%;
+	    border-collapse: collapse;
+	}
+
+	#materialQuantityTable th,
+	#materialQuantityTable td {
+	    padding: 10px;
+	    border: 1px solid #ccc;
+	    text-align: left;
+	}
+
+	#materialQuantityTable th {
+	    background-color: #f0f0f0;
+	    font-weight: 100;
+	}
+
+	/* Input field style */
+	#materialQuantityTable input[type="text"] {
+	    width: 100%;
+	    border: none;
+	    background-color: transparent;
+	    font-size: 14px;
+	    color: #333;
+	}
+
+
+
+</style>
+</head>
+<body>
+	<div th:replace="~{QUALITYCONTROL.html :: sidebarFragment}"></div> <!-- // for side bar code  -->                                                     
+	<div class="form-container">
+	    <div class="form-section active" id="section1" style="margin-left: 20px; margin-right: 20px;">
+	        <div class="container mt-5 d-flex justify-content-center">
+	            <div class="inspection-form-container">
+	                <h2>Raw Material Quality Inspection</h2><br>
+
+	                <form id="rawMaterialQualityInspectionForm">
+	                    <input type="hidden" id="id" name="id" th:value="${inspectionList?.id}" />
+	                    <input type="hidden" id="isEditMode" name="isEditMode" th:value="${inspectionList != null}" />
+											
+	                    <!-- Row 1: PO UID & Raw Material Names -->
+	                    <div class="form-row">
+	                        <div class="form-group">
+	                            <label for="rawmaterialpurchaseorderuid">RM Purchase Order ID :</label>
+	                            <select id="rawmaterialpurchaseorderuid" name="rawmaterialpurchaseorderuid" class="form-control"
+	                                th:disabled="${inspectionList != null}">
+	                                <option value="">Select RM Purchase Order ID</option>
+	                                <option th:each="uid : ${rawmaterialpurchaseorderuid}" th:value="${uid}" th:text="${uid}"
+	                                        th:selected="${uid} == ${inspectionList?.rawmaterialpurchaseorderuid}"></option>
+	                            </select>
+	                        </div>
+
+	                        <div class="form-group">
+	                            <label for="rawmaterialname">Raw Material Names :</label>
+	                            <select id="rawmaterialname"  multiple class="form-control"
+	                                th:disabled="${inspectionList != null}"></select>
+	                                
+	                          <input type="hidden" id="preselectedRawMaterialNames" th:value="${inspectionList?.rawmaterialname}" />
+	                        </div>
+	                    </div>
+
+	                    <!-- Row 2: Material Quantity Table -->
+	                    <div class="form-row">
+	                        <div class="form-group">
+								 <!-- Material quantity table -->
+							    <div id="materialQuantityLabel"></div>
+							    <div id="materialQuantityTable" style="display:none;">
+							        <table class="table table-bordered">
+							            <thead>
+							                <tr>
+							                    <th>Material Name</th>
+							                    <th>Quantity</th>
+							                </tr>
+							            </thead>
+							            <tbody id="materialQuantityTableBody"></tbody>
+							        </table>
+							    </div>
+ 							<!-- Hidden inputs to capture structured data -->
+						    <input type="hidden" id="selectedRawMaterialNames" name="rawmaterialname" />
+						    <input type="hidden" id="rawmaterialuid" name="rawmaterialuid" />
+						    <input type="hidden" id="rawmaterialdetails" name="rawmaterialdetails" />
+							
+	                            </div>
+	                        </div>
+	                    
+
+	                    <!-- Row 3: Inspection Date & Checked By -->
+	                    <div class="form-row">
+	                        <div class="form-group">
+	                            <label for="inspectiondate">Inspection Date :</label>
+	                            <input type="date" class="form-control" id="inspectiondate" name="inspectiondate"  th:value="${inspectionList?.inspectiondate}" required>
+	                        </div>
+
+	                        <div class="form-group">
+	                            <label for="checkedby">Checked By :</label>
+					             <!-- CREATE MODE -->
+								<select id="checkedby" name="checkedby" th:if="${inspectionList == null or inspectionList.id == null}" required>
+									<option value="">Select checked by</option>
+									<option th:each="entry : ${checkedbyMap}" th:value="${entry.key + ' - ' + entry.value}"
+										th:text="${entry.key + ' - ' + entry.value}">
+									</option>
+								</select>
+								<!-- EDIT MODE -->
+								<input type="text" id="checkedby" name="checkedby" th:value="${inspectionList.checkedby}" th:if="${inspectionList?.id != null}"readonly />
+
+	                        </div>
+	                    </div>
+
+	                    <!-- Row 4: Inspection Result & Quality Parameters -->
+	                    <div class="form-row">
+	                        <div class="form-group">
+	                            <label for="inspectionresult">Inspection Result :</label>
+	                            <select class="form-control" id="inspectionresult" name="inspectionresult" required>
+	                                <option value="">-- Select Result --</option>
+	                                <option value="Pass" th:selected="${inspectionList?.inspectionresult == 'Pass'}">Pass</option>
+	                                <option value="Reject" th:selected="${inspectionList?.inspectionresult == 'Reject'}">Reject</option>
+	                            </select>
+	                        </div>
+	                    </div>
+
+	                    <!-- Row 5: Remarks -->
+	                    <div class="form-row">
+	                         <div class="form-group">
+	                            <label for="qualityparameters">Quality Parameters :</label>
+	                            <textarea class="form-control" id="qualityparameters" name="qualityparameters" rows="3"
+	                                th:text="${inspectionList?.qualityparameters}" style="width: 210px;"required></textarea>
+	                        </div>
+	                        <div class="form-group">
+	                            <label for="remarks">Remarks :</label>
+	                            <textarea class="form-control" id="remarks" name="remarks" rows="3" th:text="${inspectionList?.remarks}" style="width: 210px;"></textarea>
+	                        </div>
+	                    </div>
+
+	                    <!-- Submit Button -->
+	                    <div class="form-actions">
+	                        <div class="form-group">
+	                            <button type="button" id="submitBtn" class="btn btn-primary btn-block" onclick="submitInspectionForm()" >Submit</button>
+          						<button type="button" onclick="goback()" class="btn btn-secondary">Back</button>
+          						  <div th:if="${successMessage}" class="success-message" th:text="${successMessage}"></div>
+<!--           						 //  -->
+          						
+	                        </div>
+	                        
+	                        </div>
+	                     </form>
+	                  </div>
+	                
+				</div>
+						</div>
+						</div>
+				                
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script> 
+function goBack() {
+	window.location.href = '/dashboard';
+	}
+</script>
+<script>
+
+function goback() {
+	window.location.href = '/qualitycontrol/rawmaterialqualityinspectiongrid';
+	}
+
+
+let rawMaterialMap = {}; // Re-initialized each time PO changes
+
+function onPurchaseOrderChange(selectElement) {
+    const purchaseOrderUid = selectElement.value;
+    if (!purchaseOrderUid) return;
+
+    $.ajax({
+        url: '/fetchRawMaterialsByPoUid',
+        method: 'GET',
+        data: { rawmaterialpurchaseorderuid: purchaseOrderUid },
+        success: function (response) {
+            const materialDropdown = $('#rawmaterialname');
+            materialDropdown.empty();
+            rawMaterialMap = {};
+
+            const preselected = ($('#preselectedRawMaterialNames').val() || '').split(',').filter(n => n);
+
+            response.forEach(material => {
+                const name = material.rawmaterialname;
+                const uid = material.rawmaterialuid;
+                const quantity = material.materialQuantity;
+
+                rawMaterialMap[name] = { uid, quantity };
+
+                const isSelected = preselected.includes(name);
+                materialDropdown.append(
+                    `<option value="${name}" data-uid="${uid}" ${isSelected ? 'selected' : ''}>${name}</option>`
+                );
+            });
+
+            // Bind change only once
+            $('#rawmaterialname').off('change').on('change', updateMaterialQuantityDisplay);
+
+            // Show preselected values in table if editing
+            if (preselected.length > 0) {
+                updateMaterialQuantityDisplay();
+            }
+        },
+        error: function () {
+            alert("Error fetching raw material details");
+        }
+    });
+}
+
+function updateMaterialQuantityDisplay() {
+    // Clear all inputs and table before processing
+    $('#selectedRawMaterialNames').val('');
+    $('#rawmaterialuid').val('');
+    $('#rawmaterialquantity').val('');
+    $('#rawmaterialdetails').val('');
+    $('#materialQuantityTableBody').html('');
+
+    const selectedOptions = $('#rawmaterialname option:selected');
+    const names = new Set();
+    const selectedUIDs = new Set(); // using Set to prevent duplicates
+    const nameQtyPairs = new Set();
+    const rawMaterialDetails = {};
+
+    let tableRows = '';
+
+    selectedOptions.each(function () {
+        const name = $(this).val(); // raw material name
+        const uid = rawMaterialMap[name]?.uid; // get uid from rawMaterialMap
+        const quantity = rawMaterialMap[name]?.quantity || 'N/A';
+
+        // Add name and name-quantity pair
+        names.add(name);
+        nameQtyPairs.add(`${name}-${quantity}`);
+
+        // Add UID(s) to the set (in case there are multiple comma-separated UIDs)
+        if (uid) {
+            uid.split(',').forEach(id => selectedUIDs.add(id.trim()));
+        }
+
+     // Add only quantity in the JSON object
+        rawMaterialDetails[name] = {
+            quantity: quantity
+        };
+     
+        // Generate table row
+        tableRows += `
+            <tr>
+                <td><input type="text" class="form-control" value="${name}" readonly></td>
+                <td><input type="text" class="form-control" value="${quantity}" readonly></td>
+            </tr>`;
+    });
+
+    // Update table
+    if (selectedOptions.length > 0) {
+        $('#materialQuantityTableBody').html(tableRows);
+        $('#materialQuantityLabel').html('<label>Material Quantity Section:</label>');
+        $('#materialQuantityTable').show();
+    } else {
+        $('#materialQuantityLabel').html('');
+        $('#materialQuantityTable').hide();
+    }
+
+    // Update hidden input fields
+    $('#selectedRawMaterialNames').val(Array.from(names).join(','));
+    $('#rawmaterialuid').val(Array.from(selectedUIDs).join(','));
+    $('#rawmaterialquantity').val(Array.from(nameQtyPairs).join(','));
+    $('#rawmaterialdetails').val(JSON.stringify(rawMaterialDetails))// 
+}
+
+function validateInspectionForm() {
+
+    // 1. Purchase Order ID
+    let poUid = $('#rawmaterialpurchaseorderuid').val();
+    if (!poUid) {
+        alert("Please select RM Purchase Order ID");
+        return false;
+    }
+
+    // 2. Raw Material Names (multi-select)
+    let selectedMaterials = $('#rawmaterialname').val();
+    if (!selectedMaterials || selectedMaterials.length === 0) {
+        alert("Please select at least one Raw Material");
+        return false;
+    }
+
+    // 3. Material Quantity Table Validation
+    if ($('#materialQuantityTableBody').children().length === 0) {
+        alert("Material quantity information is missing! Please re-select raw materials.");
+        return false;
+    }
+
+    // 4. Inspection Date
+    let inspectionDate = $('#inspectiondate').val();
+    if (!inspectionDate) {
+        alert("Inspection Date is required");
+        return false;
+    }
+
+    // 5. Checked By
+    let checkedBy = $('#checkedby').val();
+    if (!checkedBy) {
+        alert("Please select Checked By");
+        return false;
+    }
+
+    // 6. Inspection Result
+    let result = $('#inspectionresult').val();
+    if (!result) {
+        alert("Please select Inspection Result (Pass / Reject)");
+        return false;
+    }
+
+    // 7. Quality Parameters
+    let qParams = $('#qualityparameters').val().trim();
+    if (!qParams) {
+        alert("Quality Parameters field cannot be empty");
+        return false;
+    }
+
+    // 8. Remarks (optional but allow only max length)
+    let remarks = $('#remarks').val();
+    if (remarks.length > 300) {
+        alert("Remarks cannot exceed 300 characters");
+        return false;
+    }
+
+    return true; // All validations passed
+}
+
+
+function submitInspectionForm() {
+	
+	if (!validateInspectionForm()) {
+	        return; // Stop submission if validation fails
+	    }
+		
+		
+    const formData = new FormData(document.getElementById('rawMaterialQualityInspectionForm'));
+    const id = $('#id').val();
+    const url = id ? '/rawmaterialqualityinspection/update' : '/rawmaterialqualityinspection/save';
+    const successMessage = id ? 'Raw Material Purchase Order Updated Successfully!' : 'Raw Material Quality Inspection Saved Successfully!';
+
+    $.ajax({
+        url: url,
+        type: 'POST',
+        data: formData,
+        contentType: false,
+        processData: false,
+        success: function () {
+            alert(successMessage);
+            resetForm();
+            window.location.href = '/qualitycontrol/rawmaterialqualityinspectiongrid';
+        },
+        error: function () {
+            alert('❌ Submission failed. Please try again.');
+        }
+    });
+}
+
+function resetForm() {
+    $('#rawMaterialQualityInspectionForm')[0].reset();
+    $('#id').val('');
+    $('#form-title').text('Raw Material Quality Inspection Form');
+    $('#submitBtn').text('Submit');
+    $('#materialQuantityTableBody').html('');
+    $('#materialQuantityLabel').html('');
+    $('#materialQuantityTable').hide();
+}
+
+$(document).ready(function () {
+	//loadEmployeeDropdowns();
+
+
+	const rawmaterialdetails = $('#rawmaterialdetails').val();
+	const rawmaterialpurchaseorderuid = $('#rawmaterialpurchaseorderuid').val();
+	const isEdit = $('#isEditMode').val();
+
+
+	$('#rawmaterialpurchaseorderuid').on('change', function () {
+	onPurchaseOrderChange(this);
+	});
+
+
+	if (isEdit === 'true' && rawmaterialpurchaseorderuid) {
+	// Force-load and render materials in edit mode
+	$.ajax({
+	url: '/fetchRawMaterialsByPoUid',
+	method: 'GET',
+	data: { rawmaterialpurchaseorderuid: rawmaterialpurchaseorderuid },
+	success: function (response) {
+	const materialDropdown = $('#rawmaterialname');
+	materialDropdown.empty();
+	rawMaterialMap = {};
+
+
+	const preselected = ($('#preselectedRawMaterialNames').val() || '').split(',').filter(n => n);
+
+
+	response.forEach(material => {
+	const name = material.rawmaterialname;
+	const uid = material.rawmaterialuid;
+	const quantity = material.materialQuantity;
+
+
+	rawMaterialMap[name] = { uid, quantity };
+	const isSelected = preselected.includes(name);
+
+
+	materialDropdown.append(`<option value="${name}" data-uid="${uid}" ${isSelected ? 'selected' : ''}>${name}</option>`);
+	});
+
+
+	// Bind the change event only once
+	$('#rawmaterialname').off('change').on('change', updateMaterialQuantityDisplay);
+
+
+	// ✅ Render the table manually
+	if (preselected.length > 0) {
+	updateMaterialQuantityDisplay();
+	}
+	},
+	error: function () {
+	alert("Error fetching raw material details");
+	}
+	});
+	}
+	});
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Sales Order Form</title>
+	<link rel="stylesheet" href="/css/empinfo.css">
+	<link rel="stylesheet" href="/css/hrms.css"> <!-- // for side bar code  -->
+	<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<style>
+	h5 {
+		margin: 10px;
+	}
+</style>
+
+<body>
+	<div th:replace="~{SALES.html :: sidebarFragment}"></div> <!-- // for side bar code  -->
+
+
+	<form id="salesorder" enctype="/form-data" class="form-container">
+		<!-- Personal Information Section -->
+		<input type="hidden" id="id" name="id" th:value="${so?.id}">
+
+		<h2>Sales Order Form</h2>
+
+		<!-- First Row -->
+
+		<div class="form-row">
+
+			<div class="form-group">
+				<label for="customertype">Customer Type :</label>
+				<select name="customertype" id="customertype" th:if="${so == null or so.id == null}"
+					onchange="fetchCustomerType(this.value)" required>
+					<option value="">-- Select Customer Type --</option>
+					<option value="Wholesaler" th:selected="${so?.customertype == 'Wholesaler'}">Wholesaler</option>
+					<option value="Retailer" th:selected="${so?.customertype == 'Retailer'}">Retailer</option>
+					<option value="Other" th:selected="${so?.customertype == 'Other'}">Other</option>
+
+				</select>
+				<input type="text" name="customertype" th:value="${so?.customertype}" th:if="${so?.id != null}"
+					readonly>
+			</div>
+
+			<div class="form-group">
+			<label for="customeruid">Customer ID:</label>
+				<select id="customeruid" name="customeruid" onchange="fetchCustomerDetails(this.value)"
+					th:if="${so == null or so.id == null}" required>
+					<option value="">-- Select Customer ID --</option>
+				</select>
+				<input type="text" id="customeruid" name="customeruid" th:value="${so?.customeruid}"
+					onchange="fetchCustomerDetails(this.value)" readonly th:if="${so?.id != null}">
+				</div>
+
+			<div class="form-group">
+			<label for="customername">Customer Name:</label>
+				<input type="text" id="customername" name="customername" readonly>
+	
+			</div>
+
+			<div class="form-group">
+			<label for="contactnumber">Phone Number:</label>
+				<input type="text" id="contactnumber" name="contactnumber" readonly>
+			
+					</div>
+
+			
+
+		</div>
+		
+		<div class="form-row">
+		<div class="form-group">
+			<label for="emailaddress">Email ID:</label>
+				<input type="text" id="emailaddress" name="emailaddress" readonly>			
+					</div>	
+			<div class="form-group">
+				<label for="productuid">Product ID:</label>
+				<select id="productuid" name="productuid" onchange="fetchproductdetails(this.value)"
+					th:if="${so == null or so.id == null}" required>
+					<option value="">Select Product ID</option>
+					<option th:each="uid :${productuid}" th:value="${uid}" th:text="${uid}"></option>
+				</select>
+				<input type="text" id="productuid" name="productuid" th:value="${so?.productuid}"
+					onchange="fetchproductdetails(this.value)" readonly th:if="${so?.id != null}">
+
+			</div>
+
+			<div class="form-group">
+				<label for="productname">Product Name:</label>
+				<input type="text" id="productname" name="productname" readonly>
+			</div>
+			<div class="form-group">
+				<label for="sellingprice">Selling Price:</label>
+				<input type="text" id="sellingprice" name="sellingprice" readonly>
+			</div>
+
+		</div>
+
+		<!-- Second Row -->
+		
+		<div class="form-row">
+		
+			<div class="form-group">				
+				<label for="orderdate">Order Date:</label>
+				<input type="date" id="orderdate" name="orderdate" onchange="dateValidation()"
+					th:value="${so?.orderdate}" required>
+		
+			</div>
+			<div class="form-group">
+				<label for="orderquantity">Order Quantity: </label>
+				<input type="number" id="orderquantity" min="1" name="orderquantity" th:value="${so?.orderquantity}"
+					onchange="quantityControl()" required th:readonly="${so?.id != null}">
+			</div>
+
+            <div class="form-group">
+			<label for="deliverydate">Delivery Date:</label>
+				<input type="date" id="deliverydate" name="deliverydate" th:value="${so?.deliverydate}"
+					onchange="dateValidation()" required>
+		
+				</div>
+				
+			<div class="form-group">
+				<label for="deliveredquantity">Delivered Quantity: </label>
+				<input type="number" id="deliveredquantity" name="deliveredquantity" min="0" oninput="quantityControl()"
+					th:value="${so?.deliveredquantity}" required>
+			</div>
+		</div>
+		
+		<!-- Third Row -->
+	<div class="form-row">
+		<div class="form-group">
+				<label for="remainingquantity">Remaining Quantity: </label>
+				<input type="text" id="remainingquantity" name="remainingquantity" th:value="${so?.remainingquantity}"
+					readonly>
+			</div>
+
+			<div class="form-group">
+				<label for="totalamount">Total Amount:</label>
+				<input type="text" id="totalamount" name="totalamount" th:value="${so?.totalamount}" readonly>
+
+			</div>
+		
+			<div class="form-group">
+				<label for="deliveryaddress">Delivery Address:</label>
+				<input id="deliveryaddress" name="deliveryaddress" th:value="${so?.deliveryaddress}" required></input>
+
+			</div>
+			
+				<div class="form-group">
+				<label for="deliverymethod">Delivery Method:</label>
+				<input type="text" id="deliverymethod" name="deliverymethod" th:value="${so?.deliverymethod}"
+					pattern="[A-Za-z\s]+" title="Only letters and spaces allowed">
+		
+				</div>
+		</div>
+
+		<!-- four Row -->
+	<div class="form-row">
+		<div class="form-group">
+				<label for="billingaddress">Billing Address:</label>
+				<input type="text" id="billingaddress" name="billingaddress" th:value="${so.billingaddress}">
+			</div>
+			<div class="form-group">
+				<label for="shippingaddress">Shipping Address:</label>
+				<input type="text" id="shippingaddress" name="shippingaddress" th:value="${so.shippingaddress}">
+			</div>
+			
+			<div class="form-group">
+			<label for="orderstatus">Order Status:</label>
+				<select id="orderstatus" name="orderstatus" required>
+					<option value="" th:selected="${so?.orderstatus == 'Select'}">Select</option>
+					<option value="New" th:selected="${so?.orderstatus == 'New'}">New</option>
+					<option value="Processing" th:selected="${so?.orderstatus == 'Processing'}">Processing</option>
+					<option value="Completed" th:selected="${so?.orderstatus == 'Completed'}">Completed</option>
+					<option value="Cancelled" th:selected="${so?.orderstatus == 'Cancelled'}">Cancelled</option>
+				</select>
+					</div>
+		
+			<div class="form-group">
+				<label for="deliverystatus">Delivery Status:</label>
+				<select id="deliverystatus" name="deliverystatus" th:value="${so?.deliverystatus}" required>
+					<option value="" th:selected="${so?.deliverystatus =='Select'}">Select</option>
+					<option value="Pending" th:selected="${so?.deliverystatus =='Pending'}">Pending</option>
+					<option value="Shipped" th:selected="${so?.deliverystatus =='Shipped'}">Shipped</option>
+					<option value="Delivered" th:selected="${so?.deliverystatus =='Delivered'}">Delivered</option>
+					<option value="Cancelled" th:selected="${so?.deliverystatus =='Cancelled'}">Cancelled</option>
+				</select>
+			</div>
+
+		</div>
+
+	
+		<!-- Five Row  -->
+		
+		<div class="form-actions">
+			<button type="button" id="submitBtn" onclick="submitForm()">Submit</button>
+			<div th:if="${successMessage}" class="success-message" th:text="${successMessage}"></div>
+			<button type="button" class="back-button" onclick="goback();">Back</button>
+
+		</div>
+	</form>
+	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script> 
+function goBack() {
+	window.location.href = '/dashboard';
+	}
+</script>
+	<script>
+
+		function goback() {
+					window.location.href = '/sales/salesordergrid';
+				}
+				
+		function quantityControl() {
+		    // Safely parse quantities; default to 0 if empty or invalid
+		    const orderQuantityInput = parseFloat($('#orderquantity').val()) || 0;
+		    const deliveredQuantityInput = parseFloat($('#deliveredquantity').val()) || 0;
+
+		    // Validate: Delivered cannot exceed order quantity
+		    if (orderQuantityInput > 0 && deliveredQuantityInput > orderQuantityInput) {
+		        alert(`Delivered Quantity (${deliveredQuantityInput}) cannot be greater than Order Quantity (${orderQuantityInput})`);
+		        $('#deliveredquantity').val(orderQuantityInput);
+		        $('#remainingquantity').val(0);
+		        calculateTotalAmount();
+		        return;
+		    }
+
+		    // Calculate remaining quantity safely
+		    const remaining = orderQuantityInput - deliveredQuantityInput;
+		    $('#remainingquantity').val(remaining >= 0 ? remaining : 0);
+
+		    // Ensure total amount is recalculated
+		    calculateTotalAmount();
+		}
+
+		$(document).ready(function () {
+		    // Auto-fill customer details when updating
+		    var existingCustomerUid = $('#customeruid').val();
+		    if (existingCustomerUid) {
+		        fetchCustomerDetails(existingCustomerUid);
+		    }
+		});
+
+		
+		function resetFormFields() {
+		    // Reset the form element completely
+
+		    // Clear hidden field
+		    $('#id').val('');
+
+		    // Reset dynamically populated read-only fields
+		    $('#customername').val('');
+		    $('#contactnumber').val('');
+		    $('#emailaddress').val('');
+		    $('#billingaddress').val('');
+		    $('#shippingaddress').val('');
+		    $('#productname').val('');
+		    $('#sellingprice').val('');
+		    $('#remainingquantity').val('');
+		    $('#totalamount').val('');
+		    $('#orderquantity').val('');
+		    $('#deliveredquantity').val('');
+		    $('#orderdate').val('');
+		    $('#orderstatus').val('');
+		    $('#deliverydate').val('');
+		    $('#deliverymethod').val('');
+		    $('#deliveryaddress').val('');
+
+		    // Clear dropdowns populated dynamically
+		    $('#customeruid').val("");
+		    $('#productuid').val("");
+
+		    // Reset button and title text if you are using update mode
+		    $('#form-title').text('Sales Order Form');
+		    $('#submitBtn').text('Submit');
+		}
+
+
+		function fetchCustomerDetails(customeruid) {
+			if (!customeruid || customeruid == "") {
+				$('#customername').val("");
+				$('#contactnumber').val("");
+				$('#emailaddress').val("");
+			
+				return;
+			}
+
+			$.ajax({
+				url: '/sales/customer/GETdetails',
+				method: 'GET',
+				data: {customeruid: customeruid},
+				success: function (response) {
+					$('#customername').val(response.companyname);
+					$('#contactnumber').val(response.phonenumber);
+					$('#emailaddress').val(response.email);
+				},
+				error: function () {
+					alert('ERROR FETCHING CUSTOMER DETAILS. PLEASE TRY AGAIN.');
+				}
+			});
+		}
+
+		$(document).ready(function () {
+			// Auto-fill Item details when updating
+			var existingproductid = $('#productuid').val();
+			if (existingproductid) {
+				fetchproductdetails(existingproductid);
+			}
+		});
+
+		function fetchproductdetails(productuid) {
+			if (!productuid) return;
+
+			$.ajax({
+				url: '/sales/product/GETproducts',
+				method: 'GET',
+				data: {productuid: productuid},
+				success: function (response) {
+					$('#productname').val(response.productname);
+					$('#sellingprice').val(response.sellingprice);
+					calculateTotalAmount();
+				},
+				error: function () {
+					alert('ERROR WHILE FETCHING PRODUCT DETAILS. TRY AGAIN.');
+				}
+			});
+		}
+		
+		function validateAddressFields() {
+		    const fields = [
+		        { id: "deliverymethod", name: "Delivery Method" },
+		        { id: "billingaddress", name: "Billing Address" },
+		        { id: "shippingaddress", name: "Shipping Address" }
+		    ];
+
+		    for (let f of fields) {
+		        const input = document.getElementById(f.id);
+		        const value = input.value.trim();
+
+		        if (value === "") {
+		            alert(f.name + " cannot be empty!");
+		            input.focus();
+		            return false;
+		        }
+		    }
+
+		    return true;
+		}
+
+
+		function submitForm() {
+			const form = document.getElementById('salesorder');
+
+			if (!form.checkValidity() || !dateValidation() || !validateAddressFields()) {
+				form.reportValidity(); // shows validation message
+				return;
+			}
+
+			const formData = new FormData(form); // only build FormData after validation
+
+			const id = $('#id').val();
+
+			let url, successMessage;
+
+			if (!id) {
+				url = '/savedsalesorder';
+				successMessage = 'Sales order Form saved successfully!';
+			} else {
+				url = '/salesorder/update';
+				successMessage = 'Sales order Form updated successfully!';
+			}
+
+			for (let [key, value] of formData.entries()) {
+				console.log(`${key}: ${value}`);
+			}
+
+			$.ajax({
+				url: url,
+				type: 'POST',
+				data: formData,
+				processData: false,
+				contentType: false,
+				success: function (response) {
+					alert(successMessage);
+					resetForm();
+					window.location.href = '/sales/salesordergrid';
+				},
+				error: function () {
+					alert('Error saving Sales Order Form. Please try again.');
+				}
+			});
+		}
+
+		function resetForm() {
+			$('#salesorder')[0].reset();
+			$('#id').val('');
+			$('#form-title').text('Sales Order Form');
+			$('#submitBtn').text('Submit');
+		}
+
+		function prefillForm(data) {
+			$('#orderdate').val(data.orderdate);
+			$('#orderstatus').val(data.orderstatus);
+			$('#deliverydate').val(data.deliverydate);
+			$('#deliverymethod').val(data.deliverymethod);
+			$('#deliveryaddress').val(data.deliveryaddress);
+			$('#deliverystatus').val(data.deliverystatus);
+			$('#productuid').val(data.productuid);
+			$('#productname').val(data.productname);
+			$('#form-title').text('Update Sales order Form');
+			$('#submitBtn').text('Update');
+		}
+
+		function calculateTotalAmount() {
+		    // Safely parse inputs; default to 0 if empty
+		    const deliveredquantity = parseFloat($('#deliveredquantity').val()) || 0;
+		    const sellingprice = parseFloat($('#sellingprice').val()) || 0;
+
+		    // Multiply safely
+		    const totalamount = deliveredquantity * sellingprice;
+
+		    // Always show a valid number (0.00 if empty or invalid)
+		    $('#totalamount').val(isNaN(totalamount) ? '0' : totalamount.toFixed(2));
+		}
+
+
+		function fetchCustomerType(customertype) {
+			if (!customertype) return;
+			resetFormFields();
+			fetchCustomerDetails();
+			
+			$.ajax({
+				url: "/sales/customeruid",
+				type: 'GET',
+				data: {customertype: customertype},
+				success: function (response) {
+					console.log("customertype response : " + response);
+
+					const dropdown = $('#customeruid'); // assuming your dropdown has id="customeruid"
+					dropdown.empty(); // Clear existing options
+
+					dropdown.append('<option value="">-- Select Customer ID --</option>'); // Optional default option
+
+					// Assuming response is a List<String>
+					response.forEach(function (uid) {
+						dropdown.append('<option value="' + uid + '">' + uid + '</option>');
+					});
+
+				},
+				error: function () {
+					alert('Error saving Sales Order Form. Please try again.');
+				}
+			});
+		}
+
+		function dateValidation() {
+			const orderDate = new Date($('#orderdate').val());
+			const deliveryDate = new Date($('#deliverydate').val());
+
+			if (deliveryDate && deliveryDate < orderDate) {
+				alert("order date must be before than delivery");
+				$('#orderdate').val("");
+				return false;
+			}
+			if (orderDate && deliveryDate && deliveryDate < orderDate) {
+				const formattedOrderDate = orderDate.toLocaleDateString();     // e.g., 10/03/2025
+				const formattedDeliveryDate = deliveryDate.toLocaleDateString(); // e.g., 10/02/2025
+
+				alert(`Delivery Date (${formattedDeliveryDate}) must be after Order Date (${formattedOrderDate}).`);
+				$('#deliverydate').val("");
+				return false;
+			}
+			return true;
+		}
+	</script>
+
+
+</body>
+
+</html>

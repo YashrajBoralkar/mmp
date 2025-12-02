@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sales Order Form</title>
+  <link rel="stylesheet" href="/css/empinfo.css">
+  <link rel="stylesheet" href="/css/hrms.css"> <!-- // for side bar code  -->
+   <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<style>
+h5{
+  margin: 10px;
+}
+
+</style>
+<body>
+  <div th:replace="~{INVENTORY.html :: sidebarFragment}"></div> <!-- // for side bar code  -->
+
+
+   <form id="salesorder" enctype="/form-data" class="form-container"  >
+    <!-- Personal Information Section -->
+    <input type="hidden" id="id" name="id" th:value="${so?.id}">
+
+      <h2>Sales Order Form</h2>
+
+      <!-- First Row -->
+    
+      <div class="form-row">
+        
+        <div class="form-group">        
+          <label for="orderdate">Order Date:</label>
+          <input type="date" id="orderdate" name="orderdate" th:value="${so?.orderdate}">
+        </div>
+
+        <div class="form-group">
+          <label for="orderstatus">Order Status:</label>
+                    <select id="orderstatus" name="orderstatus" th:value="${so?.orderstatus}">
+                        <option value="Select" th:selected="${so?.orderstatus == 'Select'}">Select</option>
+                        <option value="New" th:selected="${so?.orderstatus == 'New'}">New</option>
+                        <option value="Processing" th:selected="${so?.orderstatus == 'Processing'}">Processing</option>
+                        <option value="Completed" th:selected="${so?.orderstatus == 'Completed'}">Completed</option>
+                        <option value="Cancelled" th:selected="${so?.orderstatus == 'Cancelled'}">Cancelled</option>
+                    </select>
+        </div>
+
+        <div class="form-group">
+          <label for="deliverydate">Delivery Date:</label>
+          <input type="date" id="deliverydate" name="deliverydate" th:value="${so?.deliverydate}">   
+        </div>
+
+        <div class="form-group">
+          <label for="deliverymethod">Delivery Method:</label>
+          <input type="text" id="deliverymethod" name="deliverymethod" th:value="${so?.deliverymethod}">
+        </div>
+
+      </div>
+
+      <!-- Second Row -->
+      <div class="form-row">
+        <div class="form-group">
+          <label for="deliveryaddress">Delivery Address:</label>
+          <input id="deliveryaddress" name="deliveryaddress" th:text="${so?.deliveryaddress}"></input>
+
+	      </div>
+   
+        <div class="form-group">
+          <label for="deliverystatus">Delivery Status:</label>
+          <select id="deliverystatus" name="deliverystatus" th:value="${so?.deliverystatus}">
+              <option value="Select" th:selected="${so?.deliverystatus =='Select'}">Select</option>
+              <option value="Pending" th:selected="${so?.deliverystatus =='Pending'}">Pending</option>
+              <option value="Shipped" th:selected="${so?.deliverystatus =='Shipped'}">Shipped</option>
+              <option value="Delivered" th:selected="${so?.deliverystatus =='Delivered'}">Delivered</option>
+              <option value="Cancelled" th:selected="${so?.deliverystatus =='Cancelled'}">Cancelled</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="customeruid">Customer UID:</label>
+          <select id="customeruid" name="customeruid" onchange="fetchCustomerDetails(this.value)">
+              <option value="">Select Customer UID</option>
+              <option th:each="uid : ${customeruid}" th:value="${uid}" th:text="${uid}"></option>
+          </select>
+        </div>
+
+        <div class="form-group" >         
+          <label for="customername">Customer Name:</label>
+          <input type="text" id="customername" name="customername" readonly>
+        </div>
+
+      </div>
+
+      <!-- Third Row -->
+      <div class="form-row">
+      
+          <div class="form-group">            
+            <label for="contactnumber">Phone Number:</label>
+            <input type="text" id="contactnumber" name="contactnumber" readonly>
+          </div>
+
+          <div class="form-group">
+            <label for="emailaddress">Email Address:</label>
+            <input type="text" id="emailaddress" name="emailaddress" readonly>
+        </div>
+        <div class="form-group">
+          <label for="billingaddress">Billing Address:</label>
+          <input type="text" id="billingaddress" name="billingaddress" readonly>
+        </div>
+        <div class="form-group">         
+          <label for="shippingaddress">Shipping Address:</label>
+          <input type="text" id="shippingaddress" name="shippingaddress" readonly>
+        </div>
+        
+      </div>
+
+      <!-- four Row -->
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="productuid">Product UID:</label>
+          <select id="productuid" name="productuid" onchange="fetchproductdetails(this.value)">
+              <option value="">SELECT PRODUCT UID</option>
+              <option th:each="uid :${productuid}" th:value="${uid}" th:text="${uid}"></option>
+          </select>
+        </div>
+
+        <div class="form-group">         	
+          <label for="productname">Product Name:</label>
+          <input type="text" id="productname" name="productname" readonly>
+        </div> 
+        <div class="form-group">
+                    <label for="sellingprice">Selling Price:</label>
+                    <input type="text" id="sellingprice" name="sellingprice" readonly>
+          </div>  
+        <div class="form-group">          
+          <label for="quantity">Quantity: </label>
+          <input type="text" id="quantity" name="quantity" >
+        </div>
+      
+        
+    </div>
+
+   <!-- Five Row  -->
+   <div class="form-row">
+
+    <div class="form-group">
+      <label for="totalamount">Total Amount:</label>
+            <input type="text" id="totalamount" name="totalamount" readonly>
+
+    </div>
+  </div>  
+      <div class="form-actions">
+      <button type="button" id="submitBtn" onclick="submitForm()">Submit</button>
+      <div th:if="${successMessage}" class="success-message" th:text="${successMessage}"></div>                  
+    </div>
+  </form>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+   <script>
+        function fetchCustomerDetails(customeruid) {
+            if (!customeruid) return;
+
+            $.ajax({
+                url: '/customer/getdetails',
+                method: 'GET',
+                data: { customeruid: customeruid },
+                success: function(response) {
+                    $('#customername').val(response.customername);
+                    $('#contactnumber').val(response.contactnumber);
+                    $('#emailaddress').val(response.emailaddress);
+                    $('#billingaddress').val(response.billingaddress);
+                    $('#shippingaddress').val(response.shippingaddress);
+                },
+                error: function() {
+                    alert('ERROR FETCHING CUSTOMER DETAILS. PLEASE TRY AGAIN.');
+                }
+            });
+        }
+
+        function fetchproductdetails(productuid) {
+            if (!productuid) return;
+
+            $.ajax({
+                url: '/product/getproducts',
+                method: 'GET',
+                data: { productuid: productuid },
+                success: function(response) {
+                    $('#productname').val(response.productname);
+                    $('#sellingprice').val(response.sellingprice);
+                    
+                },
+                error: function() {
+                    alert('ERROR WHILE FETCHING PRODUCT DETAILS. TRY AGAIN.');
+                }
+            });
+        }
+
+        function submitForm() {
+            const formData = new FormData(document.getElementById('salesorder'));
+            const id = $('#id').val();
+
+            let url, successMessage;
+
+            if (!id) {
+                url = '/savedsales';
+                successMessage = 'Sales order Form saved successfully!';
+            } else {
+                url = '/sales/update';
+                successMessage = 'Sales order Form updated successfully!';
+            }
+
+            $.ajax({
+                url: url,
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(response) {
+                    alert(successMessage);
+                    resetForm();
+                    window.location.href = '/inventory/procurementintegrationGrid';
+                },
+                error: function() {
+                    alert('Error saving Sales Order Form. Please try again.');
+                }
+            });
+        }
+
+        function resetForm() {
+            $('#salesorder')[0].reset();
+            $('#id').val('');
+            $('#form-title').text('Sales Order Form');
+            $('#submitBtn').text('Submit');
+        }
+
+        function prefillForm(data) {
+            $('#orderdate').val(data.orderdate);
+            $('#orderstatus').val(data.orderstatus);
+            $('#deliverydate').val(data.deliverydate);
+            $('#deliverymethod').val(data.deliverymethod);
+            $('#deliveryaddress').val(data.deliveryaddress);
+            $('#deliverystatus').val(data.deliverystatus);
+			$('#productuid').val(data.productuid);
+			$('#productname').val(data.productname);
+            $('#form-title').text('Update Sales order Form');
+            $('#submitBtn').text('Update');
+        }
+		
+		function calculateTotalAmount() {
+		            let quantity = parseFloat($('#quantity').val()) || 0;
+		            let sellingprice = parseFloat($('#sellingprice').val()) || 0;
+		            let totalamount = quantity * sellingprice;
+
+		            $('#totalamount').val(totalamount.toFixed(2)); // 2 decimal places
+		        }
+
+		        $(document).ready(function() {
+		            $('#quantity').on('input', calculateTotalAmount);
+		        });
+    </script>
+
+</body>
+</html>

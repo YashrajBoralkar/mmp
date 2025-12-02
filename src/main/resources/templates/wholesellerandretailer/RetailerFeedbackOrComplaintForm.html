@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Retailer Feedback Or Complaint Form</title>
+ <link rel="stylesheet" href="/css/empinfo.css">
+  <link rel="stylesheet" href="/css/hrms.css"> 
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+<div th:replace="~{WHOLESELLERANDRETAILER.html :: sidebarFragment}"></div> <!-- // for side bar code  -->                                                                        
+    
+   <form  id="rfForm" enctype="multipart/form-data" class="form-container" >
+    <!-- Personal Information Section -->
+    <input type="hidden" id="id" name="id" th:value="${updaterf?.id}" />
+    <h2>Retailer Feedback Or Complaint</h2>   
+     <br>
+
+      <!-- First Row -->
+    
+      <div class="form-row" >
+        <div class="form-group">
+            <label for="selleruid">Retailer ID :</label>
+             <select id="selleruid" name="selleruid"  onchange="fetchRetailerUid(this.value)"required th:if="${updaterf == null or updaterf.id == null}">
+				<option value="">Select Retailer ID</option>
+				    <option th:each="uid : ${selleruid}" th:value="${uid}"th:text="${uid}"></option>
+            </select>
+			<input type="text" id="selleruid" name="selleruid" th:value="${updaterf?.selleruid}" readonly th:if="${updaterf?.id != null}" />
+        </div>
+        
+       <div class="form-group">
+            <label for="companyname">Company Name :</label>
+            <input type="text" id="companyname" name="companyname" readonly>
+</div>
+</div>
+
+      <!-- Second Row -->
+<div class="form-row">
+
+ <div class="form-group">
+            <label for="date">Date :</label>
+            <input type="date" id="date" name="date" th:value="${updaterf?.date}" required />
+     </div>
+     <div class="form-group">
+        <label for="type">Type :</label>
+        <select id="type" name="type" th:value="${updaterf?.type}" required>
+                <option value="">Select Type</option>
+                <option value="Feedback" th:selected="${updaterf?.type == 'Feedback'}">Feedback</option>
+                <option value="Complaint" th:selected="${updaterf?.type == 'Complaint'}">Complaint</option>
+        </select>
+    </div> 
+</div>
+
+ <!-- Second Row -->
+<div class="form-row">
+ <div class="form-group">
+    <label for="priority">Priority :</label>
+    <select id="priority" name="priority" th:value="${updaterf?.priority}" required>
+      <option value="">Select Priority</option>
+      <option value="High" th:selected="${updaterf?.priority == 'High'}">High</option>
+      <option value="Medium" th:selected="${updaterf?.priority == 'Medium'}">Medium</option>
+      <option value="Low" th:selected="${updaterf?.priority == 'Low'}">Low</option>
+    </select>
+  </div>
+  
+    <div class="form-group">
+    <label for="status">Status :</label>
+    <select id="status" name="status" th:value="${updaterf?.status}" required>
+      <option value="">Select Status</option>
+      <option value="Open" th:selected="${updaterf?.status == 'Open'}">Open</option>
+      <option value="Pending" th:selected="${updaterf?.status == 'Pending'}">Pending</option>
+      <option value="Resolved" th:selected="${updaterf?.status == 'Resolved'}">Resolved</option>
+    </select>
+  </div>
+
+</div>
+
+<div class="form-row">
+<div class="form-group">
+    <label for="description">Description :</label>
+    <textarea type="text" id="description" name="description" style="width: 405px;height: 65px;" th:text="${updaterf?.description}" required /></textarea>
+  </div>
+</div>
+
+   <!-- Five Row  -->
+    <div class="form-actions">
+  <div class="button-group">
+    <button type="button" id="submitBtn" onclick="submitRFForm()">Submit</button>
+    <button type="button" class="back-button" onclick="goback();">Back</button>
+  </div>
+  <div th:if="${successMessage}" class="success-message" th:text="${successMessage}"></div>
+</div>
+
+   </form>
+   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+   <script>
+	$(document).ready(function () {
+	    var existingRetailerUid = $('#selleruid').val();
+	    if (existingRetailerUid) {
+	        fetchRetailerUid(existingRetailerUid);
+	    }
+	});
+
+	function fetchRetailerUid(selleruid) {
+	    if (!selleruid) return;
+
+	    $.ajax({
+	        url: '/retailerfeedbackorcomplaint/getretaileruid', // Update this to match your backend endpoint
+	        method: 'GET',
+	        data: { selleruid: selleruid },
+	        success: function (response) {
+                $('#companyname').val(response.companyname || '');
+                
+            },
+            error: function () {
+                alert('Error fetching product details. Please try again.');
+            }
+	    });
+	}
+
+</script>
+<script>
+function goback() {
+		window.location.href = '/wholesellerandretailer/retailerfeedbackorcomplaintgrid';
+	  }
+</script>
+<script>
+			
+		function submitRFForm() {
+			// Get form elements
+				    const selleruid = $('#selleruid').val();
+				    const date = $('#date').val();
+				    const type = $('#type').val();
+				    const description = $('#description').val().trim();
+				    const priority = $('#priority').val();
+				    const status = $('#status').val();
+
+				    // Validation checks
+				    if (!selleruid) {
+				        alert("Please select a valid Retailer UID.");
+				        return;
+				    }
+					if (!date) {
+					    alert("Please select a date.");
+					    return;
+					}
+
+					// Get today's date (without time)
+					const today = new Date();
+					today.setHours(0, 0, 0, 0);
+
+					// Convert selected date to Date object (without time)
+					const selectedDate = new Date(date);
+					selectedDate.setHours(0, 0, 0, 0);
+
+					// Check if selected date is today
+					if (selectedDate.getTime() !== today.getTime()) {
+					    alert("Please select today's date only.");
+					    return;
+					}
+				    if (!type) {
+				        alert("Please select the type (Feedback or Complaint).");
+				        return;
+				    }
+				    if (!description || description.length < 5) {
+				        alert("Description is required and should be at least 5 characters.");
+				        return;
+				    }
+				    if (!priority) {
+				        alert("Please select a priority level.");
+				        return;
+				    }
+				    if (!status) {
+				        alert("Please select a status.");
+				        return;
+				    }
+					const formData = new FormData(document.getElementById('rfForm'));
+			        const id = $('#id').val();
+					let url, successMessage;
+
+					if (!id) {
+					url = '/retailerfeedbackorcomplaint/save';
+				    successMessage = 'Retailer feedback OR Complaint saved successfully!';
+					} else {
+					 url = '/retailerfeedbackorcomplaint/update';
+					 successMessage = 'Retailer feedback OR Complaint updated successfully!';
+			        }
+
+					$.ajax({
+     			            url: url,
+     			            type: 'POST',
+     			            data: formData,
+     			            processData: false,
+     			            contentType: false,
+     			            success: function(response) {																		
+						                $('#message').text(successMessage);
+						                resetForm();						  
+						                window.location.href = '/wholesellerandretailer/retailerfeedbackorcomplaintgrid';
+						                },
+						                error: function() {			
+												     alert('Error saving retailer . Please fill out all required fields.');
+							           }
+						                });
+					}
+
+		function resetForm() {
+        $('#rfForm')[0].reset();
+        $('#id').val('');
+        $('#submitBtn').text('Submit');
+    }
+</script>   
+</body>
+</html>

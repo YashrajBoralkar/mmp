@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Raw Material & Product Management</title>
+    
+    <link rel="stylesheet" href="/css/hrms.css"> <!-- // for side bar code  -->
+    <link rel="stylesheet" href="/css/grid.css">
+    <link rel="stylesheet" href="/css/emplist.css">
+
+    <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+</head>
+ <style>
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background-color: #f0f0f0;
+      padding: 10px 20px;
+    }
+
+    .search-box {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .search-box button,
+    .back-button {
+      padding: 6px 12px;
+      font-size: 14px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .search-box button:hover,
+    .back-button:hover {
+      background-color: #0056b3;
+    }
+  </style>
+
+<body>
+<div th:replace="~{INVENTORY.html :: sidebarFragment}"></div> <!-- // for side bar code  -->
+
+<div class="button-container">
+    
+</div>
+
+<div class="button-grid">
+    <button onclick="loadStockInfoTable()">Stock Info Details</button>
+<!--     <button onclick="loadBatchInfoTable()">Batch Info Details</button> -->
+<!--     <button onclick="loadLotInfoTable()">Stock Info Details</button> -->
+    <button onclick="loadProductinfoTable()"style="width:112%; ">Product Info Details</button>
+    <button onclick="loadRawMaterialInfoTable()"style="width:112%; margin-left: 20px;">Raw Material Details</button>
+    <button onclick="loadRawMaterialPurchaseRequestInfoTable()"style="width:112%; margin-left: 40px;">Raw Material Purchase Request Details</button>
+<!--     <button onclick="loadRawMaterialInventoryEntryInfoTable()"style="width:112%;">Raw Material Inventory Entry Details</button> -->
+    
+<!--     <button onclick="loadBackOrderTable()">Back Order Details</button> -->
+    
+</div>
+
+<div id="batchlottracking-table-container">
+    <!-- Add the button above the table -->
+<!--    <button class="styled-button" onclick="window.location.href='/empregister';">-->
+<!--        Open Employee Registration Form-->
+<!--    </button>-->
+</div> <!-- Table will be dynamically loaded here -->
+
+<script src="grid.js"></script>
+<script>
+function goBack() {
+	window.location.href = '/dashboard';
+  }
+  
+</script>
+<script>
+
+	
+function loadStockInfoTable() {
+    	        // Create the button and table container structure immediately
+    	        const container = document.getElementById("batchlottracking-table-container");
+    	        container.innerHTML =`
+    	            <div class="table-header">
+    					<div class="button-container" >
+    					                <button class="styled-button" onclick="window.location.href='/inventory/batchlotgrid'" style="flex-grow: 1;     margin-left: 1186px;">
+    					                    <i class="fas fa-arrow-left"></i> Back
+    					                </button>
+    					                <button id="open-register-btn" class="styled-button" style="flex-grow: 1;     margin-left: 20px;">
+    					                Stock Info Form
+    					                </button>
+    					            </div>
+    					</div>
+    	            <table>
+    	                <thead>
+    	                <tr>
+	                    <th>ID</th>
+						<th>Product ID</th>
+                        <th>Product Name</th>
+                        <th>Unit Price</th>
+                        <th>Total Stock Count</th>
+                        <th>Stock Price</th>
+                        <th>Action</th>
+	                    </tr>
+    	                    
+    	                </thead>
+    	                <tbody id="StockInfo-table-body">
+    	                    <tr><td colspan="9">Loading data...</td></tr>
+    	                </tbody>
+    	            </table>
+    	        `;
+
+    	        // Add event listener to the "Register Employee" button
+    	        document.getElementById("open-register-btn").addEventListener("click", () => {
+    	            // Redirect to the employeeattendance registration form
+    	            window.location.href = '/stockinfoform';
+    	        });
+
+    	        // Fetch and populate table data
+    	        fetch('/viewstockdetails')
+    	            .then(response => {
+    	                if (!response.ok) {
+    	                    throw new Error('Network response was not ok');
+    	                }
+    	                return response.json();
+    	            })
+    	            .then(data => {
+    	                const headers = data.headers; // Extract headers dynamically
+    	                const rows = data.data;      // Extract employee data
+    	                const tbody = document.getElementById("StockInfo-table-body");
+
+    	                // Check if there are rows to display
+    	                if (rows.length === 0) {
+    	                    tbody.innerHTML = `<tr><td colspan="9">No data available.</td></tr>`;
+    	                    return;
+    	                }
+
+    	                // Generate rows from data
+    	                tbody.innerHTML = rows.map(row => `
+    	                    <tr>
+    	                        <td>${row['ID']}</td>
+    	                        <td>${row['Product ID']}</td>
+    	                        <td>${row['Product Name']}</td>
+    	                        <td>${row['Unit Price']}</td>
+    	                        <td>${row['Total Stock Count']}</td>
+    	                        <td>${row['Stock Price']}</td>
+    	                        <td>
+    	                            <div class="action-buttons">
+    	                                <a href="#" class="btn btn-delete" data-id="${row['ID']}" onclick="DeleteStockInfodetails(this)">Delete</a>
+    	                                <a href="/stockdetails/update/${row['ID']}" class="btn btn-update">Update</a>
+    	                            </div>
+    	                        </td>
+    	                    </tr>
+    	                `).join('');
+    	            })
+    	            .catch(error => {
+    	                console.error('Error fetching Stock Info data:', error);
+    	                document.getElementById("StockInfo-table-body").innerHTML = `<tr><td colspan="9">Error loading data.</td></tr>`;
+    	            });
+    	    }
+
+			function DeleteStockInfodetails(element) {
+		    const id = element.getAttribute('data-id'); // Retrieve the employee ID
+		    if (confirm(`Are you sure you want to delete Stock Info details with ID: ${id}?`)) {
+		        // Perform the fetch request with the employee ID as a query parameter
+		        fetch(`/deletestockdetails?id=${id}`, { method: 'GET' })
+		            .then(response => {
+		                if (response.redirected) {
+		                    // Redirect to the new location if the server redirects
+		                    window.location.href = response.url;
+		                } else {
+		                    console.log('Stock Info details deleted:', id);
+		                }
+		            })
+		            .catch(error => {
+		                console.error('Error deleting Stock Info details:', error);
+		            });
+		    }
+		}
+	
+	
+	
+function loadBatchInfoTable() {
+			        // Create the button and table container structure immediately
+			        const container = document.getElementById("batchlottracking-table-container");
+			        container.innerHTML = `
+			            <div class="table-header">
+							<div class="button-container" style="margin-left: 1045px;">
+											                <button class="styled-button" onclick="window.location.href='/inventory/batchlotgrid'" style="flex-grow: 1;">
+											                    <i class="fas fa-arrow-left"></i> Back
+											                </button>
+											                <button id="open-register-btn1" class="styled-button" style="flex-grow: 1; margin-left: 0px;">
+											                Batch Info Form
+											                </button>
+											                <button id="open-register-btn2" class="styled-button" style="flex-grow: 1; margin-left: -3px;">
+											                Batch Tracking Form
+											                </button>
+											            </div>
+						 </div>
+			            <table>
+			                <thead>
+			                    <tr>
+			                    <th>ID</th>
+    	                        <th>Batch Id</th>
+    	                        <th>LOT Ids</th>
+    	                        <th>Product ID</th>
+    	                        <th>Product Name</th>
+    	                        <th>Product Category</th>
+    	                        <th>LOT Quantity</th>
+    	                        <th>Action</th>
+			                    </tr>
+			                </thead>
+			                <tbody id="Batchinfo-table-body">
+			                    <tr><td colspan="9">Loading data...</td></tr>
+			                </tbody>
+			            </table>
+			        `;
+
+			        // Add event listener to the "Register Employee" button
+			        document.getElementById("open-register-btn1").addEventListener("click", () => {
+			            // Redirect to the employee shift info form
+			            window.location.href = '/batchinfoform';
+			        });
+			        
+			     // Add event listener to the "Register Employee" button
+			        document.getElementById("open-register-btn2").addEventListener("click", () => {
+			            // Redirect to the employee shift info form
+			            window.location.href = '/batchtrackingform';
+			        });
+
+			        // Fetch and populate table data
+			        fetch('/viewbatchinfolist')
+			            .then(response => {
+			                if (!response.ok) {
+			                    throw new Error('Network response was not ok');
+			                }
+			                return response.json();
+			            })
+			            .then(data => {
+			                const headers = data.headers; // Extract headers dynamically
+			                const rows = data.data;      // Extract employee data
+			                const tbody = document.getElementById("Batchinfo-table-body");
+
+			                // Check if there are rows to display
+			                if (rows.length === 0) {
+			                    tbody.innerHTML = `<tr><td colspan="9">No data available.</td></tr>`;
+			                    return;
+			                }
+
+			                // Generate rows from data
+			                tbody.innerHTML = rows.map(row => `
+			                    <tr>
+					                <td>${row['ID']}</td>
+			                        <td>${row['Batch Id']}</td>
+			                        <td>${row['LOT Ids']}</td>
+			                        <td>${row['Product ID']}</td>
+			                        <td>${row['Product Name']}</td>
+			                        <td>${row['Product Category']}</td>
+			                        <td>${row['LOT Quantity']}</td>
+			                         <td>
+			                            <div class="action-buttons">
+			                                <a href="#" class="btn btn-delete" data-id="${row['ID']}" onclick="DeleteBatchinfodetails(this)">Delete</a>
+			                                <a href="/getbatchinfo/${row['ID']}" class="btn btn-update">Update</a>
+			                            </div>
+			                        </td>
+			                    </tr>
+			                `).join('');
+			            })
+			            .catch(error => {
+			                console.error('Error fetching Batch info data:', error);
+			                document.getElementById("Batchinfo-table-body").innerHTML = `<tr><td colspan="9">Error loading data.</td></tr>`;
+			            });
+			    }
+
+					function DeleteBatchinfodetails(element) {
+				    const id = element.getAttribute('data-id'); // Retrieve the employee ID
+				    if (confirm(`Are you sure you want to delete Batch Info with ID: ${id}?`)) {
+				        // Perform the fetch request with the employee ID as a query parameter
+				        fetch(`/deletebatchinfo?id=${id}`, { method: 'GET' })
+				            .then(response => {
+				                if (response.redirected) {
+				                    // Redirect to the new location if the server redirects
+				                    window.location.href = response.url;
+				                } else {
+				                    console.log('Batch info info deleted:', id);
+				                }
+				            })
+				            .catch(error => {
+				                console.error('Error deleting Batch info :', error);
+				            });
+				    }
+				}
+	
+					
+function loadLotInfoTable() {
+				        // Create the button and table container structure immediately
+				        const container = document.getElementById("batchlottracking-table-container");
+				        container.innerHTML =`
+				            <div class="table-header">
+								<div class="button-container" style="margin-left: 1045px;">
+								                <button class="styled-button" onclick="window.location.href='/inventory/batchlotgrid'" style="flex-grow: 1;margin-left: -44px;">
+								                    <i class="fas fa-arrow-left"></i> Back
+								                </button>
+								                <button id="open-register-btn1" class="styled-button" style="flex-grow: 1; margin-left: 0px;">
+								                Lot Creation Form
+								                </button>
+								                <button id="open-register-btn2" class="styled-button" style="flex-grow: 1; margin-left: -3px;">
+								                Lot Tracking Form
+								                </button>
+								            </div>
+								</div>
+				            <table>
+				                <thead>
+				                   
+				                    <tr>
+		    	                    <th>ID</th>
+			                        <th>Lot Id</th>
+			                        <th>Product ID</th>
+			                        <th>Product Name</th>
+			                        <th>Product Category</th>
+			                        <th>Product Quantity</th>
+			                        <th>Action</th>
+		    	                    </tr>
+				                   
+				                </thead>
+				                <tbody id="lotinfo-table-body">
+				                    <tr><td colspan="9">Loading data...</td></tr>
+				                </tbody>
+				            </table>
+				        `;
+
+				        // Add event listener to the "Register Employee" button
+				        document.getElementById("open-register-btn1").addEventListener("click", () => {
+				            // Redirect to the employeeattendance registration form
+				            window.location.href = '/lotinfoform';
+				        });
+				     // Add event listener to the "Register Employee" button
+				        document.getElementById("open-register-btn2").addEventListener("click", () => {
+				            // Redirect to the employeeattendance registration form
+				            window.location.href = '/lottracking';
+				        });
+
+				        // Fetch and populate table data
+				        fetch('/viewlotinfolist')
+				            .then(response => {
+				                if (!response.ok) {
+				                    throw new Error('Network response was not ok');
+				                }
+				                return response.json();
+				            })
+				            .then(data => {
+				                const headers = data.headers; // Extract headers dynamically
+				                const rows = data.data;      // Extract employee data
+				                const tbody = document.getElementById("lotinfo-table-body");
+
+				                // Check if there are rows to display
+				                if (rows.length === 0) {
+				                    tbody.innerHTML = `<tr><td colspan="9">No data available.</td></tr>`;
+				                    return;
+				                }
+
+				                // Generate rows from data
+				                tbody.innerHTML = rows.map(row => `
+				                    <tr>
+				                <td>${row['ID']}</td>
+    	                        <td>${row['Lot Id']}</td>
+    	                        <td>${row['Product Id']}</td>
+    	                        <td>${row['Product Name']}</td>
+    	                        <td>${row['Product Category']}</td>
+    	                       <td>${row['Product Quantity']}</td>
+
+				                        <td>
+				                            <div class="action-buttons">
+				                                <a href="#" class="btn btn-delete" data-id="${row['ID']}" onclick="confirmDeleteLotInfo(this)">Delete</a>
+				                                <a href="/getlotinfo/${row['ID']}" class="btn btn-update">Update</a>
+				                            </div>
+				                        </td>
+				                    </tr>
+				                `).join('');
+				            })
+				            .catch(error => {
+				                console.error('Error fetching purchase requisition data:', error);
+				                document.getElementById("lotinfo-table-body").innerHTML = `<tr><td colspan="9">Error loading data.</td></tr>`;
+				            });
+				    }
+
+				    // Example function to handle delete action
+				    	function confirmDeleteLotInfo(element) {
+					    const id = element.getAttribute('data-id'); // Retrieve the employee ID
+					    if (confirm(`Are you sure you want to delete lot info data with ID: ${id}?`)) {
+					        // Perform the fetch request with the employee ID as a query parameter
+					        fetch(`/deletelotinfo?id=${id}`, { method: 'GET' })
+					            .then(response => {
+					                if (response.redirected) {
+					                    // Redirect to the new location if the server redirects
+					                    window.location.href = response.url;
+					                } else {
+					                    console.log('Lot info deleted:', id);
+					                }
+					            })
+					            .catch(error => {
+					                console.error('Error deleting lot info data:', error);
+					            });
+					    }
+					}
+					
+						
+						
+						
+function loadProductinfoTable() {
+					        // Create the button and table container structure immediately
+					        const container = document.getElementById("batchlottracking-table-container");
+					        container.innerHTML =`
+					            <div class="table-header">
+									<div class="button-container" style="margin-left: 1045px;">
+									                <button class="styled-button" onclick="window.location.href='/inventory/batchlotgrid'" style="flex-grow: 1;">
+									                    <i class="fas fa-arrow-left"></i> Back
+									                </button>
+									                <button id="open-register-btn" class="styled-button" style="flex-grow: 1; margin-left: 20px;">
+									                Product Info Form
+									                </button>
+									            </div>
+									</div>
+					            <table>
+					                <thead>
+					                    <tr>
+					                    <th>Id</th>
+					    				<th>Product ID</th>
+					                    <th>Product Name</th>
+					    				<th>Product Category</th>
+					    				<th>Unit Of Measure</th>
+					    				<th>Selling Price (MRP)</th>
+					    				<th>Product Status</th>
+					                    <th>Actions</th>
+					                    </tr>
+					                </thead>
+					                <tbody id="productinfoform-table-body">
+					                    <tr><td colspan="9">Loading data...</td></tr>
+					                </tbody>
+					            </table>
+					        `;
+
+					        // Add event listener to the "Register Employee" button
+					        document.getElementById("open-register-btn").addEventListener("click", () => {
+					            // Redirect to the employeeattendance registration form
+					            window.location.href = '/productinfo';
+					        });
+
+					        // Fetch and populate table data
+					        fetch('/viewproductinfolist')
+					            .then(response => {
+					                if (!response.ok) {
+					                    throw new Error('Network response was not ok');
+					                }
+					                return response.json();
+					            })
+					            .then(data => {
+					                const headers = data.headers; // Extract headers dynamically
+					                const rows = data.data;      // Extract employee data
+					                const tbody = document.getElementById("productinfoform-table-body");
+
+					                // Check if there are rows to display
+					                if (rows.length === 0) {
+					                    tbody.innerHTML = `<tr><td colspan="9">No data available.</td></tr>`;
+					                    return;
+					                }
+
+					                // Generate rows from data
+					                tbody.innerHTML = rows.map(row => `
+					                    <tr>
+					                        <td>${row['ID']}</td>
+					                        <td>${row['Product ID']}</td>
+					                        <td>${row['Product Name']}</td>
+					                        <td>${row['Product Category']}</td>
+					                        <td>${row['Unit of Measure']}</td>
+					                        <td>${row['Selling Price (MRP)']}</td>
+					                        <td>${row['Product Status']}</td>					                        
+					                       
+											<td>
+					                            <div class="action-buttons">
+					                                <a href="#" class="btn btn-delete" data-id="${row['ID']}" onclick="confirmDeleteProductinfo(this)">Delete</a>
+					                                <a href="/getproductinfo/${row['ID']}" class="btn btn-update">Update</a>
+					                            </div>
+					                        </td>
+					                    </tr>
+					                `).join('');
+					            })
+					            .catch(error => {
+					                console.error('Error fetching product info data:', error);
+					                document.getElementById("productinfoform-table-body").innerHTML = `<tr><td colspan="9">Error loading data.</td></tr>`;
+					            });
+					    }
+
+					    // Example function to handle delete action
+					    	function confirmDeleteProductinfo(element) {
+						    const id = element.getAttribute('data-id'); // Retrieve the employee ID
+						    if (confirm(`Are you sure you want to delete product info data with ID: ${id}?`)) {
+						        // Perform the fetch request with the employee ID as a query parameter
+						        fetch(`/deleteproductinfo?id=${id}`, { method: 'GET' })
+						            .then(response => {
+						                if (response.redirected) {
+						                    // Redirect to the new location if the server redirects
+						                    window.location.href = response.url;
+						                } else {
+						                    console.log('Product info data deleted:', id);
+						                }
+						            })
+						            .catch(error => {
+						                console.error('Error deleting product info data:', error);
+						            });
+						    }
+						}
+	
+function loadRawMaterialInfoTable() {
+					    	        /// Create the button and table container structure immediately
+					    	        const container = document.getElementById("batchlottracking-table-container");
+					    	        container.innerHTML = `
+					    	            <div class="table-header">
+					    					<div class="button-container" style="margin-left: 1045px;">
+					    									                <button class="styled-button" onclick="window.location.href='/inventory/batchlotgrid'" style="flex-grow: 1;">
+					    									                <i class="fas fa-arrow-left"></i> Back
+					    									                </button>
+					    									                <button id="open-register-btn" class="styled-button" style="flex-grow: 1; margin-left: 20px;">
+					    									                Raw Material Registration Form
+					    									                </button>
+					    									            </div>
+					    				 </div>
+					    	            <table>
+					    	            <thead>
+					    	            <tr>
+					    	                <th>ID</th>
+					    	                <th>Raw Material ID</th>
+					    	                <th>Raw Material Name</th>
+					    	                <th>Category</th>
+					    	                <th>Standard Purchase Price</th>
+					    	                <th>Active Status</th>
+					    	                 <th>Action</th>
+					    	            </tr>
+					    	        </thead>
+
+					    	                <tbody id="RawMaterial-table-body">
+					    	                    <tr><td colspan="9">Loading data...</td></tr>
+					    	                </tbody>
+					    	            </table>
+					    	        `;
+
+					    	        // Add event listener to the "Register Employee" button
+					    	        document.getElementById("open-register-btn").addEventListener("click", () => {
+					    	            // Redirect to the employee shift info form
+					    	            window.location.href = '/showrawmaterialregistrationform';
+					    	        });
+
+					    	        // Fetch and populate table data
+					    	        fetch('/viewrawmaterialregistrationinfolist')
+					    	            .then(response => {
+					    	                if (!response.ok) {
+					    	                    throw new Error('Network response was not ok');
+					    	                }
+					    	                return response.json();
+					    	            })
+					    	            .then(data => {
+					    	                const headers = data.headers; // Extract headers dynamically
+					    	                const rows = data.data;      // Extract employee data
+					    	                const tbody = document.getElementById("RawMaterial-table-body");
+
+					    	                // Check if there are rows to display
+					    	                if (rows.length === 0) {
+					    	                    tbody.innerHTML = `<tr><td colspan="9">No data available.</td></tr>`;
+					    	                    return;
+					    	                }
+
+					    	                // Generate rows from data
+					    	                tbody.innerHTML = rows.map(row => `
+					    	                    <tr>
+					    	                <td>${row['ID']}</td>
+					    	                <td>${row['Raw Material ID']}</td>
+					    	                <td>${row['Raw Material Name']}</td>				 
+					    	                <td>${row['Category']}</td>
+					    	                <td>${row['Standard Purchase Price']}</td>
+					    	                <td>${row['Active Status']}</td>
+					    	                <td>
+					    	                            <div class="action-buttons">
+					    	                                <a href="#" class="btn btn-delete" data-id="${row['ID']}" onclick="DeletefromRawMaterialInfo(this)">Delete</a>
+					    	                                <a href="/rawmaterialmasterregistration/edit/${row['ID']}" class="btn btn-update">Update</a>
+					    	                            </div>
+					    	                        </td>
+					    	                    </tr>
+					    	                `).join('');
+					    	            })
+					    	            .catch(error => {
+					    	                console.error('Error fetching Raw Material data:', error);
+					    	                document.getElementById("RawMaterial-table-body").innerHTML = `<tr><td colspan="9">Error loading data.</td></tr>`;
+					    	            });
+					    	    }
+
+					    			function DeletefromRawMaterialInfo(element) {
+					    		    const id = element.getAttribute('data-id'); // Retrieve the employee ID
+					    		    if (confirm(`Are you sure you want to delete Raw Material Info with ID: ${id}?`)) {
+					    		        // Perform the fetch request with the employee ID as a query parameter
+					    		        fetch(`/deleterawmaterialmasterregistrationinfo?id=${id}`, { method: 'GET' })
+					    		            .then(response => {
+					    		                if (response.redirected) {
+					    		                    // Redirect to the new location if the server redirects
+					    		                    window.location.href = response.url;
+					    		                } else {
+					    		                    console.log('Raw Material info deleted:', id);
+					    		                }
+					    		            })
+					    		            .catch(error => {
+					    		                console.error('Error deleting Raw Material info :', error);
+					    		            });
+					    		    }
+					    		}
+					    			
+function loadRawMaterialPurchaseRequestInfoTable() {
+						    	        /// Create the button and table container structure immediately
+						    	        const container = document.getElementById("batchlottracking-table-container");
+						    	        container.innerHTML = `
+						    	            <div class="table-header">
+						    					<div class="button-container" style="margin-left: 1045px;">
+						    									                <button class="styled-button" onclick="window.location.href='/inventory/batchlotgrid'" style="flex-grow: 1;">
+						    									                <i class="fas fa-arrow-left"></i> Back
+						    									                </button>
+						    									                <button id="open-register-btn" class="styled-button" style="flex-grow: 1; margin-left: 20px;">
+						    									                Raw Material Purchase Request Form
+						    									                </button>
+						    									            </div>
+						    				 </div>
+						    	            <table>
+						    	            <thead>
+						    	            <tr>
+						    	                <th>Raw Material Purchase Request ID</th>
+						    	                <th>Production Planning ID</th>
+						    	                <th>Product Name</th>
+						    	                <th>Raw Material Details</th>
+						    	                <th>Request Date</th>
+						    	                <th>Required By</th>
+						    	                <th>Priority</th>
+						    	                 <th>Action</th>
+						    	            </tr>
+						    	        </thead>
+
+						    	                <tbody id="RawMaterialPurchaseRequest-table-body">
+						    	                    <tr><td colspan="9">Loading data...</td></tr>
+						    	                </tbody>
+						    	            </table>
+						    	        `;
+
+						    	        // Add event listener to the "Register Employee" button
+						    	        document.getElementById("open-register-btn").addEventListener("click", () => {
+						    	            // Redirect to the employee shift info form
+						    	            window.location.href = '/showrawmaterialpurchaserequestform';
+						    	        });
+
+						    	        // Fetch and populate table data
+						    	        fetch('/viewrawmaterialpurchaserequestinfolist')
+						    	            .then(response => {
+						    	                if (!response.ok) {
+						    	                    throw new Error('Network response was not ok');
+						    	                }
+						    	                return response.json();
+						    	            })
+						    	            .then(data => {
+						    	                const headers = data.headers; // Extract headers dynamically
+						    	                const rows = data.data;      // Extract employee data
+						    	                const tbody = document.getElementById("RawMaterialPurchaseRequest-table-body");
+
+						    	                // Check if there are rows to display
+						    	                if (rows.length === 0) {
+						    	                    tbody.innerHTML = `<tr><td colspan="9">No data available.</td></tr>`;
+						    	                    return;
+						    	                }
+
+						    	                // Generate rows from data
+						    	                tbody.innerHTML = rows.map(row => `
+						    	                    <tr>
+						    	                <td>${row['Raw Material Purchase Request ID']}</td>
+						    	                <td>${row['Production Planning ID']}</td>
+						    	                <td>${row['Product Name']}</td>				 
+						    	                <td>${row['Raw Material Details']}</td>
+						    	                <td>${row['Request Date']}</td>
+						    	                <td>${row['Required By']}</td>
+						    	                <td>${row['Priority']}</td>
+						    	                <td>
+						    	                      <div class="action-buttons">
+						    	                      <a href="/deleterawmaterialpurchaserequestinfo?rawmaterialpurchaserequestuid=${row['Raw Material Purchase Request ID']}"
+						    	                    	   class="btn btn-delete"
+						    	                    	   onclick="return confirmDeleteRawMaterialPurchaseRequest(this);"
+						    	                    	   ${row['Raw Material Purchase Request ID'] ? '' : 'style="display:none;"'}>
+						    	                    	   Delete
+						    	                    	</a>
+
+						                                     <a href="/rawmaterialpurchaserequestupdate?rawmaterialpurchaserequestuid=${row['Raw Material Purchase Request ID']}"
+						                                    	   class="btn btn-update"
+						                                    	   ${row['Raw Material Purchase Request ID'] ? '' : 'style="display:none;"'}>
+						                                    	   Update
+						                                    	</a>
+
+						    	                         </div>
+						    	                     </td>
+						    	                    </tr>
+						    	                `).join('');
+						    	            })
+						    	            .catch(error => {
+						    	                console.error('Error fetching Raw Material Purchase RequestS data:', error);
+						    	                document.getElementById("RawMaterialPurchaseRequest-table-body").innerHTML = `<tr><td colspan="9">Error loading data.</td></tr>`;
+						    	            });
+						    	    }
+
+function confirmDeleteRawMaterialPurchaseRequest(element) {
+    const url = element.getAttribute('href');
+    const requestUid = new URLSearchParams(url.split('?')[1]).get('rawmaterialpurchaserequestuid');
+
+    if (confirm(`Are you sure you want to delete Raw Material Purchase Request with ID: ${requestUid}?`)) {
+        return true; // Allow redirect to deletion controller
+    }
+    return false; // Cancel the action
+}
+
+
+// function loadRawMaterialInventoryEntryInfoTable() {
+// 						    	        /// Create the button and table container structure immediately
+// 						    	        const container = document.getElementById("batchlottracking-table-container");
+// 						    	        container.innerHTML = `
+// 						    	            <div class="table-header">
+// 						    					<div class="button-container" style="margin-left: 1045px;">
+// 						    									                <button class="styled-button" onclick="window.location.href='/inventory/batchlotgrid'" style="flex-grow: 1;">
+// 						    									                    <i class="fas fa-arrow-left"></i> Back
+// 						    									                </button>
+// 						    									                <button id="open-register-btn" class="styled-button" style="flex-grow: 1; margin-left: 20px;">
+// 						    									                Raw Material Inventory Entry Form
+// 						    									                </button>
+// 						    									            </div>
+// 						    				 </div>
+// 						    	            <table>
+// 						    	            <thead>
+// 						    	            <tr>
+// 						    	                <th>ID</th>
+// 						    	                <th>RM Inventory Entry ID</th>
+// 						    	                <th>RMRN ID</th>
+// 						    	                <th>Raw Material ID</th>
+// 						    	                <th>Raw Material Name</th>
+// 						    	                <th>Actual Quantity</th>
+// 						    	                <th>Entered By</th>
+// 						    	                <th>Action</th>
+// 						    	            </tr>
+// 						    	        </thead>
+
+// 						    	                <tbody id="RawMaterialInventoryEntry-table-body">
+// 						    	                    <tr><td colspan="9">Loading data...</td></tr>
+// 						    	                </tbody>
+// 						    	            </table>
+// 						    	        `;
+
+// 						    	        // Add event listener to the "Register Employee" button
+// 						    	        document.getElementById("open-register-btn").addEventListener("click", () => {
+// 						    	            // Redirect to the employee shift info form
+// 						    	            window.location.href = '/rawmaterialinventoryentry/form';
+// 						    	        });
+
+// 						    	        // Fetch and populate table data
+// 						    	        fetch('/viewrawmaterialinventoryentryinfolist')
+// 						    	            .then(response => {
+// 						    	                if (!response.ok) {
+// 						    	                    throw new Error('Network response was not ok');
+// 						    	                }
+// 						    	                return response.json();
+// 						    	            })
+// 						    	            .then(data => {
+// 						    	                const headers = data.headers; // Extract headers dynamically
+// 						    	                const rows = data.data;      // Extract employee data
+// 						    	                const tbody = document.getElementById("RawMaterialInventoryEntry-table-body");
+
+// 						    	                // Check if there are rows to display
+// 						    	                if (rows.length === 0) {
+// 						    	                    tbody.innerHTML = `<tr><td colspan="9">No data available.</td></tr>`;
+// 						    	                    return;
+// 						    	                }
+
+// 						    	                // Generate rows from data
+// 						    	                tbody.innerHTML = rows.map(row => `
+// 						    	                    <tr>
+// 						    	                <td>${row['ID']}</td>
+// 						    	                <td>${row['RM Inventory Entry ID']}</td>
+// 						    	                <td>${row['RMRN ID']}</td>				 
+// 						    	                <td>${row['Raw Material ID']}</td>
+// 						    	                <td>${row['Raw Material Name']}</td>
+// 						    	                <td>${row['Actual Quantity']}</td>
+// 						    	                <td>${row['Entered By']}</td>
+// 						    	                <td>
+// 						    	                            <div class="action-buttons">
+// 						    	                                <a href="#" class="btn btn-delete" data-id="${row['ID']}" onclick="DeletefromRawMaterialInventoryEntryInfo(this)">Delete</a>
+// 						    	                                <a href="/rawmaterialinventoryentry/edit/${row['ID']}" class="btn btn-update">Update</a>
+// 						    	                            </div>
+// 						    	                        </td>
+// 						    	                    </tr>
+// 						    	                `).join('');
+// 						    	            })
+// 						    	            .catch(error => {
+// 						    	                console.error('Error fetching Raw Material Inventory Entry data:', error);
+// 						    	                document.getElementById("RawMaterialInventoryEntry-table-body").innerHTML = `<tr><td colspan="9">Error loading data.</td></tr>`;
+// 						    	            });
+// 						    	    }
+
+// 						    			function DeletefromRawMaterialInventoryEntryInfo(element) {
+// 						    		    const id = element.getAttribute('data-id'); // Retrieve the employee ID
+// 						    		    if (confirm(`Are you sure you want to delete Raw Material Inventory Entry Info with ID: ${id}?`)) {
+// 						    		        // Perform the fetch request with the employee ID as a query parameter
+// 						    		        fetch(`/deleterawmaterialinventoryentryinfo?id=${id}`, { method: 'GET' })
+// 						    		            .then(response => {
+// 						    		                if (response.redirected) {
+// 						    		                    // Redirect to the new location if the server redirects
+// 						    		                    window.location.href = response.url;
+// 						    		                } else {
+// 						    		                    console.log('Raw Material Inventory Entry info deleted:', id);
+// 						    		                }
+// 						    		            })
+// 						    		            .catch(error => {
+// 						    		                console.error('Error deleting Raw Material Inventory Entry info :', error);
+// 						    		            });
+// 						    		    }
+// 						    		}
+</script> 
+</body>
+</html>

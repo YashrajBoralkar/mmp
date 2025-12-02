@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Employee Onboarding Form</title>
+  <link rel="stylesheet" href="/css/empinfo.css">
+  <link rel="stylesheet" href="/css/hrms.css">
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+   </head>
+   <body>
+  <div th:replace="~{HRMS.html :: sidebarFragment}"></div>
+  <div class="form-container" style="max-width: 986px;margin: 62px auto auto 400px;">
+    <form id="onboardingForm" enctype="multipart/form-data">
+      <input type="hidden" id="id" name="id" th:value="${onboarding?.id}">
+      <h2 id="form-title">Employee Onboarding Form</h2>
+      <br>
+      <!-- First Row -->
+      <div class="form-row">
+        <div class="form-group">
+          <label for="employeeuid">Employee ID :</label>
+          <!-- Create Mode -->
+          <select id="employeeuid" name="employeeuid"
+                  onchange="fetchEmployeeDetails(this.value)"
+                  th:if="${onboarding == null or onboarding.id == null}">
+            <option value="">-- Select Employee ID --</option>
+            <option th:each="uid : ${employeeuid}" th:value="${uid}" th:text="${uid}"></option>
+          </select>
+
+          <!-- Update Mode -->
+          <input type="text" id="employeeuid" name="employeeuid"
+                 th:value="${onboarding?.employeeuid}"
+                 th:if="${onboarding != null and onboarding.id != null}" readonly>
+        </div>
+
+        <div class="form-group">
+          <label>First Name:</label>
+          <input type="text" id="first_name" name="first_name" readonly>
+        </div>
+        <div class="form-group">
+          <label>Last Name:</label>
+          <input type="text" id="last_name" name="last_name" readonly>
+        </div>
+        <div class="form-group">
+          <label>Department Name:</label>
+          <input type="text" id="departmentname" name="departmentname" readonly>
+        </div>
+        <div class="form-group">
+          <label for="designation">Designation:</label>
+          <input type="text" id="designation" name="designation" th:value="${onboarding?.designation}">
+        </div>
+      </div>
+
+      <br>
+
+      <!-- Second Row -->
+      <div class="form-row">
+        <div class="form-group">
+          <label for="dateofjoining">Date of Joining:</label>
+          <input type="date" id="dateofjoining" name="dateofjoining" th:value="${onboarding?.dateofjoining}">
+        </div>
+
+        <div class="form-group">
+          <label for="academiccertificates" style="font-size:13px;">Academic Certificates:</label>
+          <select id="academiccertificates" name="academiccertificates" th:value="${onboarding?.academiccertificates}">
+            <option value="">-- Select --</option>
+            <option value="Submitted" th:selected="${onboarding?.academiccertificates == 'Submitted'}">Submitted</option>
+            <option value="Pending" th:selected="${onboarding?.academiccertificates == 'Pending'}">Pending</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="identityproof">Identity Proof:</label>
+          <select id="identityproof" name="identityproof" th:value="${onboarding?.identityproof}">
+            <option value="">-- Select --</option>
+            <option value="Submitted" th:selected="${onboarding?.identityproof == 'Submitted'}">Submitted</option>
+            <option value="Pending" th:selected="${onboarding?.identityproof == 'Pending'}">Pending</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="taxdocuments">Tax Documents:</label>
+          <select id="taxdocuments" name="taxdocuments" th:value="${onboarding?.taxdocuments}">
+            <option value="">-- Select --</option>
+            <option value="Submitted" th:selected="${onboarding?.taxdocuments == 'Submitted'}">Submitted</option>
+            <option value="Pending" th:selected="${onboarding?.taxdocuments == 'Pending'}">Pending</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="offerlettersigned">Offer Letter Signed:</label>
+          <select id="offerlettersigned" name="offerlettersigned" th:value="${onboarding?.offerlettersigned}">
+            <option value="">-- Select --</option>
+            <option value="Submitted" th:selected="${onboarding?.offerlettersigned == 'Submitted'}">Submitted</option>
+            <option value="Pending" th:selected="${onboarding?.offerlettersigned == 'Pending'}">Pending</option>
+          </select>
+        </div>
+      </div>
+      <br>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="managername">Manager Name:</label>
+          <select id="managername" name="managername" th:value="${onboarding?.managername}">
+            <option value="">-- Select Manager --</option>
+            <option value="Manager1" th:selected="${onboarding?.managername == 'Manager1'}">Manager 1</option>
+            <option value="Manager2" th:selected="${onboarding?.managername == 'Manager2'}">Manager 2</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="employeeagreementsigned">Employee Agreement Signed:</label>
+          <select id="employeeagreementsigned" name="employeeagreementsigned" th:value="${onboarding?.employeeagreementsigned}">
+            <option value="">-- Select --</option>
+            <option value="Submitted" th:selected="${onboarding?.employeeagreementsigned == 'Submitted'}">Submitted</option>
+            <option value="Pending" th:selected="${onboarding?.employeeagreementsigned == 'Pending'}">Pending</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="systemaccess">System Access:</label>
+          <br>
+          <input type="text" id="systemaccess" name="systemaccess" th:value="${onboarding?.systemaccess}">
+        </div>
+
+        <div class="form-group">
+          <label for="accesstype">Access Type:</label>
+          <br>
+          <input type="text" id="accesstype" name="accesstype" th:value="${onboarding?.accesstype}">
+        </div>
+
+        <div class="form-group">
+          <label for="levelofaccess">Level of Access:</label>
+          <br>
+          <input type="text" id="levelofaccess" name="levelofaccess" th:value="${onboarding?.levelofaccess}">
+        </div>
+
+        <div class="form-group">
+          <label for="orientationdate">Orientation Date:</label>
+          <br>
+          <input type="date" id="orientationdate" name="orientationdate" th:value="${onboarding?.orientationdate}">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="mandatorytrainingprogram" >Mandatory Training Program:</label>
+          <input type="text" id="mandatorytrainingprogram" name="mandatorytrainingprogram" th:value="${onboarding?.mandatorytrainingprogram}">
+        </div>
+
+        <div class="form-group">
+          <label for="assetid">Asset ID:</label>
+          <br>
+          <input type="text" id="assetid" name="assetid" th:value="${onboarding?.assetid}">
+        </div>
+
+        <div class="form-group">
+          <label for="assetname">Asset Name:</label>
+          <br>
+          <input type="text" id="assetname" name="assetname" th:value="${onboarding?.assetname}">
+        </div>
+
+        <div class="form-group">
+          <label for="assettype">Asset Type:</label>
+          <br>
+          <input type="text" id="assettype" name="assettype" th:value="${onboarding?.assettype}">
+        </div>
+
+        <div class="form-group">
+          <label for="assignedto">Assigned To:</label>
+          <br>
+          <input type="text" id="assignedto" name="assignedto" th:value="${onboarding?.assignedto}">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="allocationdate">Allocation Date:</label>
+          <input type="date" id="allocationdate" name="allocationdate" th:value="${onboarding?.allocationdate}">
+        </div>
+
+        <div class="form-group">
+          <label for="conditionatallocation" >Condition at Allocation:</label>
+          <input type="text" id="conditionatallocation" name="conditionatallocation" th:value="${onboarding?.conditionatallocation}">
+        </div>
+
+        <div class="form-group">
+          <label for="serialnumber">Serial Number:</label>
+          <input type="text" id="serialnumber" name="serialnumber" th:value="${onboarding?.serialnumber}">
+        </div>
+
+        <div class="form-group">
+          <label for="configurationdetails">Configuration Details:</label>
+          <input type="text" id="configurationdetails" name="configurationdetails" th:value="${onboarding?.configurationdetails}">
+        </div>
+
+        <div class="form-group">
+          <label for="approvedby">Approved By:</label>
+          <input type="text" id="approvedby" name="approvedby" th:value="${onboarding?.approvedby}">
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button type="button" id="submitBtn" onclick="submitForm()">Submit</button>
+        <button type="button" class="back-button" onclick="goback();">Back</button>
+        <div id="message"></div>
+      </div>
+    </form>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script> 
+function goBack() {
+	window.location.href = '/dashboard';
+	}
+</script>
+  <script>
+  // Auto-fetch details for edit mode
+  $(document).ready(function () {
+    const existingUID = $('#employeeuid').val();
+    if (existingUID) {
+      fetchEmployeeDetails(existingUID);
+    }
+  });
+
+  function fetchEmployeeDetails(employeeuid) {
+    if (!employeeuid) return;
+    $.ajax({
+      url: '/onboarding/edetails',
+      method: 'GET',
+      data: { employeeuid: employeeuid },
+      success: function(response) {
+        if (response) {
+          $('#first_name').val(response.firstName);
+          $('#last_name').val(response.lastName);
+          $('#departmentname').val(response.departmentname);
+        }
+      },
+      error: function() {
+        alert('Error fetching employee details. Please try again.');
+      }
+    });
+  }
+
+  function goback() {
+    window.location.href = '/hrms/Onoffboarding';
+  }
+
+  // ✅ Validation function
+  function validateOnboardingForm() {
+    function isAlphabetOnly(value) { return /^[A-Za-z\s]+$/.test(value); }
+    function isNumberOnly(value) { return /^[0-9]+$/.test(value); }
+    function isAlphaNumeric(value) { return /^[A-Za-z0-9\s]+$/.test(value); }
+
+    const requiredFields = [
+      { id: 'employeeuid', name: 'Employee UID' },
+      { id: 'designation', name: 'Designation', alpha: true },
+      { id: 'dateofjoining', name: 'Date of Joining' },
+      { id: 'academiccertificates', name: 'Academic Certificates' },
+      { id: 'identityproof', name: 'Identity Proof' },
+      { id: 'taxdocuments', name: 'Tax Documents' },
+      { id: 'offerlettersigned', name: 'Offer Letter Signed' },
+      { id: 'managername', name: 'Manager Name' },
+      { id: 'employeeagreementsigned', name: 'Employee Agreement Signed' },
+      { id: 'systemaccess', name: 'System Access', alpha: true },
+      { id: 'accesstype', name: 'Access Type', alpha: true },
+      { id: 'levelofaccess', name: 'Level of Access', alphanumeric: true },
+      { id: 'orientationdate', name: 'Orientation Date' },
+     
+	  // ✅ This field now allows symbols, numbers & characters (no restriction)
+	       { id: 'mandatorytrainingprogram', name: 'Mandatory Training Program', any: true },
+	       
+      { id: 'assetid', name: 'Asset ID', alphanumeric: true },
+      { id: 'assetname', name: 'Asset Name', alphanumeric: true },
+      { id: 'assettype', name: 'Asset Type', alpha: true },
+      { id: 'assignedto', name: 'Assigned To' },
+      { id: 'allocationdate', name: 'Allocation Date' },
+      { id: 'conditionatallocation', name: 'Condition at Allocation', alpha: true },
+      { id: 'serialnumber', name: 'Serial Number', alphanumeric: true },
+      { id: 'configurationdetails', name: 'Configuration Details', alphanumeric: true },
+      { id: 'approvedby', name: 'Approved By', alpha: true }
+    ];
+
+    for (let field of requiredFields) {
+      let value = $('#' + field.id).val()?.trim();
+
+      if (!value) {
+        Swal.fire({ icon: 'warning', title: 'Validation Error', text: field.name + ' is required.' });
+        return false;
+      }
+
+      if (field.alpha && !isAlphabetOnly(value)) {
+        Swal.fire({ icon: 'error', title: 'Invalid Input', text: field.name + ' must contain only letters.' });
+        return false;
+      }
+
+      if (field.numeric && !isNumberOnly(value)) {
+        Swal.fire({ icon: 'error', title: 'Invalid Input', text: field.name + ' must contain only numbers.' });
+        return false;
+      }
+
+      if (field.alphanumeric && !isAlphaNumeric(value)) {
+        Swal.fire({ icon: 'error', title: 'Invalid Input', text: field.name + ' must contain only letters and numbers.' });
+        return false;
+      }
+	  // ✅ New rule: allow anything (symbols, numbers, letters)
+	       if (field.any && value.length < 1) {
+	         Swal.fire({ icon: 'error', title: 'Invalid Input', text: field.name + ' cannot be empty.' });
+	         return false;
+	       }
+    }
+    return true;
+  }
+
+  // ✅ Submit Form
+  function submitForm() {
+    if (!validateOnboardingForm()) return;
+
+    const formData = new FormData(document.getElementById('onboardingForm'));
+    const id = $('#id').val();
+    let url = id ? '/updateonboarding' : '/saveform';
+    const successMessage = id ? 'OnBording details updated successfully!' : 'OnBording details saved successfully!';
+
+    
+    $.ajax({
+      url: url,
+      type: 'POST',
+      data: formData,
+      processData: false,
+      contentType: false,
+      success: function() {
+        Swal.fire({
+          icon: 'success',
+          title: 'Success',
+          text: successMessage,
+          showConfirmButton: true,  
+          confirmButtonText: 'OK'
+        }).then(() => {
+          window.location.href = '/hrms/Onoffboarding';
+        });
+      },
+      error: function() {
+        Swal.fire({ icon: 'error', title: 'Error', text: 'Error saving data. Please try again.' });
+      }
+    });
+  }  
+</script>
+</body>
+</html>

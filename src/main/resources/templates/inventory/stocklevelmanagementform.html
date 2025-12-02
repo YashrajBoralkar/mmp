@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stock Level Information Form</title>
+ <link rel="stylesheet" href="/css/empinfo.css">
+    <link rel="stylesheet" href="/css/hrms.css"> <!-- // for side bar code  -->
+         <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+     
+     <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+<div th:replace="~{INVENTORY.html :: sidebarFragment}"></div> <!-- // for side bar code  -->
+	<form id="stocklevelmanagementForm">
+  <div class="form-container">
+  
+   <!-- Hidden ID Field -->
+        <input type="hidden" id="id" name="id" th:value="${stocklevel?.id}" >
+  
+
+      <h2>Stock Level Information Form</h2>
+      <!-- First Row -->  
+      <div class="form-row">
+        <div class="form-group">
+          <label for="batchuid">Batch UID:</label>
+          <select id="batchuid" name="batchuid" onchange="fetchBatchDetails(this.value)" >
+              <option value="">Select Batch UID</option>
+              <option th:each="uid : ${batchuid}" th:value="${uid}" th:text="${uid}"></option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="stockuid">Stock UID:</label>
+          <select id="stockuid" name="stockuid" onchange="fetchStockinfoDetails(this.value)" >
+              <option value="">Select Stock UID</option>
+              <option th:each="uid : ${stockuid}" th:value="${uid}" th:text="${uid}"></option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="stockname">Stock Name</label>
+          <input type="text" id="stockname" name="stockname" readonly>         
+        </div>
+         <div class="form-group">
+          <label for="stockdescription">Description</label>
+          <input id="stockdescription"   name="stockdescription" rows="3" readonly>
+        </div>
+        
+      </div>
+
+      <!-- Second Row -->
+      <div class="form-row">
+      
+      <div class="form-group">
+          <label for="warehouseuid">Warehouse UID:</label>
+          <select id="warehouseuid" name="warehouseuid" onchange="fetchWarehouseDetails(this.value)">
+          <option value="">Select Warehouse UID</option>
+          <option th:each="uid : ${warehouseuid}" th:value="${uid}" th:text="${uid}"></option>
+          </select>               
+        </div>
+       
+        <div class="form-group">
+          <label for="address">Address</label>
+          <input type="text" id="address" name="address" readonly>
+        </div>
+        <div class="form-group">
+            <label for="cityname">City Name</label>
+            <input type="text" id="cityname" name="cityname" readonly>
+        </div>
+      </div>
+
+      <!-- Third Row -->
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="shelfnumber">Shelf Number</label>
+          <input type="text" id="shelfnumber" name="shelfnumber" th:value="${stocklevel?.shelfnumber}" required>  
+        </div>
+        <div class="form-group">
+          <label for="currentstockquantity">Current Stock Quantity</label>
+          <input type="number" id="currentstockquantity" name="currentstockquantity" th:value="${stocklevel?.currentstockquantity}" required>
+        </div>
+        <div class="form-group">
+          <label for="minstockquantity">Minimum Stock Quantity</label>
+           <input type="number" id="minstockquantity" name="minstockquantity" th:value="${stocklevel?.minstockquantity}" required>
+        </div>
+      </div>
+      <!-- four row -->
+      <div class="form-row">
+        <div class="form-group">
+          <label for="maxstockquantity">Maximum Stock Quantity</label>
+          <input type="number" id="maxstockquantity" name="maxstockquantity" th:value="${stocklevel?.maxstockquantity}" required>
+        </div>
+        <div class="form-group">
+          <label for="defectivestockquantity">Defective Stock Quantity</label>
+         <input type="text" id="defectivestockquantity" name="defectivestockquantity" th:value="${stocklevel?.defectivestockquantity}" required>  
+        </div>
+        <div class="form-group">
+          <label for="reorederstock">Reorder Stock</label>
+          <input type="text" id="reorederstock" name="reorederstock" th:value="${stocklevel?.reorederstock}" required>
+        </div>
+      </div>
+      <br>
+      <div class="form-actions">
+        <button style="position: relative;bottom: 12px;" type="button" id="submitBtn" onclick="submitForm()">Submit</button>
+        <div th:if="${successMessage}" class="success-message" th:text="${successMessage}"></div>
+      </div>
+      </div>
+      </form>
+   
+
+<script>
+  
+
+function fetchWarehouseDetails(warehouseuid) {
+    if (!warehouseuid)  return;
+    
+    
+    $.ajax({
+        url: '/warehouse/getwarehouseDetails',
+        method: 'GET',
+        data: { warehouseuid: warehouseuid },
+        success: function(response) {
+              $('#address').val(response.address);
+              $('#cityname').val(response.cityname);
+           
+        },
+        error: function() {
+            alert('Error fetching warehouse details. Please try again.');
+        }
+    });
+}
+
+function fetchStockinfoDetails(stockuid) {
+    if (!stockuid)  return;
+    
+    
+    $.ajax({
+        url: '/stock/getstockmanagementDetails',
+        method: 'GET',
+        data: { stockuid: stockuid },
+        success: function(response) {
+              $('#stockname').val(response.stockname);
+              $('#stockdescription').val(response.stockdescription);
+
+        },
+        error: function() {
+            alert('Error fetching warehouse details. Please try again.');
+        }
+    });
+}
+
+
+
+
+
+function submitForm() {
+    const formData = new FormData(document.getElementById('stocklevelmanagementForm'));
+    const id = $('#id').val();
+    let url, successMessage;
+
+    if (!id) {
+        url = '/savestocklevelform';
+        successMessage = 'Stock saved successfully!';
+    } else {
+        url = '/stocklevelupdate';
+        successMessage = 'Stock updated successfully!';
+    }
+
+    $.ajax({
+        url: url,
+        type: 'POST',
+        data: formData,
+        processData: false,
+        contentType: false,
+        success: function(response) {
+            alert(successMessage);
+            resetForm();
+            window.location.href = '/inventory/stocklevelGrid';
+        },
+        error: function() {
+            alert('Error saving stock level. Please try again.');
+        }
+    });
+}
+
+function resetForm() {
+    $('#stocklevelmanagementForm')[0].reset();
+    $('#id').val('');
+    $('#form-title').text('Stock Form');
+    $('#submitBtn').text('Submit');
+}
+
+function prefillForm(data) {
+    $('#id').val(data.id);
+    $('#shelfnumber').val(data.shelfnumber);
+    $('#currentstockquantity').val(data.currentstockquantity);
+    $('#minstockquantity').val(data.minstockquantity);
+    $('#maxstockquantity').val(data.maxstockquantity);
+	$('#defectivestockquantity').val(data.defectivestockquantity);
+	$('#reorederstock').val(data.reorederstock);
+	   
+    $('#form-title').text('Update Stock Level');
+    $('#submitBtn').text('Update');
+}
+</script>
+</body>
+</html>

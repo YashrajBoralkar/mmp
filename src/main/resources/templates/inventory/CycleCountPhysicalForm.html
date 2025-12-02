@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cycle Count Physical Form</title>
+    <link rel="stylesheet" href="/css/empinfo.css">
+    <link rel="stylesheet" href="/css/hrms.css">
+    <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div th:replace="~{INVENTORY.html :: sidebarFragment}"></div>
+
+    <form id="PhysicalcyclecountForm" class="form-container">
+        <input type="hidden" id="id" name="id" th:value="${physicalcyclecount?.id}">
+        <h2>Cycle Count Physical Form</h2>
+
+        <!-- Row 1 -->
+        <div class="form-row">
+            <div class="form-group">
+                <label for="category">Category:</label>
+                <input type="text" id="category" name="category" th:value="${physicalcyclecount?.category}" required>
+            </div>
+            <div class="form-group">
+                <label for="scheduleddate">Scheduled Date:</label>
+                <input type="date" id="scheduleddate" name="scheduleddate" th:value="${physicalcyclecount?.scheduleddate}" required>
+            </div>
+            <div class="form-group">
+                <label for="cyclecounttype">Cycle Count Type:</label>
+                <select id="cyclecounttype" name="cyclecounttype" required>
+                    <option value="">Select Type</option>
+                    <option value="Daily" th:selected="${physicalcyclecount?.cyclecounttype == 'Daily'}">Daily</option>
+                    <option value="Weekly" th:selected="${physicalcyclecount?.cyclecounttype == 'Weekly'}">Weekly</option>
+                    <option value="Monthly" th:selected="${physicalcyclecount?.cyclecounttype == 'Monthly'}">Monthly</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="countinitiatedby">Count Initiated By:</label>
+                <input type="text" id="countinitiatedby" name="countinitiatedby" th:value="${physicalcyclecount?.countinitiatedby}" required>
+            </div>
+        </div>
+
+        <!-- Row 2 -->
+        <div class="form-row">
+            <div class="form-group">
+                <label for="productuid">Product ID: </label>
+                <select id="productuid" name="productuid" onchange="onProductChange(this.value)" th:disabled="${physicalcyclecount?.id != null}" required>
+                    <option value="">Select Product ID</option>
+                    <option th:each="uid : ${productuids}" th:value="${uid}" th:text="${uid}" th:selected="${uid == physicalcyclecount?.productuid}"></option>
+                </select>
+                <input type="hidden" name="productuid" th:value="${physicalcyclecount?.productuid}" th:if="${physicalcyclecount?.id != null}">
+            </div>
+            <div class="form-group">
+                <label for="productname">Product Name:</label>
+                <input type="text" id="productname" name="productname" readonly required>
+            </div>
+            <div class="form-group">
+                <label for="warehouseuid">Warehouse ID:</label>
+                <input type="text" id="warehouseuid_update" name="warehouseuid" th:value="${physicalcyclecount?.warehouseuid}" readonly th:if="${physicalcyclecount?.id != null}">
+                <select id="warehouseuid_create" name="warehouseuid" onchange="fetchWarehouseNameCreate(this.value)" th:if="${physicalcyclecount?.id == null}" required>
+                    <option value="">--Select Warehouse UID--</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="warehousename">Warehouse Name:</label>
+                <input type="text" id="warehousename" name="warehousename" th:value="${warehousename}" readonly required>
+            </div>
+        </div>
+
+        <!-- Row 3 -->
+        <div class="form-row">
+            <div class="form-group">
+                <label for="systemstock">System Stock:</label>
+                <input type="number" id="systemstock" name="systemstock" th:value="${physicalcyclecount?.systemstock}" readonly required>
+            </div>
+            <div class="form-group">
+                <label for="physicalstock">Physical Stock:</label>
+                <input type="number" id="physicalstock" name="physicalstock" th:value="${physicalcyclecount?.physicalstock}" required>
+            </div>
+            <div class="form-group">
+                <label for="stockdifference">Stock Difference:</label>
+                <input type="number" id="stockdifference" name="stockdifference" th:value="${physicalcyclecount?.stockdifference}" readonly>
+            </div>
+            <div class="form-group">
+                <label for="reasonofdiscrepancy">Reason of Discrepancy:</label>
+                <select id="reasonofdiscrepancy" name="reasonofdiscrepancy" required>
+                    <option value="">Reason of Discrepancy</option>
+                    <option value="Counting Error" th:selected="${physicalcyclecount?.reasonofdiscrepancy == 'Counting Error'}">Counting Error</option>
+                    <option value="Data Entry Error" th:selected="${physicalcyclecount?.reasonofdiscrepancy == 'Data Entry Error'}">Data Entry Error</option>
+                    <option value="Theft/Pilferage" th:selected="${physicalcyclecount?.reasonofdiscrepancy == 'Theft/Pilferage'}">Theft/Pilferage</option>
+                    <option value="Supplier Delivery Error" th:selected="${physicalcyclecount?.reasonofdiscrepancy == 'Supplier Delivery Error'}">Supplier Delivery Error</option>
+                    <option value="Damaged or Expired Stock" th:selected="${physicalcyclecount?.reasonofdiscrepancy == 'Damaged or Expired Stock'}">Damaged or Expired Stock</option>
+                    <option value="Item Misplacement" th:selected="${physicalcyclecount?.reasonofdiscrepancy == 'Item Misplacement'}">Item Misplacement</option>
+                    <option value="Other" th:selected="${physicalcyclecount?.reasonofdiscrepancy == 'Other'}">Other</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Row 4 -->
+        <div class="form-row">
+            <div class="form-group">
+                <label for="remark">Remark:</label><br>
+                <input id="remark" name="remark" th:value="${physicalcyclecount?.remark}">
+            </div>
+            <div class="form-group">
+                <label for="correctiveactiontaken">Corrective Action Taken:</label>
+                <select id="correctiveactiontaken" name="correctiveactiontaken" required>
+                    <option value="">Select Status</option>
+                    <option value="Adjust System Stock" th:selected="${physicalcyclecount?.correctiveactiontaken == 'Adjust System Stock'}">Adjust System Stock</option>
+                    <option value="Investigate & Report Theft" th:selected="${physicalcyclecount?.correctiveactiontaken == 'Investigate & Report Theft'}">Investigate & Report Theft</option>
+                    <option value="Restock or Reallocate Items" th:selected="${physicalcyclecount?.correctiveactiontaken == 'Restock or Reallocate Items'}">Restock or Reallocate Items</option>
+                    <option value="Update Data Entry Records" th:selected="${physicalcyclecount?.correctiveactiontaken == 'Update Data Entry Records'}">Update Data Entry Records</option>
+                    <option value="Other" th:selected="${physicalcyclecount?.correctiveactiontaken == 'Other'}">Other</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="resolvedby">Resolved By:</label><br>
+                <input type="text" id="resolvedby" name="resolvedby" th:value="${physicalcyclecount?.resolvedby}" required>
+            </div>
+            <div class="form-group">
+                <label for="resolutiondate">Resolution Date:</label><br>
+                <input type="date" id="resolutiondate" name="resolutiondate" th:value="${physicalcyclecount?.resolutiondate}" required>
+            </div>
+        </div>
+
+        <!-- Row 5 -->
+        <div class="form-row">
+            <div class="form-group">
+                <label for="approvalstatus">Approval Status:</label>
+                <select id="approvalstatus" name="approvalstatus" required>
+                    <option value="">Select Status</option>
+                    <option value="Pending" th:selected="${physicalcyclecount?.approvalstatus == 'Pending'}">Pending</option>
+                    <option value="Approved" th:selected="${physicalcyclecount?.approvalstatus == 'Approved'}">Approved</option>
+                    <option value="Rejected" th:selected="${physicalcyclecount?.approvalstatus == 'Rejected'}">Rejected</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="verifiedby">Verified By:</label>
+                <select id="verifiedby" name="verifiedby" required>
+                    <option value="">Select Verified By</option>
+                    <option th:each="emp : ${employees}"
+                            th:value="${emp.employeeUID + ' - ' + emp.firstName + ' ' + (emp.middleName == null ? '' : emp.middleName) + ' ' + emp.lastName}"
+                            th:text="${emp.employeeUID + ' - ' + emp.firstName + ' ' + (emp.middleName == null ? '' : emp.middleName) + ' ' + emp.lastName}"
+                            th:selected="${physicalcyclecount?.verifiedby != null and physicalcyclecount?.verifiedby.startsWith(emp.employeeUID)}">
+                    </option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="reviewedby">Reviewed By:</label>
+                <select id="reviewedby" name="reviewedby" required>
+                    <option value="">Select Reviewed By</option>
+                    <option th:each="emp : ${employees}"
+                            th:value="${emp.employeeUID + ' - ' + emp.firstName + ' ' + (emp.middleName == null ? '' : emp.middleName) + ' ' + emp.lastName}"
+                            th:text="${emp.employeeUID + ' - ' + emp.firstName + ' ' + (emp.middleName == null ? '' : emp.middleName) + ' ' + emp.lastName}"
+                            th:selected="${physicalcyclecount?.reviewedby != null and physicalcyclecount?.reviewedby.startsWith(emp.employeeUID)}">
+                    </option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="finalapproval">Final Approval:</label>
+                <select id="finalapproval" name="finalapproval" required>
+                    <option value="Pending" th:selected="${physicalcyclecount?.finalapproval == null or physicalcyclecount?.finalapproval == 'Pending'}">Pending</option>
+                    <option value="Approved" th:selected="${physicalcyclecount?.finalapproval == 'Approved'}">Approved</option>
+                    <option value="Rejected" th:selected="${physicalcyclecount?.finalapproval == 'Rejected'}">Rejected</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Buttons -->
+        <div class="form-actions">
+            <button type="button" id="submitBtn">Submit</button>
+            <button type="button" onclick="goback()">Back</button>
+        </div>
+    </form>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        // ======= Go Back =======
+        function goback() {
+            window.location.href = '/inventory/resolvediscrepancygrid';
+        }
+
+        // ======= Validate Form =======
+        function validateForm() {
+            let requiredFields = ['category','scheduleddate','cyclecounttype','countinitiatedby','physicalstock','reasonofdiscrepancy','correctiveactiontaken','resolvedby','resolutiondate','approvalstatus','verifiedby','reviewedby','finalapproval'];
+            for(let field of requiredFields){
+                if(!$('#'+field).val().trim()){
+                    alert('⚠️ ' + field.replace(/([A-Z])/g, ' $1') + ' is required.');
+                    return false;
+                }
+            }
+
+            let scheduled = new Date($('#scheduleddate').val());
+            let resolved = new Date($('#resolutiondate').val());
+            if(resolved < scheduled){
+                alert("⚠️ Resolution Date must be same or after Scheduled Date.");
+                return false;
+            }
+
+            return true;
+        }
+
+        // ======= Submit Form =======
+        function submitForm() {
+            if(!validateForm()) return;
+
+            const formData = new FormData(document.getElementById('PhysicalcyclecountForm'));
+            const id = $('#id').val();
+            let url = !id ? '/physicalcyclecount' : '/updatephysicalcyclecount';
+            let successMessage = !id ? '✅ Physical Cycle Count saved successfully!' : '✅ Physical Cycle Count updated successfully!';
+
+            $.ajax({
+                url: url,
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function () {
+                    alert(successMessage);
+                    $('#PhysicalcyclecountForm')[0].reset();
+                    $('#stockdifference').val('');
+                    window.location.href = '/physicalcyclecount';
+                },
+                error: function () {
+                    alert('❌ Error saving Physical Cycle Count.');
+                }
+            });
+        }
+
+        // ======= Fetch Product & Warehouse =======
+        function onProductChange(productuid){
+            if(!productuid){
+                $('#productname').val('');
+                $('#warehouseuid_create').empty().append('<option value="">--Select Warehouse--</option>');
+                $('#warehousename').val('');
+                $('#systemstock').val('');
+                return;
+            }
+            $.ajax({
+                url: '/getProductInfoByUid',
+                type: 'GET',
+                data: { productuid: productuid },
+                success: function(res){
+                    $('#productname').val(res.productname || '');
+                    // Populate warehouses
+                    $.ajax({
+                        url:'/getWarehousesByProductUid',
+                        type:'GET',
+                        data:{productUid:productuid},
+                        success:function(data){
+                            const $warehouse = $('#warehouseuid_create');
+                            $warehouse.empty().append('<option value="">--Select Warehouse--</option>');
+                            data.forEach(whuid => { $warehouse.append('<option value="'+whuid+'">'+whuid+'</option>'); });
+                        },
+                        error:function(){ alert('Error fetching warehouses.'); }
+                    });
+                },
+                error:function(){ alert('Error fetching product details.'); }
+            });
+        }
+
+        function fetchWarehouseNameCreate(warehouseUid){
+            if(!warehouseUid){ $('#warehousename').val(''); return; }
+            $.ajax({
+                url:'/getWarehousenameByWarehouseUid',
+                type:'GET',
+                data:{ warehouseuid: warehouseUid },
+                success:function(res){ $('#warehousename').val(res?.warehousename || ''); },
+                error:function(){ $('#warehousename').val(''); }
+            });
+            fetchSystemStockByWarehouse(warehouseUid);
+        }
+
+        function fetchSystemStockByWarehouse(warehouseUid){
+            if(!warehouseUid){ $('#systemstock').val(''); return; }
+            $.ajax({
+                url:'/getRealtimeQuantityByWarehouse',
+                type:'GET',
+                data:{ warehouseuid: warehouseUid },
+                success:function(res){ $('#systemstock').val(parseInt(res)||0); },
+                error:function(){ $('#systemstock').val(''); }
+            });
+        }
+
+        // ======= Stock Difference Auto-Calculate =======
+		$(document).ready(function(){
+		    $('#physicalstock').on('input', function(){
+		        let systemStock = parseInt($('#systemstock').val()) || 0;
+		        let physicalStock = parseInt($(this).val()) || 0;
+		        $('#stockdifference').val(systemStock - physicalStock);
+		    });
+
+		    // Update mode: populate warehouse name & stock
+		    let warehouseUpdate = $('#warehouseuid_update').val();
+		    if(warehouseUpdate){
+		        $.ajax({
+		            url:'/getWarehousenameByWarehouseUid',
+		            type:'GET',
+		            data:{ warehouseuid: warehouseUpdate },
+		            success:function(res){ $('#warehousename').val(res?.warehousename||''); },
+		            error:function(){ $('#warehousename').val(''); }
+		        });
+		        fetchSystemStockByWarehouse(warehouseUpdate);
+		    }
+
+		    // ===== Update mode: populate product name =====
+		    let productUpdate = $('#id').val() ? $('#productuid').val() : null;
+		    if(productUpdate){
+		        $.ajax({
+		            url:'/getProductInfoByUid',
+		            type:'GET',
+		            data:{ productuid: productUpdate },
+		            success:function(res){
+		                $('#productname').val(res.productname || '');
+		            },
+		            error:function(){ $('#productname').val(''); }
+		        });
+		    }
+
+		    $('#submitBtn').on('click', submitForm);
+		});
+
+    </script>
+</body>
+</html>

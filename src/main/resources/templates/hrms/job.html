@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Job Posting Form</title>
+  <link rel="stylesheet" href="/css/empinfo.css">
+  <link rel="stylesheet" href="/css/hrms.css"> <!-- Sidebar CSS -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+
+<body>
+<div th:replace="~{HRMS.html :: sidebarFragment}"></div> <!-- Sidebar -->
+
+<form id="jobForm" enctype="multipart/form-data">
+  <div class="form-container">
+    <input type="hidden" id="id" name="id" th:value="${job?.id}">
+    <h2 id="form-title" th:text="${job != null} ? 'Update Job Posting' : 'Job Posting Form'">Job Posting Form</h2>
+
+    <!-- First Row -->
+    <div class="form-row">
+      <div class="form-group">
+        <label for="title">Job Title:</label>
+        <input type="text" id="title" name="title" th:value="${job?.title}" required>
+      </div>
+      <div class="form-group">
+        <label for="description">Job Description:</label>
+        <input type="text" id="description" name="description" th:value="${job?.description}" required>
+      </div>
+    </div>
+
+    <!-- Second Row -->
+    <div class="form-row">
+      <div class="form-group">
+        <label for="requirement">Required Skills:</label>
+        <input type="text" id="requirement" name="requirement" th:value="${job?.requirement}" required>
+      </div>
+      <div class="form-group">
+        <label for="department">Department Name:</label>
+        <input type="text" id="department" name="department" th:value="${job?.department}" required>
+      </div>
+    </div>
+
+    <!-- Third Row -->
+    <div class="form-row">
+      <div class="form-group">
+        <label for="postedBy">Posted By:</label>
+        <select id="postedBy" name="postedBy" th:value="${job?.postedBy}" required>
+          <option value="">Select HR/Admin</option>
+          <option value="HR" th:selected="${job?.postedBy == 'HR'}">HR</option>
+          <option value="ADMIN" th:selected="${job?.postedBy == 'ADMIN'}">Admin</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="postedDate">Posting Date:</label>
+        <input type="date" id="postedDate" name="postedDate" th:value="${job?.postedDate}" required>
+      </div>
+      <div class="form-group">
+        <label for="applicationDeadline">Application Deadline:</label>
+        <input type="date" id="applicationDeadline" name="applicationDeadline" th:value="${job?.applicationDeadline}" required>
+      </div>
+    </div>
+
+    <!-- Fourth Row -->
+    <div class="form-row">
+      <div class="form-group">
+        <label for="employmentType">Employment Type:</label>
+        <select id="employmentType" name="employmentType" th:value="${job?.employmentType}" required>
+          <option value="">Select</option>
+          <option value="Full-Time" th:selected="${job?.employmentType == 'Full-Time'}">Full-Time</option>
+          <option value="Part-Time" th:selected="${job?.employmentType == 'Part-Time'}">Part-Time</option>
+          <option value="Contract" th:selected="${job?.employmentType == 'Contract'}">Contract</option>
+          <option value="Internship" th:selected="${job?.employmentType == 'Internship'}">Internship</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="workLocation">Work Location:</label>
+        <select id="workLocation" name="workLocation" th:value="${job?.workLocation}" required>
+          <option value="">Select</option>
+          <option value="On-Site" th:selected="${job?.workLocation == 'On-Site'}">On-Site</option>
+          <option value="Remote" th:selected="${job?.workLocation == 'Remote'}">Remote</option>
+          <option value="Hybrid" th:selected="${job?.workLocation == 'Hybrid'}">Hybrid</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="address">Address:</label>
+        <input type="text" id="address" name="address" th:value="${job?.address}" required>
+      </div>
+    </div>
+
+    <!-- Buttons -->
+    <div class="form-actions">
+      <div class="button-row">
+        <button type="button" id="submitBtn" onclick="submitForm()">Save</button>
+        <button type="button" onclick="goback()">Back</button>
+      </div>
+    </div>
+  </div>
+</form>
+
+<script> 
+function goBack() {
+	window.location.href = '/dashboard';
+	}
+</script>
+<script>
+  // Allow only alphabets and spaces for specific fields
+  $('#title, #description, #requirement, #department').on('input', function () {
+    let value = $(this).val();
+    if (!/^[A-Za-z\s]*$/.test(value)) {
+      $(this).val(value.replace(/[^A-Za-z\s]/g, ''));
+      Swal.fire({
+        icon: 'warning',
+        title: 'Invalid Input',
+        text: 'Only letters and spaces are allowed in this field.',
+        timer: 1500,
+        showConfirmButton: false
+      });
+    }
+  });
+
+  // Validation logic
+  function validateForm() {
+    const title = $('#title').val().trim();
+    const description = $('#description').val().trim();
+    const requirement = $('#requirement').val().trim();
+    const department = $('#department').val().trim();
+    const postedBy = $('#postedBy').val();
+    const postedDate = $('#postedDate').val();
+    const applicationDeadline = $('#applicationDeadline').val();
+    const employmentType = $('#employmentType').val();
+    const workLocation = $('#workLocation').val();
+    const address = $('#address').val().trim();
+
+    const nameRegex = /^[A-Za-z\s]+$/;
+
+    if (!title) return showAlert('Please enter the Job Title.');
+    if (!nameRegex.test(title)) return showAlert('Job Title must contain only alphabets and spaces.');
+
+    if (!description) return showAlert('Please enter the Job Description.');
+    if (!nameRegex.test(description)) return showAlert('Job Description must contain only alphabets and spaces.');
+
+    if (!requirement) return showAlert('Please enter Required Skills.');
+    if (!nameRegex.test(requirement)) return showAlert('Required Skills must contain only alphabets and spaces.');
+
+    if (!department) return showAlert('Please enter Department Name.');
+    if (!nameRegex.test(department)) return showAlert('Department Name must contain only alphabets and spaces.');
+
+    if (!postedBy) return showAlert('Please select who posted the job.');
+    if (!postedDate) return showAlert('Please select Posting Date.');
+    if (!applicationDeadline) return showAlert('Please select Application Deadline.');
+    if (!employmentType) return showAlert('Please select Employment Type.');
+    if (!workLocation) return showAlert('Please select Work Location.');
+    if (!address) return showAlert('Please enter Address.');
+
+    const today = new Date().toISOString().split('T')[0];
+    if (applicationDeadline < today) return showAlert('Application Deadline cannot be in the past.');
+    if (applicationDeadline < postedDate) return showAlert('Deadline must be after Posting Date.');
+
+    return true;
+  }
+
+  function showAlert(message) {
+    Swal.fire({
+      icon: 'warning',
+      title: 'Validation Error',
+      text: message,
+      confirmButtonColor: '#3085d6',
+      confirmButtonText: 'OK'
+    });
+    return false;
+  }
+
+  // Submit Handler for Create or Update
+  function submitForm() {
+    if (!validateForm()) return;
+
+    const formData = new FormData(document.getElementById('jobForm'));
+    const id = $('#id').val();
+    let url = id ? '/updatejob' : '/jobpost';
+    let actionText = id ? 'updated' : 'posted';
+    let successTitle = id ? 'Job Updated Successfully!' : 'Job Posted Successfully!';
+
+    $.ajax({
+      url: url,
+      type: 'POST',
+      data: formData,
+      processData: false,
+      contentType: false,
+      success: function () {
+        Swal.fire({
+          icon: 'success',
+          title: successTitle,
+          text: `The job has been successfully ${actionText}.`,
+          showConfirmButton: true,
+          confirmButtonColor: '#3085d6'
+        }).then(() => {
+          resetForm();
+          window.location.href = '/hrms/JobGrid';
+        });
+      },
+      error: function () {
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'An error occurred while saving the job. Please try again.'
+        });
+      }
+    });
+  }
+
+  // Reset form after successful submission
+  function resetForm() {
+    $('#jobForm')[0].reset();
+    $('#id').val('');
+    $('#form-title').text('Job Posting Form');
+  }
+
+  // Back button logic
+  function goback() {
+    window.location.href = '/hrms/JobGrid';
+  }
+</script>
+
+</body>
+</html>

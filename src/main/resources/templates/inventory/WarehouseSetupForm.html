@@ -1,0 +1,374 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Warehouse Setup Form</title>
+  <link rel="stylesheet" href="/css/empinfo.css">
+  <link rel="stylesheet" href="/css/hrms.css"> <!-- // for side bar code  -->
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<style>
+h5{
+  margin: 10px;
+}
+</style>
+<body>
+  <div th:replace="~{INVENTORY.html :: sidebarFragment}"></div> <!-- // for side bar code  -->
+   <form id="warehouseinfoform" enctype="multipart/form-data">
+   <div class="form-container" style="max-width: 850px;">
+    <!-- Personal Information Section -->
+	<input type="hidden" id="id" name="id" th:value="${warehouse?.id}" />
+      <h2 style="font-size: 20px;">Warehouse Setup Form</h2>
+
+      <!-- First Row -->
+      <h5> 1.General Information</h5>
+      <div class="form-row">
+        
+        <div class="form-group">        
+          <label for="warehousename">Warehouse Name :</label>
+    <input type="text" id="warehousename" name="warehousename" th:value="${warehouse?.warehousename}" required>
+	<div class="error" id="warehousenameError"></div>
+        </div>
+               <div class="form-group">
+          <label for="contactperson">Contact Person Name :</label>
+          <input type="text" id="contactperson" name="contactperson" th:value="${warehouse?.contactperson}" required>
+        <div class="error" id="contactpersonError"></div>      
+        </div>
+
+        <div class="form-group">
+          <label for="contactnumber">Contact Number :</label>
+          <input type="tel" id="contactnumber" name="contactnumber" th:value="${warehouse?.contactnumber}" required>
+        <div class="error" id="contactnumberError"></div>
+        </div>
+      </div>
+      
+      <h5> 2. Warehouse Address Details</h5> 
+      <div class="form-row">
+        
+        <div class="form-group">
+          <label for="address">Warehouse Address :</label>
+          <input type="text" id="address" name="address" required th:value="${warehouse?.address}">
+        <div class="error" id="addressError"></div>
+        </div>
+        
+         <div class="form-group">
+          <label for="cityname">City Name :</label>
+          <input type="text" id="cityname" name="cityname" th:value="${warehouse?.cityname}" required>
+        <div class="error" id="citynameError"></div>      
+        </div>
+      </div>      
+
+      <!-- Second Row -->
+       <h5> 3. Storage Details</h5>       
+      <div class="form-row">
+        <div class="form-group">
+          <label for="storagecapacity">Storage Capacity :</label>
+	<div class="input-group">
+	    <input type="number" id="storagecapacity" name="storagecapacity" min="0" step="0.01" placeholder="Enter value" th:value="${warehouse?.storagecapacity}" required>	    
+	</div>
+        </div>
+        <div class="form-group">
+          
+           <label for="unit">Unit of Measure :</label>
+          <select id="unit" name="unit" required>
+            <option value="" disabled th:if="${warehouse?.unit == null}" selected>Select Type</option>
+            <option value="Batch" th:selected="${warehouse?.unit == 'Batch'}">Batch</option>
+            <option value="Lot" th:selected="${warehouse?.unit == 'Lot'}">Lot</option>
+            <option value="Stock" th:selected="${warehouse?.unit == 'Stock'}">Stock</option>
+        </select>
+        </div>
+
+        <div class="form-group">
+          <label for="storagetype">Storage Type :</label>
+          <select id="storagetype" name="storagetype" required>
+            <option value="" disabled th:if="${warehouse?.storagetype == null}" selected>Select Storage Type</option>            
+            <option value="Dry Storage" th:selected="${warehouse?.storagetype == 'Dry Storage'}">Dry Storage</option>
+            <option value="Cold Storage" th:selected="${warehouse?.storagetype == 'Cold Storage'}">Cold Storage</option>
+            <option value="Hazardous Material Storage" th:selected="${warehouse?.storagetype == 'Hazardous Material Storage'}">Hazardous Material Storage</option>
+        </select>
+        <div class="error" id="storagetypeError"></div>
+        </div>
+        <div class="form-group" >
+          <label for="zonesandsections">Zones and Sections :</label>
+          <input type="text" id="zonesandsections" name="zonesandsections" th:value="${warehouse?.zonesandsections}" required>
+        <div class="error" id="zonesandsectionsError"></div>
+        </div>
+      </div>
+      <!-- Third Row -->
+      <h5>4. Operational Details</h5>
+      <div class="form-row">
+      
+          <div class="form-group">
+            <label for="warehousetype">Warehouse Type :</label>
+            <select id="warehousetype" name="warehousetype" required>
+                <option value="" disabled th:if="${warehouse?.warehousetype == null}" selected>Select Warehouse Type</option>
+                <option value="Distribution Center" th:selected="${warehouse?.warehousetype == 'Distribution Center'}">Distribution Center</option>
+                <option value="Regional Hub" th:selected="${warehouse?.warehousetype == 'Regional Hub'}">Regional Hub</option>
+                <option value="Central Warehouse" th:selected="${warehouse?.warehousetype == 'Central Warehouse'}">Central Warehouse</option>
+            </select>
+            <div class="error" id="warehousetypeError"></div>          
+          </div>
+
+          <div class="form-group">
+            <label for="operationalhours">Operational Hours :</label>
+            <input type="text" id="operationalhours" name="operationalhours" th:value="${warehouse?.operationalhours}" required>
+          <div class="error" id="operationalhoursError"></div>     
+        </div>
+        <div class="form-group">
+          <label for="dockoperation">Dock Operation Type :</label>
+          <select id="dockoperation" name="dockoperation" required>
+              <option value="" disabled th:if="${warehouse?.dockoperation == null}" selected>Select Operation</option>
+              <option value="Loading" th:selected="${warehouse?.dockoperation == 'Loading'}">Loading</option>
+              <option value="Unloading" th:selected="${warehouse?.dockoperation == 'Unloading'}">Unloading</option>
+          </select>
+          <div class="error" id="dockoperationError"></div>  
+        </div>
+        <div class="form-group">
+          <label for="dockavailability">No. of Docks Available :</label>
+          <input type="number" id="dockavailability" name="dockavailability" min="0" th:value="${warehouse?.dockavailability}" required>
+        <div class="error" id="dockavailabilityError"></div>
+        
+        </div>
+      </div>
+
+      <!-- four Row -->
+
+      <h5>5. Safety and Compliance</h5>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="firesafetyequipment">Fire Safety Equipment :</label>
+          <select id="firesafetyequipment" name="firesafetyequipment" required>
+              <option value="" disabled th:if="${warehouse?.firesafetyequipment == null}" selected>Select Fire Safety Equipment</option>
+              <option value="Yes" th:selected="${warehouse?.firesafetyequipment == 'Yes'}">Yes</option>
+              <option value="No" th:selected="${warehouse?.firesafetyequipment == 'No'}">No</option>
+          </select>
+          <div class="error" id="firesafetyequipmentError"></div>
+        </div> 
+        <div class="form-group">
+          <label for="file">Safety Certification :</label>
+          <input type="file" id="file" name="file"  accept=".pdf, .doc, docx" />
+        </div>        
+      </div>
+
+   <!-- Five Row  -->
+   <h5>6. Additional Information</h5>
+   <div class="form-row">
+     <div class="form-group">
+      <label for="associatedinventorylocations">Associated Inventory Locations:</label>
+      <input type="text" id="associatedinventorylocations" name="associatedinventorylocations" th:value="${warehouse?.associatedinventorylocations}">
+       <div class="error" id="associatedinventorylocationsError"></div>
+     </div>
+
+     <div class="form-group">
+          <label for="remarks">Remarks/Comments:</label>
+          <input type="text" id="remarks" name="remarks" th:value="${warehouse?.remarks}">
+          <div class="error" id="remarksError"></div>  
+     </div>  
+
+     <div class="form-group">
+       <label for="status">Status :</label>
+       	<select id="status" name="status" required>
+	        <option value="" disabled th:if="${warehouse?.status == null}" selected>Select Status</option>
+	        <option value="Active" th:selected="${warehouse?.status == 'Active'}">Active</option>
+	        <option value="Inactive" th:selected="${warehouse?.status == 'Inactive'}">Inactive</option>
+	        <option value="Under Maintenance" th:selected="${warehouse?.status == 'Under Maintenance'}">Under Maintenance</option>
+	      </select>
+	     <div class="error" id="statusError"></div>
+     </div>
+   </div>  
+
+      <div class="form-actions">
+        <button type="button" id="submitBtn" onclick="submitForm()" >Submit</button>
+		<button type="button" class="back-button" onclick="goback()">Back</button>
+        <div th:if="${successMessage}" class="success-message" th:text="${successMessage}"></div>                       
+      </div>
+    </div>
+    </form>
+ <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script>
+	function validateTextField(fieldId, errorId) {
+	    const field = document.getElementById(fieldId);
+	    const errorField = document.getElementById(errorId);
+
+	    if (field.value.trim() === "") {
+	        errorField.textContent = "This field is required.";
+	        return false;
+	    } else {
+	        errorField.textContent = "";
+	        return true;
+	    }
+	}
+
+ 
+ function goback() {
+ 	window.location.href = '/inventory/warehousemanagement';
+ }
+ 
+ function validateContactNumber() {
+     const contactNumberField = document.getElementById('contactnumber');
+     const errorField = document.getElementById('contactnumberError');
+     const regex = /^\d{10}$/; // Only 10 digits
+
+     if (!regex.test(contactNumberField.value)) {
+         errorField.textContent = 'Contact number must be exactly 10 digits.';
+         return false;
+     } else {
+         errorField.textContent = '';
+         return true;
+     }
+ }
+ 
+ function validateOperationalHours() {
+     const operationalHoursField = document.getElementById('operationalhours');
+     const errorField = document.getElementById('operationalhoursError');
+     const value = operationalHoursField.value;
+
+     // Check if the value is a number and within the range
+     if (!Number.isInteger(+value) || value < 1 || value > 24) {
+         errorField.textContent = 'Operational hours must be a whole number between 1 and 24.';
+         return false;
+     } else {
+         errorField.textContent = '';
+         return true;
+     }
+ }
+
+ function validateDockAvailability() {
+     const dockAvailabilityField = document.getElementById('dockavailability');
+     const errorField = document.getElementById('dockavailabilityError');
+     const value = dockAvailabilityField.value;
+
+     // Check if the value is a positive integer
+     if (!Number.isInteger(+value) || value < 1) {
+         errorField.textContent = 'Number of docks available must be a positive whole number.';
+         return false;
+     } else {
+         errorField.textContent = '';
+         return true;
+     }
+ } 
+ 
+ function validateSelectField(fieldId, errorId) {
+     const field = document.getElementById(fieldId);
+     const errorField = document.getElementById(errorId);
+
+     if (field.value === "") {
+         errorField.textContent = 'Please select an option.';
+         return false;
+     } else {
+         errorField.textContent = '';
+         return true;
+     }
+ }
+ function validateRequiredField(fieldId, errorId) {
+     const field = document.getElementById(fieldId);
+     const errorField = document.getElementById(errorId);
+
+     if (field.value.trim() === "") {
+         errorField.textContent = "This field is required.";
+         return false;
+     } else {
+         errorField.textContent = "";
+         return true;
+     }
+ }
+
+ 
+function submitForm() {
+	const isWarehouseNameValid = validateRequiredField('warehousename', 'warehousenameError');
+	const isAddressValid = validateRequiredField('address', 'addressError');
+     const isContactPersonValid = validateTextField('contactperson', 'contactpersonError');
+   const isContactNumberValid = validateContactNumber(); // Validate contact number
+   const isOperationalHoursValid = validateOperationalHours(); // Validate operational hours
+   const isDockAvailabilityValid = validateDockAvailability(); // Validate dock availability
+   const isStorageTypeValid = validateSelectField('storagetype', 'storagetypeError'); // Validate storage type
+      const isWarehouseTypeValid = validateSelectField('warehousetype', 'warehousetypeError'); // Validate warehouse type
+      const isDockOperationValid = validateSelectField('dockoperation', 'dockoperationError'); // Validate dock operation
+      const isFireSafetyEquipmentValid = validateSelectField('firesafetyequipment', 'firesafetyequipmentError'); // Validate fire safety equipment
+      const isStatusValid = validateSelectField('status', 'statusError'); // Validate status
+     
+     const isAssociatedInventoryLocationsValid = validateTextField('associatedinventorylocations', 'associatedinventorylocationsError');
+     const isRemarksValid = validateTextField('remarks', 'remarksError');
+   const isZonesandSectionsValid = validateTextField('zonesandsections','zonesandsectionsError');
+
+     if (!isWarehouseNameValid || !isAddressValid || !isContactPersonValid ||  !isContactNumberValid || !isOperationalHoursValid || !isDockAvailabilityValid ||
+    !isStorageTypeValid || !isWarehouseTypeValid || !isDockOperationValid || !isFireSafetyEquipmentValid || !isStatusValid || !isAssociatedInventoryLocationsValid ||
+     !isRemarksValid || !isZonesandSectionsValid) {
+         return; // Stop submission if any field is invalid
+     } 
+   
+ 
+     const formData = new FormData(document.getElementById('warehouseinfoform'));
+     const Id = $('#id').val();
+
+     let url, successMessage;
+
+     if (!Id) {
+         url = '/submitwarehouseform';
+         successMessage = 'Warehouse saved successfully!';
+     } else {
+         url = '/updatewarehouseinfo';
+         successMessage = 'Warehouse updated successfully!';
+     }
+
+     $.ajax({
+         url: url,
+         type: 'POST', 
+         data: formData,
+         processData: false,
+         contentType: false,
+         success: function (response) {
+              alert(successMessage);// Corrected this line
+             // Optionally, reset the form
+             resetForm();
+             // Optionally, redirect after successful form submission
+             window.location.href = '/inventory/warehousemanagement';
+         },
+         error: function() {
+             alert('Error saving Warehouse. Please try again.');
+         }
+     });
+ }
+
+
+   function resetForm() {
+       $('#warehouseinfoform')[0].reset();
+       $('#id').val('');
+       $('#message').text('');
+       $('#form-title').text('New warehouse form');
+       $('#submitBtn').text('Submit');
+   }
+
+   function prefillForm(data) {
+       $('#id').val(data.id);
+    $('#warehouseName').val(data.warehousename);
+      $('#address').val(data.address);
+       $('#contactPerson').val(data.contactperson);
+       $('#contactNumber').val(data.contactnumber);
+   
+       $('#storageCapacity').val(data.storagecapacity);
+   
+       $('#storageType').val(data.storagetype);
+       $('#zonesAndSections').val(data.zonesandsections);
+   $('#warehouseType').val(data.warehousetype);
+   $('#operationalHours').val(data.operationalhours);
+   $('#dockOperation').val(data.dockoperation);
+   $('#dockAvailability').val(data.dockavailability);
+   $('#fireSafetyEquipment').val(data.firesafetyequipment);
+   $('#safacitycertification').val(data.safacitycertification);
+
+   $('#associatedInventoryLocations').val(data.associatedinventorylocations);
+   $('#remarks').val(data.remarks);
+   $('#status').val(data.status);
+       
+   
+       $('#form-title').text('Update Enrollment');
+       $('#submitBtn').text('Update');
+   }
+</script>
+
+</body>
+</html>

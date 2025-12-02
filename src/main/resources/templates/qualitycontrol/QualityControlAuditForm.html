@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quality Control Audit Form</title>
+  <link rel="stylesheet" href="/css/empinfo.css">
+  <link rel="stylesheet" href="/css/hrms.css"> 
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+<div th:replace="~{QUALITYCONTROL.html :: sidebarFragment}"></div> <!-- // for side bar code  -->
+
+   <form id="auditform" class="form-container"  style="padding: 58px;" >
+    <!-- Personal Information Section -->
+    <input type="hidden" id="id" name="id" th:value="${auditlist?.id}">
+
+      <h2>Quality Control Audit Form</h2>
+      <!-- First Row -->    
+      <h5>General Information</h5>
+      <br>
+      <div class="form-row">
+        <div class="form-group">        
+          <label for="auditdate">Audit Date :</label>
+          <input type="date" id="auditdate" name="auditdate" th:value="${auditlist?.auditdate}" required>
+        </div>
+        <div class="form-group">
+          <label for="auditorname">Auditor Name :</label>
+          <input type="text" id="auditorname" name="auditorname" th:value="${auditlist?.auditorname}" required>
+        </div>
+      </div>
+
+      <!-- Second Row -->
+      <h5>Audit Parameters</h5>
+      <br>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="pcscore" >Process Compliance Score :</label>
+          <input type="number" id="pcscore" name="pcscore" th:value="${auditlist?.pcscore}"  min="0"  required>
+	      </div>
+   
+        <div class="form-group">
+          <label for="pqscore">Product Quality Score :</label>
+          <br>
+          <input type="number" id="pqscore" name="pqscore" th:value="${auditlist?.pqscore}" min="0" required>
+        </div>       
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="correctiveaction">Corrective Action :</label>
+	    		 <select id="correctiveaction" name="correctiveaction" th:value="${auditlist?.correctiveaction}"  required>
+            	   		<option value="">Select status</option>
+                		<option value="Yes" th:selected="${auditlist?.correctiveaction == 'Yes'}">Yes</option>
+                		<option value="No" th:selected="${auditlist?.correctiveaction == 'No'}">No</option>
+            	</select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="auditstatus">Audit Status :</label>
+          <select id="auditstatus" name="auditstatus" th:value="${auditlist?.auditstatus}" required>
+                <option value="">Select status</option>
+                <option value="Pass" th:selected="${auditlist?.auditstatus == 'Pass'}" >Pass</option>
+                <option value="Fail" th:selected="${auditlist?.auditstatus == 'Fail'}">Fail</option>
+          </select>
+        
+        </div>
+
+        <div class="form-group" >         
+          <label for="supervisorreview">Supervisor Review :</label>
+          <input type="text" id="supervisorreview" name="supervisorreview" th:value="${auditlist?.supervisorreview}" required>
+        </div>
+      </div>
+     
+
+      <!-- four Row -->   
+      </div>
+    <div class="form-actions">
+      <button type="button" id="submitBtn" onclick="submitForm()">Submit</button>		
+	<div th:if="${successMessage}" class="success-message" th:text="${successMessage}"></div>  
+	      <button type="button" class="back-button" onclick="goBack();">Back</button> 
+	                
+    </div>
+    </form>
+   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+   <script>
+   function goBack() {
+		window.location.href = '/qualitycontrol/qualitycontrolauditgrid';
+	  }
+
+
+    function submitForm() {
+          let form = document.getElementById('auditform');
+          
+          if (!form.checkValidity()) {
+              alert('Please fill in all required fields.');
+              return;
+          }
+  
+        const formData = new FormData(document.getElementById('auditform'));
+        const id = $('#id').val();
+  
+        let url, successMessage;
+  
+        if (!id) {
+            url = '/qualitycontrolaudit/save';
+            successMessage = 'Audit Form Details saved successfully!';
+        } else {
+            url = '/qualitycontrolaudit/update';
+            successMessage = ' Audit Form Details updated successfully!';
+        }
+  
+        $.ajax({
+            url: url,
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function(response) {
+                $('#message').text(successMessage); // Display success message
+                resetForm();
+                window.location.href ='/qualitycontrol/qualitycontrolauditgrid';
+            },
+            error: function() {
+                alert('Error saving Audit Form. Please fill out the data.');
+            }
+        });
+    }
+    // Reset the form
+    function resetForm() {
+            $('#auditform')[0].reset();
+          $('#id').val('');
+            $('#message').text(''); // Clear the message
+            $('#submitBtn').text('Submit');
+    }
+        
+    function prefillForm(data) {
+                $('#id').val(data.id);		      
+                $('#audituid').val(data.audituid);
+                $('#auditdate').val(data.auditdate);
+                $('#auditorname').val(data.auditorname);
+                $('#pcscore').val(data.pcscore);
+                $('#pqscore').val(data.pqscore);
+                $('#correctiveaction').val(data.correctiveaction);
+                $('#auditstatus').val(data.auditstatus);
+                $('#supervisorreview').val(data.supervisorreview);
+               
+                
+               
+            $('#form-title').text('Updated Audit Form');
+            $('#submitBtn').text('Update');
+            
+    }
+
+  </script>
+</body>
+</html>

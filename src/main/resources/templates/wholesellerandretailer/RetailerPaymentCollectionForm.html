@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Retailer Payment Collection Form</title>
+  <link rel="stylesheet" href="/css/empinfo.css">
+  <link rel="stylesheet" href="/css/hrms.css"> 
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+<div th:replace="~{WHOLESELLERANDRETAILER.html :: sidebarFragment}"></div> <!-- // for side bar code  -->                                                                        
+    
+   <form  id="RetailerPaymentForm" enctype="multipart/form-data" class="form-container" >
+    <!-- Personal Information Section -->
+    <input type="hidden" id="id" name="id" th:value="${payments?.id}" />
+    <h2>Retailer Payment Collection Form</h2>   
+     <br>
+
+      <!-- First Row -->
+    
+      <div class="form-row" >
+        <div class="form-group">
+            <label for="retailinvoiceuid">Retailer Invoice ID :</label>
+    <select id="retailinvoiceuid" name="retailinvoiceuid" onchange="fetchretailinvoiceDetails(this.value)" th:if="${payments == null or payments.id == null}" required>
+        <option value="">Select Retailer invoice ID</option>
+        <option th:each="uid : ${retailinvoiceuid}" th:value="${uid}" th:text="${uid}"></option>
+    </select>
+    <input type="text" id="retailinvoiceuid" name="retailinvoiceuid" th:value="${payments?.retailinvoiceuid}" readonly th:if="${payments?.id != null}">
+        </div>
+      
+      <div class="form-group">
+            <label for="selleruid">Retailer ID :</label>
+            <input type="text" id="selleruid" name="selleruid" readonly />
+     </div>
+    
+</div>
+
+      <!-- Second Row -->
+<div class="form-row">
+     <div class="form-group">
+        <label for="paymentdate">Payment Date :</label>
+        <input type="date" id="paymentdate" name="paymentdate" required th:value="${payments?.paymentdate}" />
+    </div>
+  <div class="form-group">
+         <label for="amountpaid">Amount Paid :</label>
+         <input type="number" id="amountpaid" name="amountpaid" required min="0.01" step="0.01" th:value="${payments?.amountpaid}" />
+  </div>
+   
+</div>
+
+
+ <!-- Third Row -->
+<div class="form-row">
+  
+  <div class="form-group">
+    <label for="paymentmode">Payment Mode :</label>
+    <select id="paymentmode" name="paymentmode" required>
+        <option value="" disabled selected>Select Payment Mode</option>
+        <option value="Cash" th:selected="${payments?.paymentmode == 'Cash'}">Cash</option>
+        <option value="Cheque" th:selected="${payments?.paymentmode == 'Cheque'}">Cheque</option>
+        <option value="Online" th:selected="${payments?.paymentmode == 'Online'}">Online</option>
+    </select>
+
+  </div>
+    <div class="form-group">
+        <label for="receivedby">Received By :</label>
+        <input type="text" id="receivedby" name="receivedby" required th:value="${payments?.receivedby}" />
+</div>
+</div>
+
+
+   <!-- Fourth Row  -->
+    <div class="form-actions">
+  <div class="button-group">
+    <button type="button" id="submitBtn" onclick="submitPayment()">Submit</button>
+    <button type="button" class="back-button" onclick="goback();">Back</button>
+  </div>
+  <div th:if="${successMessage}" class="success-message" th:text="${successMessage}"></div>
+</div>
+
+   </form>
+   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script>
+	
+	function validateTextField(selector) {
+		    $(selector).on('input', function () {
+		        let value = $(this).val();
+		        if (!/^[a-zA-Z\s,]*$/.test(value)) {
+		            alert('Only alphabets, spaces, and commas are allowed.');
+		            $(this).val(value.replace(/[^a-zA-Z\s,]/g, '')); // Remove invalid characters
+		        }
+		    });
+		}
+
+		// Apply validation to the desired field
+		validateTextField('#receivedby');
+	
+	
+    function submitPayment() {
+    	const id = $('#id').val();
+        const retailinvoiceuid = $('#retailinvoiceuid').val();
+        const retaileruid = $('#retaileruid').val();
+        const paymentdate = $('#paymentdate').val();
+        const amountpaid = $('#amountpaid').val();
+        const paymentmode = $('#paymentmode').val();
+        const receivedby = $('#receivedby').val();
+
+        // === FORM VALIDATIONS ===
+        if (!retailinvoiceuid) {
+            alert("Please select a Retail Invoice UID.");
+            return;
+        }
+
+        if (!selleruid) {
+            alert("Retailer ID cannot be empty. Make sure a valid invoice is selected.");
+            return;
+        }
+
+        if (!paymentdate) {
+            alert("Please select a Payment Date.");
+            return;
+        }
+
+        if (!amountpaid || parseFloat(amountpaid) <= 0) {
+            alert("Please enter a valid Amount Paid greater than 0.");
+            return;
+        }
+
+        if (!paymentmode) {
+            alert("Please select a Payment Mode.");
+            return;
+        }
+
+        if (!receivedby.trim()) {
+            alert("Please enter the name of the person who received the payment.");
+            return;
+        }
+
+        const formData = new FormData(document.getElementById('RetailerPaymentForm'));
+        let url, successMessage;
+
+        if (!id) {
+            url = '/retailerpaymentcollection/save';
+            successMessage = 'Retailer Payment Collection saved successfully!';
+        } else {
+            url = '/retailerpaymentcollection/update';
+            successMessage = 'Retailer Payment Collection updated successfully!';
+        }
+
+        $.ajax({
+            url: url,
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function(response) {
+                alert(successMessage);
+                resetForm();
+                window.location.href = '/wholesellerandretailer/retailerpaymentcollectiongrid';
+            },
+            error: function() {
+                alert('Error saving payment. Please try again.');
+            }
+        });
+    }
+
+    function resetForm() {
+        $('#RetailerPaymentForm')[0].reset();
+        $('#id').val('');
+        $('#submitBtn').text('Submit');
+    }
+
+    $(document).ready(function() {
+        var existingRetailinvoiceuid = $('#retailinvoiceuid').val();
+        if (existingRetailinvoiceuid) {
+            fetchretailinvoiceDetails(existingRetailinvoiceuid);
+        }
+    });
+
+    function fetchretailinvoiceDetails(retailinvoiceuid) {
+        if (!retailinvoiceuid) {
+            alert("Please select a Product ID.");
+            return;
+        }
+
+        $.ajax({
+            url: '/retailerpaymentcollection/getretailerinvoice',
+            method: 'GET',
+            data: { retailinvoiceuid: retailinvoiceuid },
+            success: function(response) {
+                if (response && response.length > 0) {
+                    const RetailinvoiceDetail = response[0];
+                    $('#selleruid').val(RetailinvoiceDetail.selleruid || '');
+                } else {
+                    alert("No details found for the selected retailer ID.");
+                }
+            },
+            error: function(xhr, status, error) {
+                alert("An error occurred while fetching the retailer details.");
+            }
+        });
+    }
+</script>
+<script>
+function goback() {
+		window.location.href = '/wholesellerandretailer/retailerpaymentcollectiongrid';
+	  }
+function goBack() {
+	window.location.href = '/dashboard';
+  }</script>
+</body>
+</html>
+

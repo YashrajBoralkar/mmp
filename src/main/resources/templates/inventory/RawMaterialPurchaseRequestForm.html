@@ -1,0 +1,329 @@
+
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Raw Material Purchase Request Form</title>
+    <link rel="stylesheet" href="/css/empinfo.css">
+    <link rel="stylesheet" href="/css/hrms.css">
+    <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+
+    <style>
+        .materials-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            background-color: #fff;
+            box-shadow: 0 0 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .materials-table th,
+        .materials-table td {
+            border: 1px solid #ccc;
+            padding: 8px 10px;
+            padding-left: 20px !important;
+            text-align: left !important;
+        }
+
+        .materials-table th {
+            text-align: left;
+            padding-left: 20px;
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+
+        .materials-table input {
+            width: 100%;
+            border: none;
+            background-color: transparent;
+            font-size: 14px;
+            padding: 4px;
+        }
+
+        .materials-table input[readonly] {
+            background-color: #f9f9f9;
+        }
+
+        .materials-table tbody tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div th:replace="~{INVENTORY.html :: sidebarFragment}"></div>
+
+    <div class="form-container">
+        <div class="form-section active" id="section1" style="margin: 20px;">
+            <h2 id="form-title" style="text-align:center;">Raw Material Purchase Request Form</h2><br>
+
+            <form id="materialrequestform">
+                <input type="hidden" id="rawmaterialpurchaserequestuid" name="rawmaterialpurchaserequestuid">
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="productionplanninguid">Production Planning ID</label>
+                        <select id="productionplanninguid" name="productionplanninguid"
+                            onchange="handlePlanningUIDChange(this.value)">
+                            <option value="">-- Select Production Planning ID --</option>
+                            <option th:each="pp : ${plannings}" th:value="${pp.productionplanninguid}"
+                                th:text="${pp.productionplanninguid}">
+                            </option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="productname">Product Name</label>
+                        <input type="text" id="productname" name="productname" readonly>
+                    </div>
+                </div>
+
+                <div class="form-row" id="requiredMaterialsSection" style="display: none; width: 100%;">
+                    <div class="form-group" style="width: 100%;">
+                        <label>Material Requirements</label>
+                        <div id="material-list" class="material-list">
+                            <table class="materials-table">
+                                <thead>
+                                    <tr>
+                                        <th>Raw Material Name</th>
+                                        <th>Required Quantity</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="requiredMaterialsTable"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="requestedby">Requested By</label>
+                        <input type="text" name="requestedby" id="requestedby" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="requestdate">Request Date</label>
+                        <input type="date" name="requestdate" id="requestdate" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="requiredbydate">Required By Date</label>
+                        <input type="date" name="requiredbydate" id="requiredbydate" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="reason">Reason for Request</label>
+                        <input type="text" name="reason" id="reason">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="priority">Priority</label>
+                        <select name="priority" id="priority" required>
+                            <option value="">-- Select Priority --</option>
+                            <option value="High">High</option>
+                            <option value="Medium">Medium</option>
+                            <option value="Low">Low</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="submit-btn" onclick="saveRawMaterialRequest()">Submit</button>
+                    <button type="button" class="back-button" onclick="goback()">Back</button>
+                </div>
+
+            </form>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <script>
+        function goback() {
+            window.location.href = '/inventory/batchlotgrid';
+        }
+		function goBack() {
+		    window.location.href = '/dashboard';
+		}
+
+        // --------------------------------------
+        // VALIDATION FUNCTION
+        // --------------------------------------
+		function validateForm() {
+
+		    const planningUID = $('#productionplanninguid').val();
+		    const requestedBy = $('#requestedby').val().trim();
+		    const requestDate = $('#requestdate').val();
+		    const requiredByDate = $('#requiredbydate').val();
+		    const priority = $('#priority').val();
+
+		    // 1️⃣ Production Planning ID required
+		    if (!planningUID) {
+		        alert("Please select Production Planning ID");
+		        return false;
+		    }
+
+		    // 2️⃣ Requested By → only alphabets + space
+		    const namePattern = /^[A-Za-z ]+$/;
+		    if (!requestedBy) {
+		        alert("Requested By cannot be empty");
+		        return false;
+		    }
+		    if (!namePattern.test(requestedBy)) {
+		        alert("Requested By must contain only letters and spaces");
+		        return false;
+		    }
+
+		    // 3️⃣ Request Date required
+		    if (!requestDate) {
+		        alert("Please select Request Date");
+		        return false;
+		    }
+
+		    // 4️⃣ Required By Date must be AFTER Request Date
+		    if (!requiredByDate) {
+		        alert("Please select Required By Date");
+		        return false;
+		    }
+
+		    if (new Date(requiredByDate) <= new Date(requestDate)) {
+		        alert("Required By Date must be AFTER Request Date");
+		        return false;
+		    }
+
+		    // 5️⃣ Priority required
+		    if (!priority) {
+		        alert("Please select Priority");
+		        return false;
+		    }
+
+		    return true;
+		}
+
+        // --------------------------------------
+        // FETCH MATERIALS LIST
+        // --------------------------------------
+        function fetchRawMaterialsByPlanningUID(uid) {
+            if (!uid) {
+                $('#requiredMaterialsTable').html('');
+                return;
+            }
+
+            $('#requiredMaterialsSection').show();
+
+            $.ajax({
+                url: '/getMaterialsByPlanningUID',
+                method: 'GET',
+                data: { productionplanninguid: uid },
+                success: function (data) {
+                    if (!data.length) {
+                        $('#requiredMaterialsTable').html('<tr><td colspan="2">No materials found.</td></tr>');
+                        return;
+                    }
+
+                    let rows = "";
+                    data.forEach((item, i) => {
+                        rows += `
+                            <tr>
+                                <td><input type="text" name="materials[${i}].rawmaterialname" value="${item.rawmaterialname}" readonly></td>
+                                <td><input type="text" name="materials[${i}].requiredquantity" value="${item.requiredquantity}" readonly></td>
+                            </tr>`;
+                    });
+
+                    $('#requiredMaterialsTable').html(rows);
+                }
+            });
+        }
+
+        function fetchProductNameByPlanningUID(uid) {
+            if (!uid) return $('#productname').val("");
+
+            $.ajax({
+                url: '/getProductNameByPlanningUID',
+                method: 'GET',
+                data: { productionplanninguid: uid },
+                success: res => $('#productname').val(res.productname)
+            });
+        }
+
+        function handlePlanningUIDChange(uid) {
+            fetchProductNameByPlanningUID(uid);
+            fetchRawMaterialsByPlanningUID(uid);
+        }
+
+        function generateRawmaterialpurchaserequestuid() {
+            return "RMPR" + Math.floor(1000 + Math.random() * 9000);
+        }
+
+        // --------------------------------------
+        // SAVE OR UPDATE REQUEST
+        // --------------------------------------
+        function saveRawMaterialRequest() {
+
+            if (!validateForm()) {
+                return;
+            }
+
+            const rawmaterialpurchaserequestuid = $('#rawmaterialpurchaserequestuid').val() || generateRawmaterialpurchaserequestuid();
+            const isUpdate = $('#form-title').text().includes("Update");
+
+            const commonData = {
+                rawmaterialpurchaserequestuid,
+                productionplanninguid: $('#productionplanninguid').val(),
+                productname: $('#productname').val(),
+                requestedby: $('#requestedby').val(),
+                requestdate: $('#requestdate').val(),
+                requiredbydate: $('#requiredbydate').val(),
+                reason: $('#reason').val(),
+                priority: $('#priority').val()
+            };
+
+            if (!isUpdate) {
+
+                const requests = [];
+                $("#requiredMaterialsTable tr").each(function () {
+                    const rawmaterialname = $(this).find("input[name$='.rawmaterialname']").val();
+                    const requiredquantity = $(this).find("input[name$='.requiredquantity']").val();
+
+                    if (rawmaterialname) {
+                        requests.push({ ...commonData, rawmaterialname, requiredquantity });
+                    }
+                });
+
+                $.ajax({
+                    url: '/rawmaterialpurchaserequest/save',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(requests),
+                    success: () => {
+                        alert("Raw Material Purchase Request saved successfully!");
+                        window.location.href = '/inventory/batchlotgrid';
+                    },
+                    error: () => alert("Error while saving.")
+                });
+
+            } else {
+
+                $.ajax({
+                    url: '/rawmaterialpurchaserequest/update',
+                    type: 'POST',
+                    data: commonData,
+                    success: () => {
+                        alert("Raw Material Purchase Request updated successfully!");
+                        window.location.href = '/inventory/batchlotgrid';
+                    },
+                    error: () => alert("Update failed.")
+                });
+            }
+        }
+    </script>
+
+</body>
+
+</html>

@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Equipment Utilization Form</title>
+ <link rel="stylesheet" href="/css/empinfo.css">
+  <link rel="stylesheet" href="/css/hrms.css"> <!-- // for side bar code  -->
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+<div th:replace="~{PRODUCTIONANDOPERATION.html :: sidebarFragment}"></div> <!-- // for side bar code  -->                                                                        
+    
+   <form  id="equipment"  class="form-container" >
+    <!-- Personal Information Section -->
+   <input type="hidden" id="id" name="id" th:value="${equipment?.id}"/>
+    <br>
+
+    <h2>Equipment Utilization Form</h2>   
+     
+
+      <!-- First Row -->
+    <br>
+      <div class="form-row" >
+        <div class="form-group">
+            <label for="equipmentmasteruid">Equipment Master ID :</label>
+			<select  id="equipmentmasteruid" class="form-control" name="equipmentmasteruid" onchange="fetchEquipmentMasterDetails(this.value)"  th:if="${equipment == null or equipment.id == null}">
+				<option value="">Select Equipment Master ID </option>
+			    <option th:each="uid : ${equipmentmasteruid}" th:value="${uid}" th:text="${uid}"></option>	
+			 </select>										   		 			        
+			 <input type="text" id="equipmentmasteruid" name="equipmentmasteruid" th:value="${equipment?.equipmentmasteruid}" readonly th:if="${equipment?.id != null}">
+        </div>
+      
+      <div class="form-group">
+        <label for="equipmentname" class="form-label">Equipment Name :</label>
+         <input type="text" class="form-control" id="equipmentname" name="equipmentname" readonly>
+     </div>
+</div>
+      <!-- Second Row -->
+      <!-- Second Row: Description, Priority, Status -->
+<div class="form-row">
+  <div class="form-group">
+        <label for="utilizationRate" class="form-label" >Machine Utilization Rate (%) :</label>
+        <input type="number" step="0.1" min="0" max="100" class="form-control" id="utilizationrate" name="utilizationrate" th:value="${equipment?.utilizationrate}" required> 
+  </div>
+  <div class="form-group">
+        <label for="downtimeoccurrence" class="form-label">DownTime Occurrence :</label>
+        <br>
+        <input type="number" min="0" class="form-control" id="downtimeoccurrence" name="downtimeoccurrence" th:value="${equipment?.downtimeoccurrence}" required>
+  </div>
+</div>
+ <!-- Third Row -->
+<div class="form-row">
+  <div class="form-group">
+      <label for="energyconsumption" class="form-label">Energy Consumption (kWh):</label>
+      <input type="number" step="0.1" min="0" class="form-control" id="energyconsumption" name="energyconsumption" th:value="${equipment?.energyconsumption}">
+  </div>
+  
+</div><br>
+
+</div>
+   <!-- Fourth Row  -->
+    <div class="form-actions">
+  <div class="button-group">
+    <button type="button" id="submitBtn" onclick="submitForm()">Submit</button>
+    <button type="button" class="back-button" onclick="goback();">Back</button>
+  </div>
+  <div th:if="${successMessage}" class="success-message" th:text="${successMessage}"></div>
+</div>
+
+   </form>
+   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+   
+<script>
+function goback() {
+		window.location.href = '/productionandoperationmanagement/equipmentutilizationgrid';
+	  }
+  </script>
+ <script>
+ $(document).ready(function() {
+     // Auto-fill Item details when updating
+     var existingequipmentmasteruid= $('#equipmentmasteruid').val();
+     if (existingequipmentmasteruid) {
+     	fetchEquipmentMasterDetails(existingequipmentmasteruid);
+     }
+ });
+ function fetchEquipmentMasterDetails(equipmentmasteruid) {
+	  if (!equipmentmasteruid) return; 
+
+	     $.ajax({
+	 		url: '/fetchequipmentmasterdetails',
+	 		method: 'GET',
+	 		data: { equipmentmasteruid: equipmentmasteruid },
+	 		success: function(response) {
+	 			$('#equipmentname').val(response.equipmentname);	
+	 	},
+	 	error:function() {
+	    	alert('Error fetching Equipment Master Details. Please try again.');
+		}
+	 });
+	 } 
+
+
+
+	// Submit Form using AJAX
+			function submitForm() {
+				const formData = new FormData(document.getElementById('equipment'));
+				const id = $('#id').val();
+
+					let url, successMessage;
+
+					if (!id) {
+						url = '/saveequipmentutilization';
+						successMessage = 'saved successfully!';
+					} else {
+						url = '/equipmentutilizationupdate';
+						successMessage = 'updated successfully!';
+					}
+
+
+					$.ajax({ 
+						url: url,
+						type: 'POST',
+						data: formData,
+						processData: false,
+						contentType: false,
+						success: function () {
+							alert(successMessage);
+							window.location.href = '/productionandoperationmanagement/equipmentutilizationgrid';
+						},
+						error: function () {
+							alert('Error saving equipment. Please try again.');
+						}
+					});
+				}
+	
+</script>
+
+</body>
+</html>

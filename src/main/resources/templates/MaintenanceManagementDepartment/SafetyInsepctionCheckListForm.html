@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Safety Inspection Checklist Form</title>
+	
+  <link rel="stylesheet" href="/css/empinfo.css">
+  <link rel="stylesheet" href="/css/hrms.css"> <!-- // for side bar code  -->
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+      <div th:replace="~{MAINTENANCEMANAGEMENTDEPERTMENT.html  :: sidebarFragment}"></div> 
+<div class="form-container">
+  <div class="form-section active" id="section1" style="margin-left: 20px; margin-right: 20px;">
+    <h2>Safety Inspection Checklist</h2>
+    <br>
+
+    <form id="SafetyInspectionForm">
+      <input type="hidden" id="id" name="id" th:value="${checklist?.id}" />
+
+      <div class="form-row">
+        <div class="form-group">
+           <label>Equipment Master UID</label>
+          <select id="equipmentmasteruid" name="equipmentmasteruid" onchange="fetchEquipmentDetails(this.value)" 
+                  th:if="${checklist == null or checklist.id == null}" required>
+            <option value="">Select Equipment UID</option>
+            <option th:each="uid : ${equipmentmasteruid}" th:value="${uid}" th:text="${uid}"></option>
+          </select>
+          <input type="text" id="equipmentmasteruid" name="equipmentmasteruid" 
+                 th:value="${checklist?.equipmentmasteruid}" 
+                 onchange="fetchEquipmentDetails(this.value)" 
+                 readonly th:if="${checklist?.id != null}">
+        
+          <span id="equipmentuid-error" class="error-message"></span>
+        </div>
+      </div>
+
+      <!-- Row 2: Equipment Name & Inspection Date -->
+      <div class="form-row">
+        <div class="form-group">
+          <label for="equipmentname">Equipment Name *</label>
+          <input type="text" id="equipmentname" name="equipmentname" readonly class="form-control" />
+          <span id="equipmentname-error" class="error-message"></span>
+        </div>
+
+        <div class="form-group">
+          <label for="inspectiondate">Inspection Date *</label>
+          <input type="date" id="inspectiondate" name="inspectiondate" required th:value="${checklist?.inspectiondate}" class="form-control" />
+          <span id="inspectiondate-error" class="error-message"></span>
+        </div>
+      </div>
+
+      <!-- Row 3: Checklist Items & Inspected By -->
+      <div class="form-row">
+        <div class="form-group">
+          <label for="checklistitems">Checklist Items *</label>
+          <textarea id="checklistitems" name="checklistitems" rows="4" required class="form-control"
+            th:text="${checklist?.checklistitems}"style="height: 34px; width: 179px;"></textarea>
+          <span id="checklistitems-error" class="error-message"></span>
+        </div>
+
+        <div class="form-group">
+          <label for="inspectedby">Inspected By *</label>
+          <input type="text" id="inspectedby" name="inspectedby" th:value="${checklist?.inspectedby}" required class="form-control" />
+          <span id="inspectedby-error" class="error-message"></span>
+        </div>
+      </div>
+
+      <!-- Row 4: Remarks & Status -->
+      <div class="form-row">
+        <div class="form-group">
+          <label for="remarks">Findings / Remarks *</label>
+          <textarea id="remarks" name="remarks" rows="4" required class="form-control"
+            th:text="${checklist?.remarks}"style="height: 34px; width: 179px;"></textarea>
+          <span id="remarks-error" class="error-message"></span>
+        </div>
+
+        <div class="form-group">
+          <label for="status">Status *</label>
+          <select id="status" name="status" required class="form-control">
+            <option value="" disabled selected>Select Status</option>
+            <option value="Safe" th:selected="${checklist?.status == 'Safe'}">Safe</option>
+            <option value="Unsafe" th:selected="${checklist?.status == 'Unsafe'}">Unsafe</option>
+            <option value="Needs Action" th:selected="${checklist?.status == 'Needs Action'}">Needs Action</option>
+          </select>
+          <span id="status-error" class="error-message"></span>
+        </div>
+      </div>
+
+      <!-- Row 5: Submit Button -->
+      <div class="form-actions">
+      <button type="button" id="submitBtn" onclick="submitForm()">Submit</button>
+          <button type="button" id="backBtn" onclick="goBack()">Back</button>
+      </div>
+            <div th:if="${successMessage}" class="success-message" th:text="${successMessage}"></div>
+      
+    </form>
+  </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    $(document).ready(function () {
+        // Set today's date in yyyy-mm-dd format
+        const today = new Date().toISOString().split('T')[0];
+        
+        // Set default value, min, and max to today for inspectiondate
+        $('#inspectiondate').val(today).attr('min', today).attr('max', today);
+
+        // Prevent manual change to other date
+        $('#inspectiondate').on('change', function () {
+            if ($(this).val() !== today) {
+                alert("Only today's date is allowed.");
+                $(this).val(today);
+            }
+        });
+    });
+</script>
+
+<script>	
+function submitForm() {
+	let form = document.getElementById('SafetyInspectionForm');
+			    
+			    if (!form.checkValidity()) {
+			        alert('Please fill in all required fields.');
+			        return;
+			    }
+
+			   
+					    const formData = new FormData(document.getElementById('SafetyInspectionForm'));
+					    const id = $('#id').val();
+
+					    let url, successMessage;
+
+					    if (!id) {
+					        url = '/savesafetyinsepctionchecklist';
+					        successMessage = 'Safety Insepction Check List Form data saved successfully!';
+					    } else {
+					        url = '/updatesafetyinsepctionchecklist';
+					        successMessage = 'Safety Insepction Check List Form data updated successfully!';
+					    }
+
+					    $.ajax({
+					        url: url,
+					        type: 'POST',
+					        data: formData,
+					        processData: false,
+					        contentType: false,
+					        success: function(response) {
+					            $('#message').text(successMessage); // Display success message
+					            resetForm();
+					            window.location.href = '/maintenancemanagementdepartment/safetyinsepctionchecklistgrid';
+					        },
+					        error: function() {
+					            alert('Error saving Safety Insepction Check List Form . Please fill out the data.');
+					        }
+					    });
+					}
+					// Reset the form
+							function resetForm() {
+							    $('#SafetyInspectionForm')[0].reset();
+								$('#id').val('');
+							    $('#message').text(''); // Clear the message
+							    $('#submitBtn').text('Submit');
+							}
+					
+					
+    $(document).ready(function() {
+        // Auto-fill Item details when updating
+        var existingequipmentmasteruid = $('#equipmentmasteruid').val();
+        if (existingequipmentmasteruid) {
+        	fetchEquipmentDetails(existingequipmentmasteruid);
+        }
+    });
+    function fetchEquipmentDetails(equipmentmasteruid) {
+      if (!equipmentmasteruid) return; 
+
+         $.ajax({
+     		url: '/fetchEquipmentDetailsInSafetyInsepctionCheckList',
+     		method: 'GET',
+     		data: { equipmentmasteruid: equipmentmasteruid },
+     		success: function(response) {
+     			$('#equipmentname').val(response.equipmentname);	
+     	},
+     	error:function() {
+        alert('Error fetching Equipment Master Details. Please try again.');
+     			                }
+     							});
+     } 
+
+</script>
+</body>
+</html>

@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Off Boarding Details Form</title>
+  <link rel="stylesheet" href="/css/hrms.css">
+  <link rel="stylesheet" href="/css/empinfo.css">
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div th:replace="~{HRMS.html :: sidebarFragment}"></div>
+
+  <div class="form-container" style="padding: 41px; margin-left: 490px;">
+    <form id="offboardingForm" enctype="multipart/form-data">
+      <input type="hidden" id="id" name="id" th:value="${offboarding?.id}">
+      <h2 style="margin-bottom: 35px;">Off Boarding Details Form</h2>
+
+      <!-- Row 1 -->
+      <div class="form-row">
+        <div class="form-group">
+          <label for="employeeuid">Employee ID:</label>
+          <select id="employeeuid" name="employeeuid" onchange="fetchEmployeeDetails(this.value)" th:if="${offboarding == null or offboarding.id == null}">
+              <option value="">-- Select Employee ID --</option>
+              <option th:each="uid : ${employeeuid}" th:value="${uid}" th:text="${uid}"></option>
+          </select>
+          <input type="text" id="employeeuid" name="employeeuid"
+                 th:value="${offboarding?.employeeuid}"
+                 th:if="${offboarding != null and offboarding.id != null}" readonly>
+        </div>
+        </div>
+        
+       <div class="form-row"> 
+        <div class="form-group">
+          <label>First Name:</label>
+          <input type="text" id="first_name" name="first_name" readonly>
+        </div>
+        <div class="form-group">
+          <label>Last Name:</label>
+          <input type="text" id="last_name" name="last_name" readonly>
+        </div>
+        <div class="form-group">
+          <label>Department Name:</label>
+          <input type="text" id="departmentname" name="departmentname" readonly>
+        </div>
+      </div>
+
+      <!-- Row 2 -->
+      <div class="form-row">
+        <div class="form-group">
+          <label for="lastWorkingDay">Last Working Day:</label>
+          <input type="date" id="lastWorkingDay" name="lastWorkingDay" th:value="${offboarding?.lastWorkingDay}" required>
+        </div>
+        <div class="form-group">
+          <label for="reasonForExit">Reason for Exit:</label>
+          <input type="text" id="reasonForExit" name="reasonForExit" maxlength="500" th:value="${offboarding?.reasonForExit}" required>
+        </div>
+        <div class="form-group">
+          <label for="noticePeriodDetails">Notice Period Details:</label>
+          <input type="text" id="noticePeriodDetails" name="noticePeriodDetails" th:value="${offboarding?.noticePeriodDetails}" required>
+        </div>
+      </div>
+
+      <!-- Row 3 -->
+      <div class="form-row">
+        <div class="form-group">
+          <label for="startDate">Start Date:</label>
+          <input type="date" id="startDate" name="startDate" th:value="${offboarding?.startDate}" required>
+        </div>
+        <div class="form-group">
+          <label for="endDate">End Date:</label>
+          <input type="date" id="endDate" name="endDate" th:value="${offboarding?.endDate}" required>
+        </div>
+        <div class="form-group">
+          <label for="servedNoticePeriod">Served Notice Period:</label>
+          <input type="text" id="servedNoticePeriod" name="servedNoticePeriod" th:value="${offboarding?.servedNoticePeriod}" required>
+        </div>
+      </div>
+
+      <!-- Row 4 -->
+      <div class="form-row">
+        <div class="form-group">
+          <label for="feedbackOnExit">Feedback on Exit:</label>
+          <input type="text" id="feedbackOnExit" name="feedbackOnExit" maxlength="1000" th:value="${offboarding?.feedbackOnExit}" required>
+        </div>
+        <div class="form-group">
+          <label for="clearanceDetails">Clearance Details:</label>
+          <input type="text" id="clearanceDetails" name="clearanceDetails" th:value="${offboarding?.clearanceDetails}" required>
+        </div>
+        <div class="form-group">
+          <label for="companyAssetReturned">Company Asset Returned:</label>
+          <input type="text" id="companyAssetReturned" name="companyAssetReturned" th:value="${offboarding?.companyAssetReturned}" required>
+        </div>
+      </div>
+
+      <!-- Row 5 -->
+      <div class="form-row">
+        <div class="form-group">
+          <label for="nocIssued">NOC Issued:</label>
+          <input type="text" id="nocIssued" name="nocIssued" th:value="${offboarding?.nocIssued}" required>
+        </div>
+        <div class="form-group">
+          <label for="experienceLetterIssued">Experience Letter Issued:</label>
+          <input type="text" id="experienceLetterIssued" name="experienceLetterIssued" th:value="${offboarding?.experienceLetterIssued}" required>
+        </div>
+        <div class="form-group">
+          <label for="finalSettlementStatus">Final Settlement Status:</label>
+          <input type="text" id="finalSettlementStatus" name="finalSettlementStatus" th:value="${offboarding?.finalSettlementStatus}" required>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button type="button" id="submitBtn" onclick="submitForm()">Submit</button>
+        <button type="button" class="back-button" onclick="goback();">Back</button>
+      </div>
+    </form>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script> 
+function goBack() {
+	window.location.href = '/dashboard';
+	}
+</script>
+  <script>
+    $(document).ready(function () {
+      const existingUID = $('#employeeuid').val() || $('#employeeuid').val();
+      if (existingUID) fetchEmployeeDetails(existingUID);
+    });
+
+    function fetchEmployeeDetails(employeeuid) {
+      if (!employeeuid) return;
+      $.ajax({
+        url: '/offboarding/edetails',
+        method: 'GET',
+        data: { employeeuid: employeeuid },
+        success: function (response) {
+          if (response) {
+            $('#first_name').val(response.firstName);
+            $('#last_name').val(response.lastName);
+            $('#departmentname').val(response.departmentname);
+          }
+        },
+        error: function () {
+          Swal.fire({ icon: 'error', title: 'Error', text: 'Error fetching employee details. Please try again.' });
+        }
+      });
+    }
+
+    function goback() {
+      window.location.href = '/hrms/Onoffboarding';
+    }
+
+    // ✅ Validation Functions
+    function isAlphabetOnly(value) {
+      return /^[A-Za-z\s]+$/.test(value);
+    }
+
+    function isAlphanumeric(value) {
+      return /^[A-Za-z0-9\s]+$/.test(value);
+    }
+
+    // ✅ Allow letters, numbers, and special characters
+    function isTextWithSpecial(value) {
+      return /^[A-Za-z0-9\s.,'%@#()_\-]*$/.test(value);
+    }
+
+    function validateForm() {
+      let employeeUID = $('#employeeuid').val() || $('#employeeuid').val();
+      if (!employeeUID) {
+        Swal.fire({ icon: 'warning', title: 'Validation Error', text: 'Please select an Employee ID.' });
+        return false;
+      }
+
+      const requiredFields = [
+        { id: 'lastWorkingDay', name: 'Last Working Day' },
+        { id: 'reasonForExit', name: 'Reason for Exit', alpha: true },
+        { id: 'noticePeriodDetails', name: 'Notice Period Details' },
+        { id: 'startDate', name: 'Start Date' },
+        { id: 'endDate', name: 'End Date' },
+        { id: 'servedNoticePeriod', name: 'Served Notice Period' },
+
+        // ✅ Updated: allow special symbols
+        { id: 'feedbackOnExit', name: 'Feedback on Exit', special: true },
+        { id: 'clearanceDetails', name: 'Clearance Details', special: true },
+        { id: 'companyAssetReturned', name: 'Company Asset Returned', special: true },
+
+        { id: 'nocIssued', name: 'NOC Issued', alpha: true },
+        { id: 'experienceLetterIssued', name: 'Experience Letter Issued', alpha: true },
+        { id: 'finalSettlementStatus', name: 'Final Settlement Status', alpha: true }
+      ];
+
+      for (let field of requiredFields) {
+        let value = $('#' + field.id).val()?.trim();
+        if (!value) {
+          Swal.fire({ icon: 'warning', title: 'Validation Error', text: field.name + ' is required.' });
+          return false;
+        }
+        if (field.alpha && !isAlphabetOnly(value)) {
+          Swal.fire({ icon: 'error', title: 'Invalid Input', text: field.name + ' must contain only letters.' });
+          return false;
+        }
+        if (field.alphanumeric && !isAlphanumeric(value)) {
+          Swal.fire({ icon: 'error', title: 'Invalid Input', text: field.name + ' must contain only letters and numbers.' });
+          return false;
+        }
+        if (field.special && !isTextWithSpecial(value)) {
+          Swal.fire({ icon: 'error', title: 'Invalid Input', text: field.name + ' can include letters, numbers, and special symbols.' });
+          return false;
+        }
+      }
+
+      const startDate = new Date($('#startDate').val());
+      const endDate = new Date($('#endDate').val());
+      if (startDate.getTime() > endDate.getTime()) {
+        Swal.fire({ icon: 'error', title: 'Invalid Dates', text: 'Start Date must be before End Date.' });
+        return false;
+      }
+      return true;
+    }
+
+    function submitForm() {
+      if (!validateForm()) return;
+
+      const formData = new FormData(document.getElementById('offboardingForm'));
+      const id = $('#id').val();
+      const url = id ? '/updateoffboarding' : '/saveoffboarding';
+      const successMessage = id ? 'Offboarding updated successfully!' : 'Offboarding saved successfully!';
+
+      $.ajax({
+        url,
+        type: 'POST',
+        data: formData,
+        processData: false,
+        contentType: false,
+        success: function () {
+          Swal.fire({ icon: 'success', title: 'Success', text: successMessage })
+              .then(() => window.location.href = '/hrms/Onoffboarding');
+        },
+        error: function () {
+          Swal.fire({ icon: 'error', title: 'Error', text: 'Error saving offboarding. Please try again.' });
+        }
+      });
+    }
+  </script>
+</body>
+</html>

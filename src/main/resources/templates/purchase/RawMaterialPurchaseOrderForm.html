@@ -1,0 +1,523 @@
+
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+	<meta charset="UTF-8">
+	<title>Raw Material Purchase Order Form</title>
+ <link rel="stylesheet" href="/css/empinfo.css" />
+  <link rel="stylesheet" href="/css/hrms.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet" />
+ </head>
+
+<body>
+  <div th:replace="~{PURCHASE.html :: sidebarFragment}"></div>
+
+ <!-- <div th:replace="~{WHOLESELLERANDRETAILER.html :: sidebarFragment}"></div> -->
+  <div class="form-container">
+<!-- 	 <div class="form-section active" id="section1" style="margin: 20px;"> -->
+    <form id="poForm">
+      <h2>Raw Material Purchase Order Form</h2>
+      <br>
+      <!-- Hidden fields -->
+      <input type="hidden" id="rawmaterialuid" name="rawmaterialuid" th:value="${po?.rawmaterialuid}" />
+      <input type="hidden" id="id" name="id" th:value="${po?.id}" />
+
+      <!-- Row 1: Supplier UID & Supplier Name -->
+      <div class="form-row">
+        <div class="form-group">
+           <label for="rawmaterialsupplieruid">Supplier ID</label>
+		  
+          <select id="rawmaterialsupplieruid" name="rawmaterialsupplieruid" class="form-select"
+            th:if="${po == null or po.id == null}" onchange="fetchSupplierDetails(this.value)" required >
+            <option value="">-- Select Supplier ID --</option>
+            <option th:each="supplier : ${suppliers}" th:value="${supplier}" th:text="${supplier}"></option>
+          </select>
+          <input type="text" id="rawmaterialsupplieruid" name="rawmaterialsupplieruid" th:value="${po?.rawmaterialsupplieruid}"
+            th:if="${po?.id != null}" readonly class="form-control">
+</div>
+
+        <div class="form-group">
+          <label for="suppliername">Supplier Name : </label>
+          <input type="text" id="suppliername" name="suppliername" class="form-control" th:value="${po?.suppliername}"
+            readonly required>
+        </div>
+      </div>
+
+      <!-- Row 2: Raw Material Names & Material Names (readonly if edit mode) -->
+      <div class="form-row">
+        <div class="form-group" th:if="${po == null or po.id == null}">
+          <label for="materialnames">Raw Material Names :</label>
+          <select id="materialnames" name="materialnames" class="form-select" multiple
+            onchange="renderMaterialQuantityFields()" required>
+            <option th:each="material : ${po?.materialnames?.split(',')}" th:value="${material}"
+              th:text="${material}" selected="selected">
+            </option>
+          </select>
+        </div>
+
+        <div class="form-group" th:if="${po?.id != null}">
+          <label for="materialnames">Raw Material Names :</label>
+          <input type="text" id="materialnames" name="materialnames" th:value="${po?.materialnames}" readonly
+            class="form-control">
+        </div>
+      </div>
+
+      <!-- Hidden material details -->
+      <input type="hidden" id="materialdetails" name="materialdetails" th:value="${po?.materialdetails}" />
+
+      <!-- Material quantity/price dynamic container -->
+      <div id="material-quantity-container"></div>
+<br>
+      <!-- Row 3: Order Date & Delivery Date -->
+      <div class="form-row">
+        <div class="form-group">
+          <label for="orderdate">Order Date :</label>
+          <input type="date" id="orderdate" name="orderdate" th:value="${po?.orderdate}" class="form-control"
+            onchange="validateDates()" required>
+        </div>
+
+        <div class="form-group">
+          <label for="deliverydate">Delivery Date :</label>
+          <input type="date" id="deliverydate" name="deliverydate" th:value="${po?.deliverydate}"
+            class="form-control" onchange="validateDates()" required>
+        </div>
+      </div>
+
+      <!-- Row 4: Total Value (readonly) -->
+      <div class="form-row">
+        <div class="form-group">
+          <label for="totalvalue">Total Value :</label>
+          <input type="number" id="totalvalue" name="totalvalue" th:value="${po?.totalvalue}" readonly
+            class="form-control">
+        </div>
+      </div>
+
+      <!-- Buttons -->
+      <div class="form-actions">
+          <button type="button" class="btn btn-primary" onclick="submitForm()">Submit</button>
+          <button type="button" onclick="goback()" class="btn btn-secondary">Back</button>
+        <div th:if="${successMessage}" class="success-message" th:text="${successMessage}"></div>
+       
+      </div>
+    </form>
+	</div>
+	</div>
+	</div>
+<script> 
+function goBack() {
+	window.location.href = '/dashboard';
+	}
+</script>
+	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+	<script>
+		
+		
+		function validatePOForm() {
+
+		    // Helper
+		    function showError(message, fieldId = null) {
+		        alert("⚠️ " + message);
+		        if (fieldId) document.getElementById(fieldId).focus();
+		        return false;
+		    }
+
+		    // Supplier ID
+		    let supplierId = document.getElementById("rawmaterialsupplieruid").value;
+		    if (!supplierId || supplierId.trim() === "") {
+		        return showError("Please select Supplier ID", "rawmaterialsupplieruid");
+		    }
+
+		    // Supplier Name
+		    let supplierName = document.getElementById("suppliername").value;
+		    if (!supplierName || supplierName.trim() === "") {
+		        return showError("Supplier Name not found. Please re-select Supplier.", "suppliername");
+		    }
+
+		    // Material Names
+		    let materialField = document.getElementById('materialnames');
+		    let selectedMaterials = [];
+
+		    if (materialField.tagName === "SELECT") {
+		        selectedMaterials = Array.from(materialField.selectedOptions).map(o => o.value);
+		    } else {
+		        selectedMaterials = materialField.value.split(',').map(m => m.trim());
+		    }
+
+		    if (selectedMaterials.length === 0 || selectedMaterials[0] === "") {
+		        return showError("Please select at least one Raw Material", "materialnames");
+		    }
+
+		    // Quantity validations
+		    for (let material of selectedMaterials) {
+		        let qty = document.getElementById(`quantity-${material}`);
+		        if (!qty) continue;
+
+		        if (!qty.value || parseFloat(qty.value) <= 0) {
+		            return showError(`Please enter valid Quantity for ${material}`, `quantity-${material}`);
+		        }
+		    }
+
+		    // Date validation
+		    let orderDate = document.getElementById("orderdate").value;
+		    let deliveryDate = document.getElementById("deliverydate").value;
+
+		    if (!orderDate) {
+		        return showError("Please select Order Date", "orderdate");
+		    }
+		    if (!deliveryDate) {
+		        return showError("Please select Delivery Date", "deliverydate");
+		    }
+
+		    let d1 = new Date(orderDate);
+		    let d2 = new Date(deliveryDate);
+
+		    if (d2 <= d1) {
+		        return showError("Delivery Date must be after Order Date", "deliverydate");
+		    }
+
+		    return true;
+		}
+
+	
+	function goback() {
+		window.location.href = '/purchase/rawmaterialpurchaseordergrid';
+		}
+	
+	$(function () {
+		const materialdetails = $('#materialdetails').val();
+		const rawmaterialsupplieruid = $('#rawmaterialsupplieruid').val();
+
+		// Always re-render fields in edit mode
+		if (materialdetails && materialdetails.trim() !== "") {
+			renderMaterialQuantityFields();
+		} else if (rawmaterialsupplieruid && (!materialdetails || materialdetails.trim() === "")) {
+			fetchSupplierDetails(rawmaterialsupplieruid, true);
+		}
+	});
+
+	function submitForm() {
+		
+		if (!validatePOForm()) {
+		        return;
+		    }
+		
+		const formData = new FormData(document.getElementById('poForm'));
+		const id = $('#id').val();
+
+		for (let [key, value] of formData.entries()) {
+			console.log(`${key}: ${value}`);
+		}
+
+		let url, successMessage;
+
+		if (!id) {
+			url = '/Rawmaterialpurchaseorder/save';
+			successMessage = 'Raw Material Purchase Order Saved Successfully!';
+		} else {
+			url = '/Rawmaterialpurchaseorder/update';
+			successMessage = 'Raw Material Purchase Order Updated Successfully!';
+		}
+
+		$.ajax({
+			url: url,
+			type: 'POST',
+			data: formData,
+			processData: false,
+			contentType: false,
+			success: function () {
+				alert(successMessage)
+				resetForm();
+				window.location.href = '/purchase/rawmaterialpurchaseordergrid';
+			},
+			error: function () {
+				alert('Error saving form');
+			}
+		});
+	}
+
+	function fetchSupplierDetails(rawmaterialsupplieruid, skipClear = false) {
+		if (!rawmaterialsupplieruid) return;
+		$.ajax({
+			url: '/Rawmaterialpurchaseorder/getSupplierDetails',
+			type: 'GET',
+			data: {rawmaterialsupplieruid: rawmaterialsupplieruid},
+			success: function (response) {
+				let data = response[0];
+				//console.log("data : " + data);
+				console.log("data : " + JSON.stringify(data));
+
+				$('#suppliername').val(data.suppliername || '');
+				const materialSelect = $('#materialnames');
+				let materialarr = data.rawmaterialname.split(',');
+				let materialUids = data.rawmaterialuid.split(',');
+
+				materialSelect.empty();
+				if (Array.isArray(materialarr)) {
+					materialarr.forEach((material, i) => {
+						materialSelect.append(`<option value="${material}">${material}</option>`);
+					});
+				}
+				if (!skipClear) $('#material-quantity-container').empty();
+				renderMaterialQuantityFields();
+			}
+		});
+	}
+	const uidarr = [];
+
+	// function renderMaterialQuantityFields() {
+	// 	let selectedMaterials = [];
+	// 	const matField = document.getElementById('materialnames');
+	// 	if (matField.tagName === 'SELECT') {
+	// 		selectedMaterials = Array.from(matField.selectedOptions).map(opt => opt.value);
+	// 	} else {
+	// 		selectedMaterials = matField.value.split(',').map(m => m.trim());
+	// 	}
+
+	// 	const container = document.getElementById('material-quantity-container');
+	// 	container.innerHTML = '';
+
+	// 	let materialDetails = {};
+	// 	try {
+	// 		materialDetails = JSON.parse(document.getElementById('materialdetails').value || '{}');
+	// 	} catch (e) {
+	// 		console.error("Invalid materialdetails JSON.");
+	// 	}
+
+	// 	const isEditMode = document.getElementById('id').value !== ''; // detect edit mode
+
+	// 	selectedMaterials.forEach(material => {
+	// 		const group = document.createElement('div');
+	// 		group.className = 'form-group';
+
+	// 		const qtyLabel = document.createElement('label');
+	// 		qtyLabel.textContent = `${material} Quantity:`;
+
+	// 		const qtyInput = document.createElement('input');
+	// 		qtyInput.type = 'number';
+	// 		qtyInput.name = `quantity_${material}`;
+	// 		qtyInput.id = `quantity-${material}`;
+	// 		qtyInput.className = 'form-control';
+	// 		qtyInput.required = true;
+	// 		qtyInput.readOnly = isEditMode;
+	// 		qtyInput.value = materialDetails[material]?.quantity || '';
+
+	// 		const priceLabel = document.createElement('label');
+	// 		priceLabel.textContent = `${material} Unit Price:`;
+
+	// 		const priceInput = document.createElement('input');
+	// 		priceInput.type = 'number';
+	// 		priceInput.name = `price_${material}`;
+	// 		priceInput.id = `price-${material}`;
+	// 		priceInput.className = 'form-control';
+	// 		priceInput.readOnly = true;
+	// 		priceInput.step = '0.01';
+
+	// 		const totalPriceLabel = document.createElement('label');
+	// 		totalPriceLabel.textContent = `${material} Total Price:`;
+
+	// 		const totalPriceInput = document.createElement('input');
+	// 		totalPriceInput.type = 'number';
+	// 		totalPriceInput.name = `totalPrice_${material}`;
+	// 		totalPriceInput.id = `totalPrice-${material}`;
+	// 		totalPriceInput.className = 'form-control';
+	// 		totalPriceInput.readOnly = true;
+
+	// 		group.appendChild(qtyLabel);
+	// 		group.appendChild(qtyInput);
+	// 		group.appendChild(priceLabel);
+	// 		group.appendChild(priceInput);
+	// 		group.appendChild(totalPriceLabel);
+	// 		group.appendChild(totalPriceInput);
+	// 		container.appendChild(group);
+
+
+
+	function renderMaterialQuantityFields() {
+    let selectedMaterials = [];
+    const matField = document.getElementById('materialnames');
+    if (matField.tagName === 'SELECT') {
+        selectedMaterials = Array.from(matField.selectedOptions).map(opt => opt.value);
+    } else {
+        selectedMaterials = matField.value.split(',').map(m => m.trim());
+    }
+
+    const container = document.getElementById('material-quantity-container');
+    container.innerHTML = '';
+
+    let materialDetails = {};
+    try {
+        materialDetails = JSON.parse(document.getElementById('materialdetails').value || '{}');
+    } catch (e) {
+        console.error("Invalid materialdetails JSON.");
+    }
+
+    const isEditMode = document.getElementById('id').value !== ''; // detect edit mode
+
+    
+    // Create table structure
+    const table = document.createElement('table');
+    table.className = 'table table-bordered';
+
+    const thead = document.createElement('thead');
+    
+
+    const tbody = document.createElement('tbody');
+
+    selectedMaterials.forEach(material => {
+		thead.innerHTML = `
+		        <tr>
+		            <th>Material Name</th>
+		            <th>Quantity</th>
+		            <th>Unit Price</th>
+		            <th>Total Price</th>
+		        </tr>
+		    `;
+        const row = document.createElement('tr');
+
+        // Material Name (readonly input)
+        const nameCell = document.createElement('td');
+        const nameInput = document.createElement('input');
+        nameInput.type = 'text';
+        nameInput.className = 'form-control';
+        nameInput.value = material;
+        nameInput.readOnly = true;
+        nameCell.appendChild(nameInput);
+
+        // Quantity Input
+        const qtyCell = document.createElement('td');
+        const qtyInput = document.createElement('input');
+        qtyInput.type = 'number';
+        qtyInput.name = `quantity_${material}`;
+        qtyInput.id = `quantity-${material}`;
+        qtyInput.className = 'form-control';
+        qtyInput.required = true;
+        qtyInput.readOnly = isEditMode;
+        qtyInput.value = materialDetails[material]?.quantity || '';
+        qtyCell.appendChild(qtyInput);
+
+        // Unit Price Input (readonly)
+        const priceCell = document.createElement('td');
+        const priceInput = document.createElement('input');
+        priceInput.type = 'number';
+        priceInput.name = `price_${material}`;
+        priceInput.id = `price-${material}`;
+        priceInput.className = 'form-control';
+        priceInput.readOnly = true;
+        priceInput.step = '0.01';
+        priceCell.appendChild(priceInput);
+
+        // Total Price Input (readonly)
+        const totalPriceCell = document.createElement('td');
+        const totalPriceInput = document.createElement('input');
+        totalPriceInput.type = 'number';
+        totalPriceInput.name = `totalPrice_${material}`;
+        totalPriceInput.id = `totalPrice-${material}`;
+        totalPriceInput.className = 'form-control';
+        totalPriceInput.readOnly = true;
+        totalPriceCell.appendChild(totalPriceInput);
+
+        row.appendChild(nameCell);
+        row.appendChild(qtyCell);
+        row.appendChild(priceCell);
+        row.appendChild(totalPriceCell);
+        tbody.appendChild(row);
+
+        // AJAX to fetch price and UID
+        $.ajax({
+            url: '/Rawmaterialpurchaseorder/getMaterialDetails',
+            type: 'GET',
+            data: { materialname: material },
+            success: function (data) {
+                if (!uidarr.includes(data.rawmaterialuid)) {
+                    uidarr.push(data.rawmaterialuid);
+                    $("#rawmaterialuid").val(uidarr.join(','));
+                }
+                const price = materialDetails[material]?.price || data.price || 0;
+                priceInput.value = price;
+                const qty = parseFloat(qtyInput.value) || 0;
+                totalPriceInput.value = (qty * price).toFixed(2);
+                updateTotalValue();
+            }
+        });
+
+        // Recalculate total price on quantity input (if not in edit mode)
+        if (!isEditMode) {
+            qtyInput.addEventListener('input', function () {
+                const qty = parseFloat(qtyInput.value) || 0;
+                const price = parseFloat(priceInput.value) || 0;
+                totalPriceInput.value = (qty * price).toFixed(2);
+                updateTotalValue();
+            });
+        }
+    });
+
+    table.appendChild(thead);
+    table.appendChild(tbody);
+    container.appendChild(table);
+}
+
+			// ✅ AJAX call for price
+			$.ajax({
+				url: '/Rawmaterialpurchaseorder/getMaterialDetails',
+				type: 'GET',
+				data: {materialname: material},
+				success: function (data) {
+					if (!uidarr.includes(data.rawmaterialuid)) {
+						uidarr.push(data.rawmaterialuid);
+						$("#rawmaterialuid").val(uidarr.join(','));
+					}
+					const price = materialDetails[material]?.price || data.price || 0;
+					priceInput.value = price;
+					const qty = parseFloat(qtyInput.value) || 0;
+					totalPriceInput.value = (qty * price).toFixed(2);
+					updateTotalValue();
+				}
+			});
+
+			if (!isEditMode) {
+				qtyInput.addEventListener('input', function () {
+					const qty = parseFloat(qtyInput.value) || 0;
+					const price = parseFloat(priceInput.value) || 0;
+					totalPriceInput.value = (qty * price).toFixed(2);
+					updateTotalValue();
+				});
+			}
+	function updateTotalValue() {
+		let total = 0;
+					const materialDetails = {};
+					document.querySelectorAll('[id^="quantity-"]').forEach(qtyInput => {
+						const material = qtyInput.id.replace('quantity-', '');
+						const priceInput = document.getElementById(`price-${material}`);
+						const qty = parseFloat(qtyInput.value) || 0;
+						const price = parseFloat(priceInput.value) || 0;
+						total += qty * price;
+						materialDetails[material] = {quantity: qty, price: price};
+					});
+					document.getElementById("totalvalue").value = total.toFixed(2);
+					document.getElementById("materialdetails").value = JSON.stringify(materialDetails);
+				}
+
+
+
+	function validateDates() {
+		const orderDate = new Date(document.getElementById("orderdate").value);
+		const deliveryDate = new Date(document.getElementById("deliverydate").value);
+		if (orderDate && deliveryDate && deliveryDate <= orderDate) {
+			alert("Delivery Date must be after Order Date.");
+			document.getElementById("deliverydate").value = "";
+		}
+	}
+
+		
+		function resetForm() {
+		    $('#poForm')[0].reset();
+		    $('#id').val('');
+		    $('#form-title').text('Raw Material Purchase Order Form');
+		    $('#submitBtn').text('Submit');
+		  }
+		
+	</script>
+</body>
+
+</html>

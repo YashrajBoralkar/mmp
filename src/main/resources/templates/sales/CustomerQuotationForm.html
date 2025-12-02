@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Customer Quotation Form</title>
+  <link rel="stylesheet" href="/css/empinfo.css">
+  <link rel="stylesheet" href="/css/hrms.css"> <!-- // for side bar code  -->
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+</head>
+
+<body > 
+ <div th:replace="~{SALES.html :: sidebarFragment}"></div> <!-- // for side bar code  -->
+
+   <form id="customerQuotationForm" class="form-container"  >
+    <!-- Personal Information Section -->
+    <input type="hidden" id="id" name="id" th:value="${quotation?.id}">
+    <div class="form-section active" id="section1">
+      <h2>Customer Quotation Form</h2>
+
+      <!-- First Row -->
+    
+      <div class="form-row">
+        
+        <div class="form-group">        
+          <label for="customeruid">Customer UID *</label>
+        <select id="customeruid" name="customeruid" onchange="fetchcustomerDetails(this.value)" th:if="${quotation == null or quotation.id == null}" required>
+            <option value="">Select Customer UID</option>
+            <option th:each="uid : ${customeruids}" th:value="${uid}" th:text="${uid}"></option>
+        </select>
+        <input type="text" id="customeruid" name="customeruid" th:value="${quotation?.customeruid}" readonly th:if="${quotation?.id != null}">
+        <span id="customeruid-error" class="error-message"></span>
+        </div>
+
+        <div class="form-group">
+          <label for="customername">Customer Name *</label>
+          <input type="text" id="customername" name="customername" readonly />
+        </div>
+
+        <div class="form-group">
+          <label for="quotationdate">Quotation Date *</label>
+          <input type="date" id="quotationdate" name="quotationdate" th:value="${quotation?.quotationdate}" required />  
+        </div>
+
+        
+
+      </div>
+
+      <!-- Second Row -->
+      <div class="form-row">
+        <div class="form-group">
+          <label for="validuntil">Valid Until *</label>
+          <input type="date" id="validuntil" name="validuntil" th:value="${quotation?.validuntil}" required />
+      </div>
+        <div class="form-group">
+          <label for="productuid">Product UID *</label>
+          <select id="productuid" name="productuid" onchange="fetchProductDetails(this.value)" th:if="${quotation == null or quotation.id == null}" required>
+              <option value="">Select Product UID</option>
+              <option th:each="uid : ${productuid}" th:value="${uid}" th:text="${uid}"></option>
+          </select>
+          <input type="text" id="productuid" name="productuid" th:value="${quotation?.productuid}" readonly th:if="${quotation?.id != null}">
+          <span id="productuid-error" class="error-message"></span>
+	      </div>
+   
+        <div class="form-group">
+          <label>Product Name *</label>
+          <input type="text" id="productname" name="productname" readonly />
+        </div>
+
+       
+      </div>
+      <!-- Third Row -->
+      <div class="form-row">
+        <div class="form-group">
+          <label>Unit Price *</label>
+        <input type="text" id="unitprice" name="unitprice" readonly /> 
+        </div>
+
+        <div class="form-group" >         
+          <label for="quantityoffered">Quantity Offered *</label>
+          <input type="number" id="quantityoffered" name="quantityoffered" th:value="${quotation?.quantityoffered}" required />
+        </div>
+      
+          <div class="form-group">            
+            <label for="quotationamount">Quotation Amount *</label>
+            <input type="number" step="0.01" id="quotationamount" name="quotationamount" th:value="${quotation?.quotationamount}" min="0" readonly />
+          </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="discountoffered">Discount Offered (%)</label>
+          <input type="number" step="0.01" id="discountoffered" name="discountoffered" th:value="${quotation?.discountoffered}" />
+         </div>
+
+        <div class="form-group">
+          <label for="totalamount">Total Amount *</label>
+          <input type="number" step="0.01" id="totalamount" name="totalamount" th:value="${quotation?.totalamount}" />
+        </div>
+
+        <div class="form-group">
+          <label for="quotationstatus">Quotation Status *</label>
+          <select id="quotationstatus" name="quotationstatus">
+              <option value="">Select Condition</option>
+              <option th:selected="${quotation?.quotationstatus == 'Pending'}" value="Pending">Pending</option>
+              <option th:selected="${quotation?.quotationstatus == 'Approved'}" value="Approved">Approved</option>
+              <option th:selected="${quotation?.quotationstatus == 'Rejected'}" value="Rejected">Rejected</option>
+          </select>         
+        </div>
+      </div>
+
+      <!-- four Row -->
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="salesrepresentative">Sales Representative *</label>
+          <input type="text" id="salesrepresentative" name="salesrepresentative" th:value="${quotation?.salesrepresentative}" required />
+        </div>
+      </div>
+     </div>
+
+   <!-- Five Row  -->
+ <div class="form-actions">
+      <button type="button" id="submitBtn" onclick="submitForm()">Submit</button>
+        <div id="message" th:if="${successMessage}" class="success-message" th:text="${successMessage}"></div>               
+      <button type="button" class="back-button" onclick="goBack();">Back</button> 
+    	
+    </div>
+  </form>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+   <script>
+   
+   function goBack() {
+		window.location.href = '/sales/customerquotationgrid';
+	  }
+    function validateForm() {
+        let isValid = true;
+
+        // Validate Customer UID
+        if (!$('#customeruid').val()) {
+            alert("Please select a Customer UID.");
+            isValid = false;
+        }
+
+        // Validate Quotation Date
+        if (!$('#quotationdate').val()) {
+            alert("Please enter a Quotation Date.");
+            isValid = false;
+        }
+
+        // Validate Valid Until Date
+        if (!$('#validuntil').val()) {
+            alert("Please enter a Valid Until Date.");
+            isValid = false;
+        }
+
+        // Validate Product UID
+        if (!$('#productuid').val()) {
+            alert("Please select a Product UID.");
+            isValid = false;
+        }
+
+     
+  
+ 
+  
+  
+  // Discount calculation
+      $('#quantityoffered').on('input', function () {
+          let quantity = parseFloat($(this).val()) || 0;
+
+          if (quantity < 0) {
+              alert("Quantity Offered cannot be negative!");
+              $(this).val(0); 
+          }
+
+          if (quantity > 100) {
+              alert("Quantity Offered cannot exceed 100%!");
+              $(this).val(100); 
+          }
+
+          calculateQuotationAmount(); // Update total amount
+      });
+
+  
+
+        // Validate Quotation Amount
+        if (!$('#quotationamount').val() || $('#quotationamount').val() <= 0) {
+            alert("Please enter a valid Quotation Amount.");
+            isValid = false;
+        }
+
+        // Validate Total Amount
+        if (!$('#totalamount').val() || $('#totalamount').val() <= 0) {
+            alert("Please enter a valid Total Amount.");
+            isValid = false;
+        }
+
+        // Validate Quotation Status
+        if (!$('#quotationstatus').val()) {
+            alert("Please select a Quotation Status.");
+            isValid = false;
+        }
+
+        // Validate Sales Representative
+        if (!$('#salesrepresentative').val()) {
+            alert("Please enter a Sales Representative.");
+            isValid = false;
+        }
+
+        return isValid;
+    }
+
+    function submitForm() {
+        if (!validateForm()) {
+            return;
+        }
+
+        const formData = new FormData(document.getElementById('customerQuotationForm'));
+        const id = $('#id').val();
+
+        let url, successMessage;
+
+        if (!id) {
+            url = '/customerquotationform/save';
+            successMessage = 'Quotation saved successfully!';
+        } else {
+            url = '/customerquotation/update';
+            successMessage = 'Quotation updated successfully!';
+        }
+
+        $.ajax({
+            url: url,
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function(response) {
+                $('#message').text(successMessage);
+                resetForm();
+                window.location.href = '/sales/customerquotationgrid';
+            },
+            error: function() {
+                alert('Error saving Quotation. Please fill out all required fields.');
+            }
+        });
+    }
+
+    function resetForm() {
+        $('#customerQuotationForm')[0].reset();
+        $('#id').val('');
+        $('#message').text('');
+        $('#form-title').text('Add New Customer Quotation');
+        $('#submitBtn').text('Submit');
+    }
+
+    $(document).ready(function() {
+        // Auto-fill Item details when updating
+        var existingProductuid = $('#productuid').val();
+        if (existingProductuid) {
+            fetchProductDetails(existingProductuid);
+        }
+
+        var existingCustomeruid = $('#customeruid').val();
+        if (existingCustomeruid) {
+            fetchcustomerDetails(existingCustomeruid);
+        }
+    });
+
+    function fetchProductDetails(productuid) {
+        if (!productuid) {
+            alert("Please select a Product ID.");
+            return;
+        }
+
+        $.ajax({
+            url: '/getquotationproductdetails',
+            method: 'GET',
+            data: { productuid: productuid },
+            success: function(response) {
+                console.log("Response from server:", response);
+                if (response && response.length > 0) {
+                    const ProductDetail = response[0];
+                    $('#productname').val(ProductDetail.productname || '');
+                    $('#unitprice').val(ProductDetail.sellingprice || '');
+                } else {
+                    alert("No details found for the selected Product ID.");
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error("Error fetching Product details:", error);
+                alert("An error occurred while fetching the Product details.");
+            }
+        });
+    }
+
+    function fetchcustomerDetails(customeruid) {
+        if (!customeruid) {
+            alert("Please select a Customer ID.");
+            return;
+        }
+
+        $.ajax({
+            url: '/getcustomerdetails',
+            method: 'GET',
+            data: { customeruid: customeruid },
+            success: function(response) {
+                console.log("Response from server:", response);
+                if (response && response.length > 0) {
+                    const CustomerDetail = response[0];
+                    $('#customername').val(CustomerDetail.customername || '');
+                } else {
+                    alert("No details found for the selected Customer ID.");
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error("Error fetching Customer details:", error);
+                alert("An error occurred while fetching the Customer details.");
+            }
+        });
+    }
+
+    $(document).ready(function () {
+        // Quantity and Unit Price calculation
+        $('#quantityoffered, #unitprice').on('input', function () {
+            calculateQuotationAmount();
+        });
+
+        // Discount calculation
+  $('#discountoffered').on('input', function () {
+      let discount = parseFloat($(this).val()) || 0;
+
+      if (discount < 0) {
+          alert("Discount percentage cannot be negative!");
+          $(this).val(0); 
+      }
+
+      if (discount > 100) {
+          alert("Discount percentage cannot exceed 100%!");
+          $(this).val(100);  
+      }
+
+      calculateTotalAmount(); // Update total amount
+  });
+
+    });
+
+   
+
+
+function calculateQuotationAmount() {
+    let quantity = parseFloat($('#quantityoffered').val()) || 0;
+    let unitPrice = parseFloat($('#unitprice').val()) || 0;
+    let quotationAmount = quantity * unitPrice;
+
+    if (quotationAmount < 0 || isNaN(quotationAmount)) {
+        quotationAmount = 0; 
+    }
+
+    $('#quotationamount').val(quotationAmount.toFixed(2));
+    calculateTotalAmount(); // Automatically calculate total after updating quotation amount
+}
+
+
+
+    function calculateTotalAmount() {
+        let quotationAmount = parseFloat($('#quotationamount').val()) || 0;
+        let discountPercentage = parseFloat($('#discountoffered').val()) || 0;
+
+        // Validation: Discount Percentage should not exceed 100%
+        if (discountPercentage > 100) {
+            alert("Discount percentage cannot exceed 100%!");
+            $('#discountoffered').val(100); // Automatically set to 100 if exceeded
+            discountPercentage = 100;
+        }
+
+        let discountAmount = (quotationAmount * discountPercentage) / 100;
+        let totalAmount = quotationAmount - discountAmount;
+
+        if (totalAmount < 0) {
+            totalAmount = 0; // Prevent negative values
+        }
+
+        $('#totalamount').val(totalAmount.toFixed(2));
+    }
+</script>
+</body>
+</html>

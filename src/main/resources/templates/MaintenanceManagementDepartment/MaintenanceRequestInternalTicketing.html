@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Maintenance Request Form</title>
+
+	<link rel="stylesheet" href="/css/empinfo.css">
+  <link rel="stylesheet" href="/css/hrms.css"> <!-- // for side bar code  -->
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+  
+</head>
+<body>
+     <div th:replace="~{MAINTENANCEMANAGEMENTDEPERTMENT.html :: sidebarFragment}"></div>
+
+<div class="form-container">
+  <div class="form-section active" id="section1" style="margin-left: 20px; margin-right: 20px;">
+    <form id="maintenancerequestform" enctype="multipart/form-data">
+      <h2 id="form-title">Maintenance Request Form</h2>
+
+      <input type="hidden" id="id" name="id" th:value="${mr?.id}">
+
+      <!-- Row 1: Employee UID, Employee Name, Equipment UID -->
+      <div class="form-row">
+        <div class="form-group col-md-4">
+          <label>Employee UID:</label>
+          <select class="form-control" id="employeeuid" name="employeeuid" onchange="fetchEmployeeDetails(this.value)" 
+                  th:if="${mr == null or mr.id == null}" required>
+			<option value="">Select Employee UID </option>
+            <option th:each="uid : ${employeeuid}" th:value="${uid}" th:text="${uid}"></option>
+            </select>
+            <input type="text" id="employeeuid" name="employeeuid" 
+                 th:value="${mt?.employeeuid}" 
+                 onchange="fetchEmployeeDetails(this.value)" 
+                 readonly th:if="${mr?.id != null}">
+                 
+                </div>
+
+        <div class="form-group col-md-4">
+          <label>Employee Name:</label>
+          <input type="text" id="first_name" name="first_name" readonly class="form-control">
+        </div>
+
+        <div class="form-group col-md-4">
+          <label>Equipment Master UID <span class="text-danger">*</span></label>
+            <select class="form-control" id="equipmentmasteruid" name="equipmentmasteruid" onchange="fetchEquipmentDetails(this.value)" 
+                  th:if="${mr == null or mr.id == null}" required>
+			<option value="">Select Equipment Master UID</option>
+            <option th:each="uid : ${equipmentmasteruid}" th:value="${uid}" th:text="${uid}"></option>
+                          
+            </select>
+            <input type="text" id="equipmentmasteruid" name="equipmentmasteruid" 
+                 th:value="${mr?.equipmentmasteruid}" 
+                 onchange="fetchEquipmentDetails(this.value)" 
+                 readonly th:if="${mr?.id != null}">
+                  </div>
+      </div>
+
+      <!-- Row 2: Equipment Name, Department, Priority Level -->
+      <div class="form-row">
+        <div class="form-group">
+          <label for="equipmentname">Equipment Name:</label>
+          <input type="text" id="equipmentname" name="equipmentname" readonly class="form-control">
+        </div>
+
+        <div class="form-group">
+            <label for="departmentname">Department  Name:</label>
+            <select class="form-control" id="departmentname" name="departmentname" th:if="${mr == null or mr.id == null}" required>
+			<option value="">Select Department  Name</option>
+            <option th:each="uid : ${departmentname}" th:value="${uid}" th:text="${uid}"></option>
+                          
+            </select>
+            <input type="text" id="departmentname" name="departmentname" 
+                 th:value="${mr?.departmentname}" 
+                 readonly th:if="${mr?.id != null}">
+                  </div>
+        </div>
+
+        <div class="form-group">
+          <label for="prioritylevel">Priority Level:</label>
+          <select id="prioritylevel" name="prioritylevel" class="form-control">
+            <option value="">-- Select Priority --</option>
+            <option value="Low" th:selected="${mr?.prioritylevel == 'Low'}">Low</option>
+            <option value="Medium" th:selected="${mr?.prioritylevel == 'Medium'}">Medium</option>
+            <option value="High" th:selected="${mr?.prioritylevel == 'High'}">High</option>
+            <option value="Critical" th:selected="${mr?.prioritylevel == 'Critical'}">Critical</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Row 3: Request Date, Status, Issue Description (on full width) -->
+      <div class="form-row">
+        <div class="form-group">
+          <label for="requestdate">Request Date:</label>
+          <input type="date" id="requestdate" name="requestdate" th:value="${mr?.requestdate}" readonly tabindex="-1"
+            class="form-control">
+        </div>
+
+        <div class="form-group">
+          <label for="status">Status:</label>
+          <select id="status" name="status" class="form-control">
+            <option value="">-- Select Status --</option>
+            <option value="Pending" th:selected="${mr?.status == 'Pending'}">Pending</option>
+            <option value="In Progress" th:selected="${mr?.status == 'In Progress'}">In Progress</option>
+            <option value="Completed" th:selected="${mr?.status == 'Completed'}">Completed</option>
+            <option value="On Hold" th:selected="${mr?.status == 'On Hold'}">On Hold</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="issuedescription">Issue Description:</label>
+          <textarea id="issuedescription" name="issuedescription" rows="2" class="form-control"
+            th:text="${mr?.issuedescription}"style="width: 224px; height: 35px;" required></textarea>
+        </div>
+      </div>
+
+      <!-- Submit Button -->
+      <div class="form-actions">
+        <div class="form-group">
+          <button type="button" id="submitBtn" onclick="submitForm()" class="btn btn-primary">Submit</button>
+		  <button type="button" id="backBtn" onclick="goBack()">Back</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+
+<!-- JQuery -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script>
+	
+	
+		
+$(document).ready(function() {
+    // Auto-fill Item details when updating
+    var existingemployeeuid = $('#employeeuid').val();
+    if (existingemployeeuid) {
+    	fetchEmployeeDetails(existingemployeeuid);
+    }
+});
+
+	function fetchEmployeeDetails(employeeuid) {
+		  if (!employeeuid) return; 
+
+		     $.ajax({
+		 		url: '/fetchEmployeeDetailsInMaintenanceRequestInternalTicketing',
+		 		method: 'GET',
+		 		data: { employeeuid: employeeuid },
+		 		success: function(response) {
+		 			$('#first_name').val(response.firstName);	
+		 	},
+		 	error:function() {
+		    alert('Error fetching Employee Details. Please try again.');
+		 			                }
+		 							});
+		 } 
+
+		$(document).ready(function() {
+		    // Auto-fill Item details when updating
+		    var existingequipmentmasteruid = $('#equipmentmasteruid').val();
+		    if (existingequipmentmasteruid) {
+		    	fetchEquipmentDetails(existingequipmentmasteruid);
+		    }
+		});
+		function fetchEquipmentDetails(equipmentmasteruid) {
+		  if (!equipmentmasteruid) return; 
+
+		     $.ajax({
+		 		url: '/fetchEquipmentDetailsInMaintenanceRequestInternalTicketing',
+		 		method: 'GET',
+		 		data: { equipmentmasteruid: equipmentmasteruid },
+		 		success: function(response) {
+		 			$('#equipmentname').val(response.equipmentname);	
+		 	},
+		 	error:function() {
+		    alert('Error fetching Equipment Master Details. Please try again.');
+		 			                }
+		 							});
+		 } 
+
+
+
+		function submitForm() {
+		   
+		    const formData = new FormData(document.getElementById('maintenancerequestform'));
+		    const id = $('#id').val();
+
+		    let url, successMessage;
+
+		    if (!id) {
+		        url = '/savemaintenancerequestinternalticketing';
+		        successMessage = 'Maintenance Request Internal Ticketing Form saved successfully';
+		    } else {
+		        url = '/updatemaintenancerequestinternalticketing';
+		        successMessage = 'Maintenance Request Internal Ticketing updated successfully';
+		    }
+
+		    $.ajax({
+		        url: url,
+		        type: 'POST',
+		        data: formData,
+		        processData: false,
+		        contentType: false,
+		        success: function(response) {
+		            alert(successMessage);
+		            resetForm();
+		            window.location.href = '/maintenancemanagementdepartment/maintenancerequestinternalticketinggrid';
+		        },
+		        error: function() {
+		            alert('Error saving maintenance request form. Please try again.');
+		        }
+		    });
+		}
+
+
+function resetForm() {
+    $('#maintenancerequestform')[0].reset();
+    $('#id').val('');
+    $('#form-title').text('Maintenance Request Form');
+    $('#submitBtn').text('Submit');
+}
+
+function prefillForm(data) {
+    $('#maintenancerequestuid').val(data.maintenancerequestuid);
+    $('#employeeuid').val(data.employeeuid);
+    $('#equipmentuid').val(data.equipmentuid);
+    $('#department').val(data.department);
+    $('#issuedescription').val(data.issuedescription);
+    $('#prioritylevel').val(data.prioritylevel);
+    $('#requestdate').val(data.requestdate);
+    $('#status').val(data.status);
+    $('#form-title').text('Update Maintenance Request Form');
+    $('#submitBtn').text('Update');
+}
+</script>
+
+<script>
+window.onload = function() {
+    const today = new Date().toISOString().split('T')[0];
+    const dateInput = document.getElementById('requestdate');
+    dateInput.value = today;
+};
+</script>
+
+</body>
+</html>

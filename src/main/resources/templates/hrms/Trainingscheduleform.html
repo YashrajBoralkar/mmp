@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Training Schedule Form</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link rel="stylesheet" href="/css/empinfo.css">
+    <link rel="stylesheet" href="/css/hrms.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+	<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        .form-row { display: flex; gap: 10px; }
+        .form-group { flex: 1; }
+        .form-row1 { display: flex; gap: 10px; }
+        .form-group1 { flex: 1; }
+        #virtualFields { display: flex; gap: 10px; visibility: hidden; }
+    </style>
+</head>
+<body>
+	<div th:replace="~{HRMS.html :: sidebarFragment}"></div>
+    
+    <div class="form-container">
+        <form id="trainingForm" enctype="multipart/form-data">
+         
+       <input type="hidden" id="id" name="id" th:value="${training?.id}" >
+      
+	   <h2 class="mb-4">Training Schedule Form</h2>
+           
+           <div class="form-row">
+            <div class="form-group">
+                  <label for="trainingtitle">Training Title:</label>
+                  <input type="text" id="trainingtitle" name="trainingtitle" th:value="${training?.trainingtitle}" placeholder="Enter Training Title" required />
+            </div>
+            <div class="form-group">
+                  <label for="trainerName">Trainer Name:</label>
+                  <input type="text" id="trainerName" name="trainerName" th:value="${training?.trainerName}" placeholder="Enter Trainer Name" required />
+            </div>
+            <div class="form-group">
+                <label for="description">Description:</label>
+                <input type="text" id="description" name="description" th:value="${training?.description}" placeholder="Enter Description" required>
+            </div>
+            <div class="form-group">
+                <label for="department">Department:</label>
+                <input type="text" id="department" name="department" th:value="${training?.department}" placeholder="Enter Department" required />
+            </div>
+           </div>
+
+           <div class="form-row">
+                <div class="form-group">
+                    <label for="internalExternal">Internal/External:</label>
+                    <select id="internalExternal" name="internalExternal" th:value="${training?.internalExternal}" class="form-select" required>
+                        <option value="">-- select --</option>
+                        <option value="Internal" th:selected="${training?.internalExternal == 'Internal'}">Internal</option>
+                        <option value="External" th:selected="${training?.internalExternal == 'External'}">External</option>
+                    </select>
+                </div> 
+               
+                <div class="form-row1" id="virtualFields">
+                    <div class="form-group1">
+                        <label for="trainerEmail">Trainer Email:</label>
+                        <input type="email" id="trainerEmail" name="trainerEmail" th:value="${training?.trainerEmail}" placeholder="Enter Trainer Email" /> 
+                    </div>
+                    <div class="form-group1">
+                        <label for="phoneNumber">Phone Number:</label>
+                        <input type="text" id="phoneNumber" name="phoneNumber" th:value="${training?.phoneNumber}" placeholder="Enter Phone Number" />
+                    </div>
+                </div> 
+             </div>
+
+            <div class="form-group">
+                <label for="trainingMode">Training Mode:</label>
+                <select id="trainingMode" name="trainingMode" th:value="${training?.trainingMode}" class="form-select" onchange="toggleFields()" required>
+                    <option value="">-- select --</option>
+                    <option value="Online" th:selected="${training?.trainingMode == 'Online'}">Online</option>
+                    <option value="Offline" th:selected="${training?.trainingMode == 'Offline'}">Offline</option>
+                </select>
+            </div>  
+
+            <div class="form-group1">
+                <div class="form-row1" id="onlineFields">
+                    <label for="location">URL:</label>
+                    <input type="url" id="location" name="location" th:value="${training?.location}" placeholder="Enter URL for Online Training" />
+                </div>
+                <div class="form-group1" id="offlineFields">
+                    <label for="venueAddress">Venue Address:</label>
+                    <input type="text" id="venueAddress" name="venueAddress" th:value="${training?.venueAddress}" placeholder="Enter Venue Address" />
+                </div>
+            </div> 
+
+           <br>
+           <div class="form-row">
+                <div class="form-group">
+                    <label for="startDate">Start Date:</label>
+                    <input type="date" id="startDate" name="startDate" th:value="${training?.startDate}" required />
+                </div>
+                <div class="form-group">
+                    <label for="endDate">End Date:</label>
+                    <input type="date" id="endDate" name="endDate" th:value="${training?.endDate}" required />
+                </div>
+                <div class="form-group">
+                    <label for="startTime">Start Time:</label>
+                    <input type="time" id="startTime" name="startTime" th:value="${training?.startTime}" required />
+                </div>
+                <div class="form-group">
+                    <label for="endTime">End Time:</label>
+                     <input type="time" id="endTime" name="endTime" th:value="${training?.endTime}" required />
+                </div>
+                <div class="form-group">
+                    <label for="duration">Duration:</label>
+                    <input type="text" id="duration" name="duration" th:value="${training?.duration}" placeholder="Calculated Duration" readonly />
+                </div>
+            </div>
+         
+			<div class="form-actions">
+			    <button type="button" id="submitBtn" onclick="submitForm()">Save Training</button>
+			    <button type="button" onclick="goback()">Back</button>
+			    <div id="message" class="success-message"></div>
+			</div>
+        
+        </form>
+    </div>
+     <script> 
+		function goBack() {
+	window.location.href = '/dashboard';
+	}
+</script>
+   <script>
+   // ✅ Alphabetic validation
+   function isAlphabeticInput(value) {
+     const regex = /^[A-Za-z\s.,!?'-]+$/;
+     return regex.test(value);
+   }
+
+   function calculateDuration() {
+	    const startDateInput = $("#startDate").val();
+	    const endDateInput = $("#endDate").val();
+	    const startTimeInput = $("#startTime").val();
+	    const endTimeInput = $("#endTime").val();
+	    const durationField = $("#duration");
+
+	    if (startDateInput && endDateInput && startTimeInput && endTimeInput) {
+	        const startDateTime = new Date(`${startDateInput}T${startTimeInput}`);
+	        const endDateTime = new Date(`${endDateInput}T${endTimeInput}`);
+
+	        if (isNaN(startDateTime) || isNaN(endDateTime)) {
+	            durationField.val("Invalid input");
+	            return;
+	        }
+
+	        const durationMillis = endDateTime - startDateTime;
+	        if (durationMillis < 0) {
+	            durationField.val("Invalid date/time range");
+	            return;
+	        }
+
+	        const totalMinutes = Math.floor(durationMillis / 60000);
+	        const days = Math.floor(totalMinutes / (24 * 60));
+	        const hours = Math.floor((totalMinutes % (24 * 60)) / 60);
+	        const minutes = totalMinutes % 60;
+
+	        let durationString = "";
+	        if (days > 0) durationString += `${days} day(s), `;
+	        if (hours > 0) durationString += `${hours} hour(s), `;
+	        if (minutes > 0) durationString += `${minutes} minute(s) `;
+
+	        durationField.val(durationString.replace(/,\s*$/, ""));
+	    }
+	}
+
+   function toggleFields() {
+        const internalExternal = $("#internalExternal").val();
+        const trainingMode = $("#trainingMode").val();
+
+        $("#virtualFields").css("visibility", internalExternal === "External" ? "visible" : "hidden");
+        $("#onlineFields").toggle(trainingMode === "Online");
+        $("#offlineFields").toggle(trainingMode === "Offline");
+   }
+
+   function submitForm() {
+     const id = $("#id").val();
+     const trainingtitle = $("#trainingtitle").val().trim();
+     const trainerName = $("#trainerName").val().trim();
+     const description = $("#description").val().trim();
+     const department = $("#department").val().trim();
+     const internalExternal = $("#internalExternal").val();
+     const trainingMode = $("#trainingMode").val();
+     const phoneNumber = $("#phoneNumber").val().trim();
+     const startDate = $("#startDate").val();
+     const endDate = $("#endDate").val();
+     const startTime = $("#startTime").val();
+     const endTime = $("#endTime").val();
+
+     // 🔴 Required field check
+     if (!trainingtitle || !trainerName || !description || !department || !internalExternal || !trainingMode || !startDate || !endDate || !startTime || !endTime) {
+        return Swal.fire("Missing Data", "Please fill in all required fields.", "warning");
+     }
+
+     // 🔴 Alphabetic validation
+     if (!isAlphabeticInput(trainingtitle)) return Swal.fire("Invalid Input", "Training Title should only contain letters and punctuation.", "warning");
+     if (!isAlphabeticInput(trainerName)) return Swal.fire("Invalid Input", "Trainer Name should only contain letters and punctuation.", "warning");
+     if (!isAlphabeticInput(description)) return Swal.fire("Invalid Input", "Description should only contain letters and punctuation.", "warning");
+     if (!isAlphabeticInput(department)) return Swal.fire("Invalid Input", "Department should only contain letters and punctuation.", "warning");
+     if ($("#venueAddress").val().trim() && !isAlphabeticInput($("#venueAddress").val().trim())) return Swal.fire("Invalid Input", "Venue Address should only contain letters and punctuation.", "warning");
+
+     // 🔴 Phone validation
+     if (internalExternal === "External" && phoneNumber && !/^\d{10}$/.test(phoneNumber)) {
+        return Swal.fire("Invalid Phone", "Phone number must be 10 digits.", "warning");
+     }
+
+     // 🔴 Date/time validation
+     if (new Date(`${startDate}T${startTime}`) >= new Date(`${endDate}T${endTime}`)) {
+        return Swal.fire("Invalid Date/Time", "Start must be before End.", "warning");
+     }
+
+     // ✅ AJAX submit
+     const formData = new FormData(document.getElementById("trainingForm"));
+     const url = id ? "/updatetraining" : "/savetrainingform";
+     const successMessage = id ? "Training updated successfully!" : "Training saved successfully!";
+
+     $.ajax({
+       url: url,
+       type: "POST",
+       data: formData,
+       processData: false,
+       contentType: false,
+       success: function() {
+         Swal.fire("Success", successMessage, "success").then(() => {
+            resetForm();
+            window.location.href = "/hrms/TrainingGrid";
+         });
+       },
+       error: function() {
+         Swal.fire("Error", "Error saving training details. Please try again.", "error");
+       }
+     });
+   }
+
+   function resetForm() {
+     $("#trainingForm")[0].reset();
+     $("#id").val("");
+     $("#submitBtn").text("Save Training");
+     $("#message").text("");
+   }
+
+   $(document).ready(function() {
+     toggleFields();
+     calculateDuration();
+     $("#internalExternal, #trainingMode").change(toggleFields);
+     $("#startDate, #endDate, #startTime, #endTime").change(calculateDuration);
+   });
+   
+   function goback() {
+      window.location.href = "/hrms/TrainingGrid"; // ✅ Redirect to Training Grid page
+   }
+
+   </script>
+</body>
+</html>

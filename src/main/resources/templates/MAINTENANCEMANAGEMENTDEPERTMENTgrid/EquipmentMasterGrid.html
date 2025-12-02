@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Equipment Master Form</title>
+    
+    <link rel="stylesheet" href="/css/hrms.css"> <!-- // for side bar code  -->
+    <link rel="stylesheet" href="/css/grid.css">
+    <link rel="stylesheet" href="/css/emplist.css">
+
+    <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+<div th:replace="~{MAINTENANCEMANAGEMENTDEPERTMENT.html :: sidebarFragment}"></div> <!-- // for side bar code  -->
+
+<div class="button-container">
+    
+</div>
+
+<div class="button-grid">
+    <button onclick="loadEquipmentUtilizationTable()"style="width:112%">Equipment Master Form</button>
+</div>
+
+<div id="equipmentutilization-table-container">
+   
+</div> <!-- Table will be dynamically loaded here -->
+
+<script src="/js/grid.js"></script>
+
+<script>
+    function loadEquipmentUtilizationTable() {
+        // Create the button and table container structure immediately
+        const container = document.getElementById("equipmentutilization-table-container");
+        container.innerHTML =`
+            <div class="table-header">
+				<div class="button-container" style="margin-left: 1045px;">
+				                <button class="styled-button" onclick="window.location.href='/maintenancemanagementdepartment/equipmentmastergrid'" style="flex-grow: 1;">
+				                    <i class="fas fa-arrow-left"></i> Back
+				                </button>
+				                <button id="open-register-btn" class="styled-button" style="flex-grow: 1; margin-left: 20px;">
+				                Equipment Utilization Form
+				                </button>
+				            </div>
+				</div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Equipment UID</th>
+                        <th>Equipment Name</th>
+                        <th>Category</th>
+        				<th>Location</th>
+                        <th>Purchase Date</th>
+                        <th>Warranty Start Date</th>
+                        <th>Warranty End Date</th>
+                        <th>Manufacturer Name</th>
+                        <th>Maintenance Frequency</th>
+                        <th>Assigned Department</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="equipmentutilizationmanagement-table-body">
+                    <tr><td colspan="9">Loading data...</td></tr>
+                </tbody>
+            </table>
+        `;
+
+        // Add event listener to the "Equipment Master" button
+        document.getElementById("open-register-btn").addEventListener("click", () => {
+            // Redirect to the Equipment Master form
+            window.location.href = '/equipmentmasterform';
+        });
+
+        // Fetch and populate table data
+        fetch('/viewequipmentmaster')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            
+            .then(data => {
+                const headers = data.headers; // Extract headers dynamically
+                const rows = data.data;      // Extract equipment data
+                const tbody = document.getElementById("equipmentutilizationmanagement-table-body");
+
+                // Check if there are rows to display
+                if (rows.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="9">No data available.</td></tr>`;
+                    return;
+                }
+
+                // Generate rows from data
+                tbody.innerHTML = rows.map(row => `
+                    <tr>
+                        <td>${row['ID']}</td>
+                        <td>${row['Equipment UID']}</td>
+                        <td>${row['Equipment Name']}</td>
+                        <td>${row['Category']}</td>
+                        <td>${row['Location']}</td>
+                        <td>${row['Purchase Date']}</td>
+                        <td>${row['Warranty Start Date']}</td>
+                        <td>${row['Warranty End Date']}</td>
+                        <td>${row['Manufacturer Name']}</td>
+                        <td>${row['Maintenance Frequency']}</td>
+                        <td>${row['Department Name']}</td>
+                        <td>${row['Status']}</td>
+                        <td>
+                            <div class="action-buttons">
+                                <a href="#" class="btn btn-delete" data-id="${row['ID']}" onclick="confirmDeleteequipmentMaster(this)">Delete</a>
+                                <a href="/updateequipmentmaster/${row['ID']}" class="btn btn-update">Update</a>
+                            </div>
+                        </td>
+                    </tr>
+                `).join('');
+            })
+            .catch(error => {
+                console.error('Error fetching Equipment Master data:', error);
+                document.getElementById("equipmentutilizationmanagement-table-body").innerHTML = `<tr><td colspan="9">Error loading data.</td></tr>`;
+            });
+    }
+
+    // Example function to handle delete action
+    	function confirmDeleteequipmentMaster(element) {
+	    const id = element.getAttribute('data-id'); // Retrieve the Equipment Master  ID
+	    if (confirm(`Are you sure you want to delete Equipment Utilization with ID: ${id}?`)) {
+	        // Perform the fetch request with the Equipment Master ID as a query parameter
+	        fetch(`/equipmentmasterdeleteinfo?id=${id}`, { method: 'GET' })
+	            .then(response => {
+	                if (response.redirected) {
+	                    // Redirect to the new location if the server redirects
+	                    loadEquipmentUtilizationTable();
+	                    window.location.href = response.url;
+	                } else {
+	                    console.log('Equipment Master data deleted:', id);
+	                }
+	            })
+	            .catch(error => {
+	                console.error('Error deleting Equipment Master data:', error);
+	            });
+	    }
+	}
+	
+	
+</script>
+
+
+
+
+</body>
+</html>

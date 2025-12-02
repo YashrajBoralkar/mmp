@@ -1,0 +1,150 @@
+/* General Form Styling */
+.form-container {
+    font-family: "Libre Baskerville", serif;
+    max-width: 800px;
+    margin: 50px auto;
+    background: #edefff;
+    border: 1px solid #ddd;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+    min-height: 500px;
+    display: flex;
+    flex-direction: column;
+}
+
+.form-container:hover {
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+}
+
+h2 {
+    text-align: center;
+    margin-bottom: 20px;
+    color: #333;
+    font-size: 24px;
+}
+
+/* Form Layout */
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group textarea {
+    height: 38px; /* Match the height of input fields */
+	/*width: 365px;*/
+    resize: none; /* Prevent manual resizing */
+}
+
+.form-row {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 10px;
+}
+
+.form-row .form-group {
+    flex: 1;
+}
+
+label {
+    display: block;
+    margin-bottom: 5px;
+    color: #000;
+    font-size: 14px;
+}
+
+/* Input and Select Styling */
+input,
+textarea,
+select {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background-color: #f9f9f9;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+    background-color: #fff;
+}
+
+input:hover,
+textarea:hover,
+select:hover {
+    border-color: #007bff;
+    background-color: #f3f3f3;
+}
+
+input:disabled,
+select:disabled {
+    cursor: not-allowed;
+    border-color: #ccc;
+    background-color: #e9ecef;
+    box-shadow: none;
+}
+
+/* Default: Full width */
+.next-interview-fields {
+    width: 100%;
+    display: none; /* Initially hidden */
+    transition: width 0.3s ease, opacity 0.3s ease;
+}
+
+/* When visible, make it 50% width */
+.next-interview-fields.active {
+    width: 50%;
+    display: block;
+}
+
+
+/* Button Styling */
+button {
+	justify-content: center;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+	margin-bottom: -1%;
+	margin-top: -2%;
+}
+
+button:hover {
+    background-color: #0056b3;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+}
+
+.button-container {
+    display: flex;
+    justify-content: center; /* Centers the buttons horizontally */
+    gap: 15px; /* Adds space between buttons */
+    margin-top: 10px; /* Adds spacing from the form */
+}
+
+
+/* Form Section Visibility */
+.form-section {
+    display: none;
+}
+
+.form-section.active {
+    display: block;
+}
+
+/* Form Actions */
+.form-actions {
+    text-align: center;
+    margin-top: 10px;
+}
+
+
+
+

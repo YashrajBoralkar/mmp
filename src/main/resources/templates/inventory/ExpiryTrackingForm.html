@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Expiry Tracking System</title>
+ <link rel="stylesheet" href="/css/empinfo.css">
+  <link rel="stylesheet" href="/css/hrms.css"> <!-- // for side bar code  -->
+   <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<style>
+h5{
+  margin: 10px;
+}
+label{
+  font-size: 12px;
+}
+</style>
+<body>
+  <div th:replace="~{INVENTORY.html :: sidebarFragment}"></div> <!-- // for side bar code  -->
+
+   <form id="ExpiryTrackingForm" class="form-container"  >
+    <!-- Personal Information Section -->
+    <input type="hidden" class="form-control" id="id" name="id">
+    
+      <h2>Expiry Tracking Form</h2>
+
+      <!-- First Row -->
+      <h5>Item Information</h5>    
+      <div class="form-row">
+
+        <div class="form-group">        
+          <label for="productuid">Product UID</label>
+          <select  id="productuid"  name="productuid" onchange="fetchProductDetails(this.value)"  th:if="${expirytracking == null or expirytracking.id == null}">
+      <option value="">Select Product UID</option>
+      <option th:each="uid : ${Productuid}" th:value="${uid}" th:text="${uid}"></option>	
+          </select>
+        </div>
+
+
+        <div class="form-group">
+          <br>
+          <input type="text" id="productuid" name="productuid" th:value="${expirytracking?.productuid}" readonly th:if="${expirytracking?.id != null}">
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Product Name:</label>
+                <input type="text" class="form-control" id="productname">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Batch Number:</label>
+          <input type="text" class="form-control" id="batchnumber" name="batchnumber" th:value="${expirytracking?.batchnumber}"> 
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Stock Quantity:</label>
+          <input type="number" class="form-control" id="stockquantity" name="stockquantity" th:value="${expirytracking?.stockquantity}">
+            </div>
+        </div>
+
+      <!-- Second Row -->
+      <div class="form-row">
+        <div class="form-group">
+          <label for="warehouseuid">Warehouse UID</label>
+			 			            <select  id="warehouseuid"  name="warehouseuid" onchange="fetchWarehouseDetails(this.value)"  th:if="${expirytracking == null or expirytracking.id == null}">
+			 							<option value="">Select Warehouse UID</option>
+			 							<option th:each="uid : ${Warehouseuid}" th:value="${uid}" th:text="${uid}"></option>	
+			 			            </select>
+	      </div>
+   
+        <div class="form-group">
+          <br>
+          <input type="text" id="warehouseuid" name="warehouseuid" th:value="${expirytracking?.warehouseuid}" readonly th:if="${expirytracking?.id != null}">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Warehouse Location:</label>
+                <input type="text" class="form-control" id="warehouselocation" readonly>
+        </div>
+
+        
+      </div>
+      <h5>Expiry Tracking</h5>
+      <!-- Third Row -->
+      <div class="form-row">
+        
+          <div class="form-group">            
+            <label class="form-label">Manufacturing Date:</label>
+            <input type="date" class="form-control" id="manufacturingdate" readonly>
+        </div>
+
+          <div class="form-group">
+            <label class="form-label">Expiry Date:</label>
+            <input type="date" class="form-control" id="expirydate" readonly>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Alert Threshold (days before expiry):</label>
+                <input type="number" class="form-control" id="alertthreshold" value="30">
+        </div>
+        
+        
+      </div>
+
+      <!-- four Row -->
+ <h5>Actions & Alerts</h5>
+ <div id="alertMessage" class="alert" style="display: none;"></div>
+   <h5 class="mt-3">&nbsp;&nbsp;&nbsp; Expiry Status: <span id="expirystatus" class="text-primary"></span></h5>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label"style="font-size: 11px;" >Recommended Action:</label>
+                <select class="form-select" id="recommendedaction" name="recommendedaction" th:value="${expirytracking?.recommendedaction}">
+					<option value="select">Select</option>
+
+					<option value="discount">Offer Discounts</option>
+                    <option value="transfer">Transfer to Another Location</option>
+                    <option value="donate">Donate to Charity</option>
+                    <option value="dispose">Dispose of Expired Stock</option>
+                </select>
+
+        </div>
+        <div class="form-group">
+          <label class="form-label" >Approval Required:</label>
+          <select class="form-select" id="approvalrequired" name="approvalrequired" th:value="${expirytracking?.approvalrequired}">
+    <option value="select">Select</option>
+
+     <option value="yes">Yes</option>
+              <option value="no">No</option>
+          </select>
+        </div> 
+        <div class="form-group">
+          <label class="form-label">Action Taken:</label>
+                <input type="text" class="form-control" id="actiontaken" name="actiontaken" th:value="${expirytracking?.actiontaken}">
+        </div>     
+        <div class="form-group">         
+          <label class="form-label">Processed By:</label>
+          <input type="text" class="form-control" id="processedby" name="processedby" th:value="${expirytracking?.processedby}">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Action Date:</label>
+          <input type="date" class="form-control" id="actiondate" name="actiondate" th:value="${expirytracking?.actiondate}">
+        </div>
+      
+        
+    </div>
+
+   <!-- Five Row  -->
+   
+
+ 
+
+
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary mt-3" onclick="submitExpiryForm()">Submit Expiry Details</button>
+      <button class="btn btn-custom" id="checkExpiryBtn">Check Expiry</button>                  
+      <div th:if="${successMessage}" class="success-message" th:value="${successMessage}"></div>
+    </div>
+  
+
+
+
+
+
+
+
+   </form>
+
+
+
+   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+   <script>
+	
+    function submitExpiryForm() {
+        const formData = new FormData(document.getElementById('ExpiryTrackingForm'));
+        const id = $('#id').val(); // Assuming an ID field exists for updates
+        let url, successMessage;
+  
+        if (!id) {
+            url = '/submit';  // Endpoint for saving new expiry tracking details
+            successMessage = 'Expiry details saved successfully!';
+        } else {
+            url = '/updateexpiry'; // Endpoint for updating existing records
+            successMessage = 'Expiry details updated successfully!';
+        }
+  
+        $.ajax({
+            url: url,
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function(response) {
+                $('#successMessage').text(successMessage).show();
+                resetExpiryForm();
+                window.location.href = '/viewexpirydetails'; // Redirect to expiry tracking list
+            },
+            error: function() {
+                alert('Error saving expiry details. Please try again.');
+            }
+        });
+    }
+  
+    function resetExpiryForm() {
+        $('#purchaseOrderForm')[0].reset();
+        $('#id').val('');
+        $('#form-title').text('Expiry Tracking Form');
+        $('#submitBtn').text('Submit Expiry Details');
+    }
+  
+    function prefillExpiryForm(data) {
+        $('#id').val(data.id);
+        $('#productuid').val(data.productuid);
+        $('#productname').val(data.productname);
+        $('#batchnumber').val(data.batchnumber);
+        $('#stockquantity').val(data.stockquantity);
+        $('#warehouseuid').val(data.warehouseuid);
+        $('#warehouselocation').val(data.warehouselocation);
+        $('#manufacturingdate').val(data.manufacturingdate);
+        $('#expirydate').val(data.expirydate);
+        $('#alertthreshold').val(data.alertthreshold);
+        $('#expirystatus').text(data.expirystatus);
+        $('#recommendedaction').val(data.recommendedaction);
+        $('#approvalrequired').val(data.approvalrequired);
+        $('#actiontaken').val(data.actiontaken);
+        $('#processedby').val(data.processedby);
+        $('#actiondate').val(data.actiondate);
+  
+      if (data.id) {
+                      // If updating, replace dropdown with readonly input
+                      $('#productuid').replaceWith('<input type="text" id="productuid" name="productuid" value="' + data.productuid + '" readonly>');
+                      $('#warehouseuid').replaceWith('<input type="text" id="warehouseuid" name="warehouseuid" value="' + data.warehouseuid + '" readonly>');
+  
+                  }
+            
+        $('#form-title').text('Update Expiry Tracking');
+        $('#submitBtn').text('Update Expiry Details');
+    }
+  
+    
+    function fetchProductDetails(productuid) {
+        if (!productuid) return;
+  
+        $.ajax({
+            url: '/getProductDetails',
+            method: 'GET',
+            data: { productuid: productuid },
+            success: function(response) {
+                if (response && response.length > 0) { // Ensure response is not empty
+                    let productData = response[0]; // Get first object from the list
+                    $('#productname').val(productData.productname || '');
+                    $('#manufacturingdate').val(productData.manufacturingdate || '');
+                    $('#expirydate').val(productData.expirydate || '');
+                } else {
+                    alert('No data found for the selected product.');
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Error fetching product details:', error);
+                alert('Error fetching product details. Please try again.');
+            }
+        });
+    }
+  
+                        
+                        function fetchWarehouseDetails(warehouseuid) {
+                                       if (!warehouseuid) return;
+  
+                                       $.ajax({
+                                        url: '/warehouse/getWarehouseDetails',
+                                        method: 'GET',
+                                        data: { warehouseuid: warehouseuid },
+                                            success: function(response) {
+                                                if (response) {
+                                                 $('#warehouselocation').val(response.warehouselocation);
+                                                                      
+                                                 }
+                                              },
+                                                 error: function() {
+                                                    alert('Error fetching employee details. Please try again.');
+                                                              }
+                                                  });
+                                              }	
+                                              
+                                              
+                                              
+                                                  
+                                              
+                                              document.getElementById("checkExpiryBtn").addEventListener("click", function(event) {
+                                                  event.preventDefault(); 
+                                                  checkExpiry();
+                                              });
+  
+                                              function checkExpiry() {
+                                                  let expiryDate = document.getElementById("expirydate").value;
+                                                  let alertThreshold = parseInt(document.getElementById("alertthreshold").value);
+  
+                                                  if (!expiryDate || isNaN(alertThreshold)) {
+                                                      document.getElementById("alertMessage").innerHTML = "⚠ Please enter a valid expiry date and threshold!";
+                                                      document.getElementById("alertMessage").className = "alert alert-danger";
+                                                      document.getElementById("alertMessage").style.display = "block";
+                                                      document.getElementById("alertMessage").style.backgroundColor='DodgerBlue';
+                                                      document.getElementById("alertMessage").style.color="#edefff";
+                                                      return;
+                                                  }
+  
+                                                  let today = new Date();
+                                                  let expiry = new Date(expiryDate);
+  
+                                                  let timeDiff = expiry.getTime() - today.getTime();
+                                                  let daysUntilExpiry = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
+  
+                                                  document.getElementById("expirystatus").innerText = `${daysUntilExpiry} days remaining`;
+  
+                                                  let alertMessage = document.getElementById("alertMessage");
+  
+                                                  if (daysUntilExpiry <= 0) {
+                                                      alertMessage.innerHTML = `🚨 <b>Expired!</b> This item has expired.`;
+                                                      alertMessage.className = "alert alert-danger";
+                                                  } else if (daysUntilExpiry <= alertThreshold) {
+                                                      alertMessage.innerHTML = `⚠ <b>Expiry Alert:</b> This item will expire soon!`;
+                                                      alertMessage.className = "alert alert-warning";
+                                                  } else {
+                                                      alertMessage.innerHTML = `✅ <b>Safe:</b> No immediate action required.`;
+                                                      alertMessage.className = "alert alert-success";
+                                                  }
+  
+                                                  alertMessage.style.display = "block";
+                                              }
+                                              
+                                              
+                                              document.addEventListener("DOMContentLoaded", function () {
+                                                  let actionDateInput = document.getElementById("actiondate");
+  
+                                                  function setTodayDate() {
+                                                      let today = new Date().toISOString().split('T')[0]; // Get YYYY-MM-DD format
+                                                      actionDateInput.value = today;
+                                                      actionDateInput.setAttribute("min", today);
+                                                      actionDateInput.setAttribute("max", today); // Prevent past/future selection
+                                                  }
+  
+                                                  setTodayDate(); // Set default value
+  
+                                                  // Prevent user from changing date
+                                                  actionDateInput.addEventListener("keydown", function (event) {
+                                                      event.preventDefault();
+                                                  });
+  
+                                                  actionDateInput.addEventListener("change", function () {
+                                                      setTodayDate(); // Reset if user tries to change manually
+                                                  });
+                                              });																	
+  
+  </script>
+  
+
+
+
+
+
+  
+
+
+</body>
+</html>

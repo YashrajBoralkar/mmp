@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>First Article Inspection</title>
+	<link rel="stylesheet" href="/css/empinfo.css">
+	<link rel="stylesheet" href="/css/hrms.css">
+	<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+	<div th:replace="~{QUALITYCONTROL.html :: sidebarFragment}"></div> <!-- // for side bar code  -->
+
+	<form id="faiForm" class="form-container" autocomplete="off">
+		<!-- Personal Information Section -->
+		<input type="hidden" id="id" name="id" th:value="${fai?.id}">
+		<br>
+		<h2>First Article Inspection Form</h2>
+		<br>
+
+		<!-- First Row -->
+
+
+		<div class="form-row">
+			<!-- Product UID -->
+			<div class="form-group">
+				<label for="productuid">Product ID:</label>
+				<!-- CREATE MODE -->
+				<select id="productuid" name="productuid" onchange="fetchPlanningUIDs(this.value)"
+					th:if="${fai == null or fai.id == null}" required>
+					<option value="" disabled selected>Select Product ID</option>
+					<option th:each="uid : ${productuids}" th:value="${uid}" th:text="${uid}"></option>
+				</select>
+				<!-- EDIT MODE -->
+				<input type="text" id="productuid" name="productuid" th:if="${fai?.id != null}" th:value="${fai.productuid}" readonly />
+			</div>
+
+
+			<!-- Product Name -->
+			<div class="form-group">
+				<label for="productname">Product Name:</label>
+				<input type="text" id="productname" name="productname" th:value="${fai.productname}" readonly />
+			</div>
+
+
+			<!-- Production Planning UID -->
+			<div class="form-group">
+				<label for="productionplanninguid">Production Planning ID:</label>
+		
+				<!-- CREATE MODE -->
+				<select id="productionplanninguid" name="productionplanninguid"
+					onchange="fetchWorkOrderUIDs(this.value)" th:if="${fai == null or fai.id == null}" required>
+					<option value="" disabled selected>Select Planning ID</option>
+					<!-- dynamically populated -->
+				</select>
+				<!-- EDIT MODE -->
+				<input type="text" id="productionplanninguid" name="productionplanninguid" th:if="${fai?.id != null}"th:value="${fai.productionplanninguid}" readonly />
+			</div>
+		</div>
+
+
+
+   <div class="form-row">
+			<!-- Work Order UID -->
+			<div class="form-group">
+				<label th:for="'workorderuid'">Work Order ID:</label>
+				<br>
+				<!-- Create Mode: Show dropdown -->
+				<select id="workorderuid" name="workorderuid" onchange="fetchProductionOrderUIDs(this.value)"
+					th:if="${fai == null or fai.id == null}" required>
+					<option value="" disabled selected>Select Work Order ID</option>
+					<!-- dynamically populated -->
+				</select>
+
+
+				<!-- Update Mode: Show readonly input with existing UID -->
+				<input type="text" id="workorderuid" name="workorderuid" th:value="${fai?.workorderuid}"
+					onchange="fetchFromWorkOrderUID(this.value)" th:if="${fai?.id != null}" readonly>
+			</div>
+
+			<!-- Production Order UID -->
+			<div class="form-group">
+				<label for="productionorderuid">Production Order ID:</label>
+				<br>
+				<!-- CREATE MODE -->
+				<select id="productionorderuid" name="productionorderuid" onchange="fetchPlannedQty(this.value)"
+					th:if="${fai == null or fai.id == null}" required>
+					<option value="" disabled selected>Select Production Order ID</option>
+					<!-- dynamically populated -->
+				</select>
+				<!-- EDIT MODE -->
+				<input type="text" id="productionorderuid" name="productionorderuid" th:if="${fai?.id != null}"
+					th:value="${fai.productionorderuid}" readonly />
+			</div>
+
+			<!-- Work Order Quantity -->
+			<div class="form-group">
+				<label for="plannedquantity">Production Order Planned Quantity:</label>
+				<input type="text" id="plannedquantity" name="plannedquantity" th:value="${fai.plannedquantity}" readonly />
+			</div>
+
+		</div>
+
+		<!-- Third Row -->
+
+		<div class="form-row">
+			<div class="form-group">
+				<label for="measurementverification">Measurement Verification:</label>
+				<input type="text" id="measurementverification" name="measurementverification" th:value="${fai?.measurementverification}" required>
+			</div>
+			<div class="form-group">
+				<label for="materialverification">Material Verification:</label>
+				<input type="text" id="materialverification" name="materialverification" th:value="${fai?.materialverification}" required >
+			</div>
+
+			<div class="form-group">
+				<label for="functionaltesting">Functional Testing:</label>
+				<input type="text" id="functionaltesting" name="functionaltesting" th:value="${fai?.functionaltesting}">
+			</div>
+		</div>
+
+		<!-- Fourth row  -->
+		<div class="form-row">
+			<div class="form-group">
+				<label for="totalinspectedunits">Total Inspected Units:</label>
+				<input type="number" id="totalinspectedunits" name="totalinspectedunits" min="1" required
+					placeholder="Enter total inspected units" oninput="calculateDefectCount()"
+					th:value="${fai?.totalinspectedunits}">
+
+			</div>
+
+			<div class="form-group">
+				<label for="defectiveunits">Defective Units:</label>
+				<input type="number" id="defectiveunits" name="defectiveunits" min="0" required
+					placeholder="Enter defective units" oninput="calculateDefectCount()"
+					th:value="${fai?.defectiveunits}">
+
+			</div>
+			<div class="form-group">
+				<label for="defectcount">Defect Count:</label>
+				<input type="number" id="defectcount" name="defectcount" th:value="${fai?.defectcount}" readonly
+					placeholder="Defect count will be auto-calculated">
+
+			</div> 
+						
+		</div>
+
+		<!-- Fifth row  -->		
+		<div class="form-row">	
+		 <div class="form-group">
+				<label for="defectcount">Approved Count After Inspection:</label>
+				<input type="number" id="approvedcount" name="approvedcount" th:value="${fai?.approvedcount}" readonly>
+			</div>	
+			<div class="form-group">
+				<label for="approvalstatus">Approval Status:</label>
+				<br>
+				<select id="approvalstatus" name="approvalstatus" th:value="${fai?.approvalstatus}" required>
+					<option value="" disabled selected>Select approval status</option>
+					<option value="Approved" th:selected="${fai?.approvalstatus == 'Approved'}">Approved</option>
+					<option value="Pending" th:selected="${fai?.approvalstatus == 'Pending'}">Pending</option>
+					<option value="Rework" th:selected="${fai?.approvalstatus == 'Rework'}">Rework</option>
+					<option value="Rejected" th:selected="${fai?.approvalstatus == 'Rejected'}">Rejected</option>
+				</select>
+			</div>
+			<div class="form-group">
+				<label for="inspectorname">Inspector Name:</label>
+				<br>
+				<!-- CREATE MODE -->
+				<select id="inspectorname" name="inspectorname" th:if="${fai == null or fai.id == null}" required>
+					<option value="">Select Inspector</option>
+					<option th:each="entry : ${inspectorMap}" th:value="${entry.key + ' - ' + entry.value}"
+						th:text="${entry.key + ' - ' + entry.value}">
+					</option>
+				</select>
+				<!-- EDIT MODE -->
+				<input type="text" id="inspectorname" name="inspectorname" th:if="${fai?.id != null}"
+					th:value="${fai.inspectorname + (inspectorMap[fai.inspectorname] != null ? ' - ' + inspectorMap[fai.inspectorname] : '')}"
+					readonly />
+			</div>
+		</div>
+
+		<!-- Sixth Row  -->
+		<div class="form-actions">
+			<button type="button" id="submitBtn" onclick="submitForm()">Submit</button>
+			<div th:if="${successMessage}" class="success-message" th:text="${successMessage}"></div>
+			<button type="button" class="back-button" onclick="goBack();">Back</button>
+
+		</div>
+
+	</form>
+
+	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+	<!-- SweetAlert2 CDN -->
+	<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+		function goBack() {
+			window.location.href = '/qualitycontrol/firstarticleinspectiongrid';
+		}
+
+		
+	</script>
+	
+	<script>
+		
+
+		function calculateDefectCount() {
+		    const plannedQty = parseInt(document.getElementById('plannedquantity').value) || 0;
+		    const totalInspected = parseInt(document.getElementById('totalinspectedunits').value) || 0;
+		    const defectiveUnits = parseInt(document.getElementById('defectiveunits').value) || 0;
+
+		    // Validation: defective cannot be greater than inspected
+		    if (defectiveUnits > totalInspected) {
+		        Swal.fire({
+		            icon: 'warning',
+		            title: 'Invalid Entry',
+		            text: 'Defective units cannot be greater than total inspected units.'
+		        });
+		        document.getElementById('defectiveunits').value = "";
+		        document.getElementById('defectcount').value = "";
+		        document.getElementById('approvedcount').value = "";
+		        return;
+		    }
+
+		    // ✅ Defect count is just defective units
+		    document.getElementById('defectcount').value = defectiveUnits;
+
+		    // ✅ Approved count is planned quantity – defective units
+		    const approvedCount = plannedQty - defectiveUnits;
+		    document.getElementById('approvedcount').value = approvedCount >= 0 ? approvedCount : 0;
+		}
+
+		$('#productuid').change(function () {
+			const productuid = $(this).val();
+			fetchProductName(productuid); // <-- Add this
+			fetchPlanningUIDs(productuid);
+		});
+
+		function fetchPlanningUIDs(productuid) {
+			if (!productuid) return;
+
+			$.ajax({
+				url: '/fai/fetch/product-details',
+				method: 'GET',
+				data: {productuid},
+				success: function (data) {
+					const dropdown = $('#productionplanninguid');
+					dropdown.empty().append('<option value="" disabled selected>Select Planning ID</option>');
+
+					// Get the planning UIDs array
+					const uids = data.productionplanninguids;
+
+					if (Array.isArray(uids)) {
+						uids.forEach(uid => {
+							dropdown.append(`<option value="${uid}">${uid}</option>`);
+						});
+					} else {
+						console.error("productionplanninguids is not an array:", uids);
+					}
+
+					// Optional: fill product name input
+					$('#productname').val(data.productname || '');
+				},
+				error: function () {
+					Swal.fire('Error', 'Failed to fetch Planning IDs.', 'error');
+				}
+			});
+		}
+
+		function fetchWorkOrderUIDs(planninguid) {
+			if (!planninguid) return;
+
+			$.ajax({
+				url: '/fai/fetch/workorderuids',
+				method: 'GET',
+				data: {productionplanninguid: planninguid},
+				success: function (uids) {
+					const dropdown = $('#workorderuid');
+					dropdown.empty().append('<option value="" disabled selected>Select Work Order ID</option>');
+					uids.forEach(uid => dropdown.append(`<option value="${uid}">${uid}</option>`));
+				},
+				error: function () {
+					Swal.fire('Error', 'Failed to fetch Work Order UIDs.', 'error');
+				}
+			});
+		}
+
+		function fetchProductionOrderUIDs(workorderuid) {
+			if (!workorderuid) return;
+
+			$.ajax({
+				url: '/fai/fetch/productionorderuids',
+				method: 'GET',
+				data: {workorderuid},
+				success: function (uids) {
+					const dropdown = $('#productionorderuid');
+					dropdown.empty().append('<option value="" disabled selected>Select Production Order ID</option>');
+					uids.forEach(uid => dropdown.append(`<option value="${uid}">${uid}</option>`));
+				},
+				error: function () {
+					Swal.fire('Error', 'Failed to fetch Production Order UIDs.', 'error');
+				}
+			});
+		}
+
+
+
+		function fetchProductName(productuid) {
+			if (!productuid) return;
+
+			$.ajax({
+				url: '/fai/fetch/product-details',
+				method: 'GET',
+				data: {productuid},
+				success: function (data) {
+					$('#productname').val(data.productname || '');  // assuming it's an input field
+				},
+				error: function () {
+					Swal.fire('Error', 'Failed to fetch Product Name.', 'error');
+				}
+			});
+		}
+
+
+		function fetchPlannedQty(productionorderuid) {
+			if (!productionorderuid) return;
+
+			$.ajax({
+				url: '/fai/fetch/plannedquantity',
+				method: 'GET',
+				data: {productionorderuid: productionorderuid}, // ✅ Correct param name
+				success: function (data) {
+					$('#plannedquantity').val(data.plannedquantity); // ✅ Match with returned key
+				},
+				error: function () {
+					Swal.fire('Error', 'Failed to fetch planned quantity.', 'error');
+				}
+			});
+		}
+
+
+
+
+
+
+		function submitForm() {
+			const id = $('#id').val(); // For edit vs create detection
+
+			// Common fields
+			const productuid = $('#productuid').val();
+			const productname = $('#productname').val();
+			const productionplanninguid = $('#productionplanninguid').val();
+			const workorderuid = $('#workorderuid').val();
+			const productionorderuid = $('#productionorderuid').val();
+			const plannedquantity = $('#plannedquantity').val();
+			const measurement = $('#measurementverification').val().trim();
+			const material = $('#materialverification').val().trim();
+			const functionaltesting = $('#functionaltesting').val().trim();
+			const totalUnits = $('#totalinspectedunits').val().trim();
+			const defectiveUnits = $('#defectiveunits').val().trim();
+			const defectcount = $('#defectcount').val().trim();
+			const approvedCount = $('#approvedcount').val().trim(); // ✅ NEW
+			const approvalStatus = $('#approvalstatus').val();
+			const inspector = $('#inspectorname').val();
+
+			// Create mode validations (Dropdown fields)
+			if (!id) {
+				if (!productuid) {
+					return Swal.fire('Required Field', 'Please select Product UID.', 'warning');
+				}
+				if (!productionplanninguid) {
+					return Swal.fire('Required Field', 'Please select Production Planning UID.', 'warning');
+				}
+				if (!workorderuid) {
+					return Swal.fire('Required Field', 'Please select Work Order UID.', 'warning');
+				}
+				if (!productionorderuid) {
+					return Swal.fire('Required Field', 'Please select Production Order UID.', 'warning');
+				}
+				if (!inspector) {
+					return Swal.fire('Required Field', 'Please select Inspector Name.', 'warning');
+				}
+			}
+
+			// Common field validations
+			if (!productname) {
+				return Swal.fire('Required Field', 'Product Name is missing.', 'warning');
+			}
+			if (!plannedquantity) {
+				return Swal.fire('Required Field', 'Planned Quantity is missing.', 'warning');
+			}
+			if (!measurement) {
+				return Swal.fire('Required Field', 'Please enter Measurement Verification.', 'warning');
+			}
+			if (!material) {
+				return Swal.fire('Required Field', 'Please enter Material Verification.', 'warning');
+			}
+			if (!functionaltesting) {
+				return Swal.fire('Required Field', 'Please enter Functional Testing (enter NA if not applicable).', 'warning');
+			}
+			if (!totalUnits || parseInt(totalUnits) <= 0) {
+				return Swal.fire('Required Field', 'Please enter valid Total Inspected Units.', 'warning');
+			}
+			if (!defectiveUnits || parseInt(defectiveUnits) < 0) {
+				return Swal.fire('Required Field', 'Please enter valid Defective Units.', 'warning');
+			}
+			if (parseInt(defectiveUnits) > parseInt(totalUnits)) {
+				return Swal.fire('Invalid Input', 'Defective Units cannot be greater than Total Inspected Units.', 'warning');
+			}
+			if (!defectcount) {
+				return Swal.fire('Required Field', 'Defect Count is missing. Please check the unit values.', 'warning');
+			}
+
+			// ✅ Approved Count validation
+			if (!approvedCount || parseInt(approvedCount) < 0) {
+				return Swal.fire('Required Field', 'Approved Count is missing or invalid. Please check inspected and defective units.', 'warning');
+			}
+
+			if (!approvalStatus) {
+				return Swal.fire('Required Field', 'Please select Approval Status.', 'warning');
+			}
+
+			// Final submission
+			const form = document.getElementById('faiForm');
+			const formData = new FormData(form);
+
+			let url = '';
+			let successMessage = '';
+
+			if (!id) {
+				url = '/firstarticleinspection/save';
+				successMessage = 'First Article Inspection saved successfully!';
+			} else {
+				url = '/firstarticleinspection/update';
+				successMessage = 'First Article Inspection updated successfully!';
+			}
+
+			$.ajax({
+				url: url,
+				type: 'POST',
+				data: formData,
+				processData: false,
+				contentType: false,
+				success: function () {
+					Swal.fire({
+						icon: 'success',
+						title: 'Success',
+						text: successMessage,
+						confirmButtonText: 'OK'
+					}).then(() => {
+						resetForm();
+						window.location.href = '/qualitycontrol/firstarticleinspectiongrid';
+					});
+				},
+				error: function (xhr) {
+					Swal.fire({
+						icon: 'error',
+						title: 'Error',
+						text: 'Error saving First Article Inspection record. Please try again.'
+					});
+					console.error(xhr.responseText);
+				}
+			});
+		}
+
+		function resetForm() {
+			$('#faiForm')[0].reset();
+			$('#id').val('');
+			$('#form-title').text('First Article Inspection Form');
+			$('#submitBtn').text('Submit');
+		}
+
+
+
+
+	</script>
+
+
+
+</body>
+
+</html>

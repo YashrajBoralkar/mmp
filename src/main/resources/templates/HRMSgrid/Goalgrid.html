@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Goal Setting</title>
+    
+    <link rel="stylesheet" href="/css/hrms.css"> <!-- // for side bar code  -->
+    <link rel="stylesheet" href="/css/grid.css">
+    <link rel="stylesheet" href="/css/emplist.css">
+
+    <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<style>
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background-color: #f0f0f0;
+      padding: 10px 20px;
+    }
+
+    .search-box {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .search-box button,
+    .back-button {
+      padding: 6px 12px;
+      font-size: 14px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .search-box button:hover,
+    .back-button:hover {
+      background-color: #0056b3;
+    }
+  </style>
+
+<body>
+<div th:replace="~{HRMS.html :: sidebarFragment}"></div> <!-- // for side bar code  -->
+
+<div class="button-container">
+    
+</div>
+
+<div class="button-grid">
+    <button onclick="loadAppraisalTable()">Appraisal Details</button>
+    <button onclick="loadFeedbackTable()">Feedback Details</button>
+    <button onclick="loadGoalsettingTable()">Goal Setting Details</button>
+</div>
+
+<div id="goalsetting-table-container">
+    <!-- Add the button above the table -->
+<!--    <button class="styled-button" onclick="window.location.href='/empregister';">-->
+<!--        Open Employee Registration Form-->
+<!--    </button>-->
+</div> <!-- Table will be dynamically loaded here -->
+
+<script src="grid.js"></script>
+<script> 
+function goBack() {
+	window.location.href = '/dashboard';
+	}
+</script>
+<script>
+    function loadAppraisalTable() {
+        // Create the button and table container structure immediately
+        const container = document.getElementById("goalsetting-table-container");
+        container.innerHTML =`
+            <div class="table-header">
+				<div class="button-container" style="margin-left: 1045px;">
+				                <button class="styled-button" onclick="window.location.href='/hrms/goalgrid'" style="flex-grow: 1;">
+				                    <i class="fas fa-arrow-left"></i> Back
+				                </button>
+				                <button id="open-register-btn" class="styled-button" style="flex-grow: 1; margin-left: 20px;">
+				                Appraisal Details Form
+				                </button>
+				            </div>
+				</div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Employee ID</th>
+                        <th>First Name</th>
+                        <th>Last Name</th>
+                        <th>Department</th>
+                        <th>Appraisal Period</th>
+                        <th>Start Date</th>
+                        <th>End Date</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="appraisalinfo-table-body">
+                    <tr><td colspan="9">Loading data...</td></tr>
+                </tbody>
+            </table>
+        `;
+
+        // Add event listener to the "Register Employee" button
+        document.getElementById("open-register-btn").addEventListener("click", () => {
+            // Redirect to the employeeattendance registration form
+            window.location.href = '/appraisalform';
+        });
+
+        // Fetch and populate table data
+        fetch('/viewAllappraisal')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                const headers = data.headers; // Extract headers dynamically
+                const rows = data.data;      // Extract employee data
+                const tbody = document.getElementById("appraisalinfo-table-body");
+
+                // Check if there are rows to display
+                if (rows.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="9">No data available.</td></tr>`;
+                    return;
+                }
+
+                // Generate rows from data
+                tbody.innerHTML = rows.map(row => `
+                    <tr>
+                        <td>${row['ID']}</td>
+                        <td>${row['Employee ID']}</td>
+                        <td>${row['First Name']}</td>
+                        <td>${row['Last Name']}</td>
+                        <td>${row['Department']}</td>
+                        <td>${row['Appraisal Period']}</td>
+                        <td>${row['Start Date']}</td>
+                        <td>${row['End Date']}</td>
+                       
+
+                        <td>
+                            <div class="action-buttons">
+                                <a href="#" class="btn btn-delete" data-id="${row['ID']}" onclick="confirmDelete(this)">Delete</a>
+                                <a href="/updateappraisal/${row['ID']}" class="btn btn-update">Update</a>
+                            </div>
+                        </td>
+                    </tr>
+                `).join('');
+            })
+            .catch(error => {
+                console.error('Error fetching appraisal details data:', error);
+                document.getElementById("appraisalinfo-table-body").innerHTML = `<tr><td colspan="9">Error loading data.</td></tr>`;
+            });
+    }
+
+    // Example function to handle delete action
+    	function confirmDelete(element) {
+	    const id = element.getAttribute('data-id'); // Retrieve the employee ID
+	    if (confirm(`Are you sure you want to delete appraisal details with ID: ${id}?`)) {
+	        // Perform the fetch request with the employee ID as a query parameter
+	        fetch(`/deleteappraisalinfo?id=${id}`, { method: 'GET' })
+	            .then(response => {
+	                if (response.redirected) {
+	                    // Redirect to the new location if the server redirects
+	                    window.location.href = response.url;
+	                } else {
+	                    console.log('Appraisal details deleted:', id);
+	                }
+	            })
+	            .catch(error => {
+	                console.error('Error deleting appraisal details:', error);
+	            });
+	    }
+	}
+	
+	
+    	 function loadFeedbackTable() {
+    	        // Create the button and table container structure immediately
+    	        const container = document.getElementById("goalsetting-table-container");
+    	        container.innerHTML =`
+    	            <div class="table-header">
+    					<div class="button-container" style="margin-left: 1045px;">
+    					                <button class="styled-button" onclick="window.location.href='/hrms/goalgrid'" style="flex-grow: 1;">
+    					                    <i class="fas fa-arrow-left"></i> Back
+    					                </button>
+    					                <button id="open-register-btn" class="styled-button" style="flex-grow: 1; margin-left: 20px;">
+    					                Feedback Form
+    					                </button>
+    					            </div>
+    					</div>
+    	            <table>
+    	                <thead>
+    	                    <tr>
+    	                        <th>ID</th>
+    	                        <th>Employee ID</th>
+    	                        <th>First Name</th>
+    	                        <th>Last Name</th>
+    	                        <th>Department</th>
+    	                        <th>Feedback Type</th>
+    	                        <th>Feedback Date</th>
+    	                        <th>Action</th>
+    	                    </tr>
+    	                </thead>
+    	                <tbody id="feedbackinfo-table-body">
+    	                    <tr><td colspan="9">Loading data...</td></tr>
+    	                </tbody>
+    	            </table>
+    	        `;
+
+    	        // Add event listener to the "Register Employee" button
+    	        document.getElementById("open-register-btn").addEventListener("click", () => {
+    	            // Redirect to the employeeattendance registration form
+    	            window.location.href = '/feedbackform';
+    	        });
+
+    	        // Fetch and populate table data
+    	        fetch('/viewAllfeedback')
+    	            .then(response => {
+    	                if (!response.ok) {
+    	                    throw new Error('Network response was not ok');
+    	                }
+    	                return response.json();
+    	            })
+    	            .then(data => {
+    	                const headers = data.headers; // Extract headers dynamically
+    	                const rows = data.data;      // Extract employee data
+    	                const tbody = document.getElementById("feedbackinfo-table-body");
+
+    	                // Check if there are rows to display
+    	                if (rows.length === 0) {
+    	                    tbody.innerHTML = `<tr><td colspan="9">No data available.</td></tr>`;
+    	                    return;
+    	                }
+
+    	                // Generate rows from data
+    	                tbody.innerHTML = rows.map(row => `
+    	                    <tr>
+    	                        <td>${row['ID']}</td>
+    	                        <td>${row['Employee ID']}</td>
+    	                        <td>${row['First Name']}</td>
+    	                        <td>${row['Last Name']}</td>
+    	                        <td>${row['Department']}</td>
+    	                        <td>${row['Feedback Type']}</td>
+    	                        <td>${row['Feedback Date']}</td>
+
+    	                        <td>
+    	                            <div class="action-buttons">
+    	                                <a href="#" class="btn btn-delete" data-id="${row['ID']}" onclick="DeletefromFeedbackINFO(this)">Delete</a>
+    	                                <a href="/updatefeedback/${row['ID']}" class="btn btn-update">Update</a>
+    	                            </div>
+    	                        </td>
+    	                    </tr>
+    	                `).join('');
+    	            })
+    	            .catch(error => {
+    	                console.error('Error fetching feedback details data:', error);
+    	                document.getElementById("feedbackinfo-table-body").innerHTML = `<tr><td colspan="9">Error loading data.</td></tr>`;
+    	            });
+    	    }
+
+			function DeletefromFeedbackINFO(element) {
+		    const id = element.getAttribute('data-id'); // Retrieve the employee ID
+		    if (confirm(`Are you sure you want to delete feedback details with ID: ${id}?`)) {
+		        // Perform the fetch request with the employee ID as a query parameter
+		        fetch(`/deletefeedbackinfo?id=${id}`, { method: 'GET' })
+		            .then(response => {
+		                if (response.redirected) {
+		                    // Redirect to the new location if the server redirects
+		                    window.location.href = response.url;
+		                } else {
+		                    console.log('Feedback details deleted:', id);
+		                }
+		            })
+		            .catch(error => {
+		                console.error('Error deleting feedback details:', error);
+		            });
+		    }
+		}
+	
+	
+	
+		function loadGoalsettingTable() {
+			        // Create the button and table container structure immediately
+			        const container = document.getElementById("goalsetting-table-container");
+			        container.innerHTML = `
+			            <div class="table-header">
+							<div class="button-container" style="margin-left: 1045px;">
+											                <button class="styled-button" onclick="window.location.href='/hrms/goalgrid'" style="flex-grow: 1;">
+											                    <i class="fas fa-arrow-left"></i> Back
+											                </button>
+											                <button id="open-register-btn" class="styled-button" style="flex-grow: 1; margin-left: 20px;">
+											                  Goal Setting Info Form
+											                </button>
+											            </div>
+						 </div>
+			            <table>
+			                <thead>
+			                    <tr>
+			                    <th>ID</th>
+    	                        <th>Employee ID</th>
+    	                        <th>First Name</th>
+    	                        <th>Last Name</th>
+    	                        <th>Department</th>
+    	                        <th>Goal Title</th>
+    	                        <th>Target Date</th>
+    	                        <th>Priority</th>
+    	                        <th>Status</th>
+    	                        <th>Action</th>
+			                    </tr>
+			                </thead>
+			                <tbody id="goalsettinginfo-table-body">
+			                    <tr><td colspan="9">Loading data...</td></tr>
+			                </tbody>
+			            </table>
+			        `;
+
+			        // Add event listener to the "Register Employee" button
+			        document.getElementById("open-register-btn").addEventListener("click", () => {
+			            // Redirect to the employee shift info form
+			            window.location.href = '/goalform';
+			        });
+
+			        // Fetch and populate table data
+			        fetch('/viewAllgoal')
+			            .then(response => {
+			                if (!response.ok) {
+			                    throw new Error('Network response was not ok');
+			                }
+			                return response.json();
+			            })
+			            .then(data => {
+			                const headers = data.headers; // Extract headers dynamically
+			                const rows = data.data;      // Extract employee data
+			                const tbody = document.getElementById("goalsettinginfo-table-body");
+
+			                // Check if there are rows to display
+			                if (rows.length === 0) {
+			                    tbody.innerHTML = `<tr><td colspan="9">No data available.</td></tr>`;
+			                    return;
+			                }
+
+			                // Generate rows from data
+			                tbody.innerHTML = rows.map(row => `
+			                    <tr>
+					                <td>${row['ID']}</td>
+			                        <td>${row['Employee ID']}</td>
+			                        <td>${row['First Name']}</td>
+			                        <td>${row['Last Name']}</td>
+			                        <td>${row['Department']}</td>
+			                        <td>${row['Goal Title']}</td>
+			                        <td>${row['Target Date']}</td>
+			                        <td>${row['Priority']}</td>
+			                        <td>${row['Status']}</td>
+			                        <td>
+			                            <div class="action-buttons">
+			                                <a href="#" class="btn btn-delete" data-id="${row['ID']}" onclick="DeletefromGoalsettinginfo(this)">Delete</a>
+			                                <a href="/updategoal/${row['ID']}" class="btn btn-update">Update</a>
+			                            </div>
+			                        </td>
+			                    </tr>
+			                `).join('');
+			            })
+			            .catch(error => {
+			                console.error('Error fetching setted goal data:', error);
+			                document.getElementById("goalsettinginfo-table-body").innerHTML = `<tr><td colspan="9">Error loading data.</td></tr>`;
+			            });
+			    }
+
+					function DeletefromGoalsettinginfo(element) {
+				    const id = element.getAttribute('data-id'); // Retrieve the employee ID
+				    if (confirm(`Are you sure you want to delete Goal Setting Info with ID: ${id}?`)) {
+				        // Perform the fetch request with the employee ID as a query parameter
+				        fetch(`/deletegoalinfo?id=${id}`, { method: 'GET' })
+				            .then(response => {
+				                if (response.redirected) {
+				                    // Redirect to the new location if the server redirects
+				                    window.location.href = response.url;
+				                } else {
+				                    console.log('Setted Goal info deleted:', id);
+				                }
+				            })
+				            .catch(error => {
+				                console.error('Error deleting goal setting info :', error);
+				            });
+				    }
+				}
+	
+    // Call the function to load the employee table when the page loads
+  //  document.addEventListener("DOMContentLoaded", loadEmployeeTable);
+</script>
+</body>
+</html>

@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Batch Information Form</title>
+    <link rel="stylesheet" href="/css/empinfo.css">
+    <link rel="stylesheet" href="/css/hrms.css"> <!-- // for side bar code  -->
+      <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<style>
+h2{
+  margin-top: -25px;
+}
+</style>
+<body>
+                                                                        
+  <div th:replace="~{INVENTORY.html :: sidebarFragment}"></div> <!-- // for side bar code  -->
+   <form id="BatchInfoForm"  class="form-container" style="padding: 86px;"  >
+    <!-- Personal Information Section -->
+    <input type="hidden" id="id" name="id" th:value="${batchinfo?.id}">
+    <h2>Batch Information Form</h2>
+   
+   <br><br>
+    <div class="form-section active" id="section1"  >
+     
+
+      <!-- First Row -->
+    
+      <div class="form-row" >
+        
+      
+	<div class="form-group">
+	  <label for="lotuids">Select LOT IDs:</label>
+	  <select id="lotsuids" name="lotuidsList" onchange="countLotQuantity()" style="height: auto;" multiple size="3" required>
+	    <option value="">--Select LOT ID--</option>
+	  </select>
+
+	  <!-- Show selected LOT IDs as text (for user display) -->
+	  <input type="text" id="lotsuids" name="lotidsDisplay" th:value="${batchinfo?.lotuids}" th:if="${batchinfo?.id != null}"  readonly>
+
+	  <!-- Hidden input to store selected LOT IDs as a comma-separated string -->
+	  <input type="hidden" id="lotuids-hidden" name="lotuids" />
+	</div>
+
+      </div>
+
+      <!-- Second Row -->
+      <div class="form-row">
+        <div class="form-group">   
+          <label for="productuid" >Product ID:</label>
+          <select type="text"    id="productuid" name="productuid" onchange="fetchProductDetails()" required th:if="${batchinfo == null or batchinfo.id == null}">
+          <option value="" >--Select Product ID--</option>
+          <option th:each="productId : ${ProductIds}"
+                  th:value="${productId}"
+                  th:text="${productId}" ></option>
+         </select>
+         <input type="text" id="productuid" name="productuid" th:value="${batchinfo?.productuid}" onchange="fetchProductDetails()" readonly th:if="${batchinfo?.id != null}">
+
+      </div>
+    
+       
+
+      <div class="form-group">
+        <label for="productname">Product Name:</label> 
+        <input type="text" id="productname" name="productname" placeholder="Enter Product Name"  readonly>
+    </div> 
+   <div class="form-group">
+          <label for="productcategory">Product Category:</label> 
+          <input type="text" id="productcategory" name="productcategory" placeholder="Enter Product Category" readonly>
+</div> 
+ </div>
+ <div class="form-row">
+	<div class="form-group">
+		<label for="manufacturingdate">Manufacturing Date:</label> 
+		<input type="date" id="manufacturingdate" name="manufacturingdate"  readonly>
+</div> 
+<div class="form-group">
+		<label for="expirydate">Expiry Date:</label> 
+		<input type="date" id="expirydate" name="expirydate"  readonly>
+</div>  	
+<div class="form-group">
+	<label for="lotprice">LOT Price:</label>
+	<input type="number" id="lotprice" name="lotprice"  readonly>
+</div>
+ </div>
+      <!-- Third Row -->
+      <div class="form-row">
+
+
+		  
+    
+
+        <div class="form-group">
+          <label for="lotquantity">LOT Quantity:</label>
+          <input type="number" id="lotquantity" name="lotquantity" th:value = "${batchinfo?.lotquantity}" readonly>
+      </div>  		 
+	   <div class="form-group">
+		          <label for="batchprice">Batch Price:</label> 
+		          <input type="text" id="batchprice" name="batchprice"  readonly>
+		      </div>     
+       
+     
+      </div>
+</div>
+
+   <!-- Five Row  -->
+    <div class="form-actions">
+      <button type="button" id="submitBtn"  onclick="submitForm()">Submit </button>
+			<div th:if="${successMessage}" class="success-message" th:text="${successMessage}"></div>                     
+    </div>
+ 
+   </form>
+   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+   <script>
+	function countLotQuantity() {
+		    const selectedOptions = $('#lotsuids option:selected');
+		    const selectedValues = selectedOptions.map(function () {
+		        return $(this).val();
+		    }).get();
+
+		    // Set LOT Quantity as the number of selected LOTs
+		    $('#lotquantity').val(selectedValues.length);
+
+		    // Show selected values as comma-separated text (readonly input)
+		    $('#lotids').val(selectedValues.join(', '));
+
+		    // Set hidden input so it can be saved in DB
+		    $('#lotuids-hidden').val(selectedValues.join(', '));
+
+		    // Recalculate batch price
+		    calculateBatchPrice();
+		}
+
+		// 🔁 Move this outside so it's globally accessible
+		function calculateBatchPrice() {
+		    const lotPrice = parseFloat($('#lotprice').val()) || 0;
+		    const lotQuantity = parseInt($('#lotquantity').val()) || 0;
+		    const batchPrice = lotPrice * lotQuantity;
+		    $('#batchprice').val(batchPrice.toFixed(2));
+		}
+
+	    $(document).ready(function() {
+		    // Auto-fill Item details when updating
+		    var existingproductuid = $('#productuid').val();
+		    if (existingproductuid) {
+		    	fetchProductDetails(existingproductuid);
+		    }
+		});
+
+		function fetchProductDetails() {
+		    const productuid = $('#productuid').val();
+
+		    if (!productuid) {
+		        alert("Please select a Product ID.");
+		        return;
+		    }
+
+		    $.ajax({
+		        url: '/getproductDetails',
+		        method: 'GET',
+		        data: { productuid: productuid },
+		        success: function (response) {
+		            console.log("Response from server:", response);
+
+		            if (response && response.productDetail) {
+		                const product = response.productDetail;
+		                $('#productname').val(product.productname || '');
+		                $('#productcategory').val(product.productcategory || '');
+						$('#manufacturingdate').val(product.manufacturingdate || '');
+						$('#expirydate').val(product.expirydate || '');
+
+		            } else {
+		                alert("No product details found.");
+		            }
+
+		            if (response && response.lotUIDs && response.lotUIDs.length > 0) {
+					    const lotDropdown = $('#lotsuids');
+					    lotDropdown.empty();
+
+					    response.lotUIDs.forEach(function (lot) {
+					        lotDropdown.append(`<option value="${lot.lotuid}">${lot.lotuid}</option>`);
+					    });
+
+					    if (response.lotUIDs[0].lotprice) {
+					        $('#lotprice').val(response.lotUIDs[0].lotprice);
+					    } else {
+					        $('#lotprice').val('');
+					    }
+
+					    // Call this here too!
+					    calculateBatchPrice();
+					} else {
+					    $('#lotsuids').empty().append('<option value="">No lots available</option>');
+					    $('#lotprice').val('');
+					    $('#batchprice').val('');
+					}
+		        },
+		        error: function (xhr, status, error) {
+		            console.error("Error fetching Product details:", error);
+		            alert("An error occurred while fetching the Product details.");
+		        }
+		    });
+		}
+
+    
+    
+    
+    function submitForm() {
+        const formData = new FormData(document.getElementById('BatchInfoForm'));
+        const id = $('#id').val();
+
+        let url, successMessage;
+
+        if (!id) {
+            url = '/savebatchinfo';
+            successMessage = 'BatchInfo saved successfully!';
+        } else {
+            url = '/updatebatchinfo';
+            successMessage = 'BatchInfo updated successfully!';
+        }
+
+        $.ajax({
+            url: url,
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function(response) {
+                $('#message').text(successMessage);
+                resetForm();
+                window.location.href = '/inventory/batchlotgrid';
+            },
+            error: function() {
+                alert('Error saving batch. Please fill out all required fields.');
+            }
+        });
+    }
+
+    function resetForm() {
+        $('#BatchInfoForm')[0].reset();
+        $('#id').val('');
+        $('#message').text('');
+        $('#form-title').text('Batch Information Form');
+        $('#submitBtn').text('Submit');
+    }
+
+    function prefillForm(data) {
+    	$('#id').val(data.id);
+    	$('#batchuid').val(data.batchuid);
+    	$('#lotuids').val(data.lotuids);
+    	$('#productuid').val(data.productuid);    	
+    //	$('#lotquantity').val(data.lotquantity);
+    	$('#warehouseuid').val(data.warehouseuid);
+    	
+    	if (data.id) {
+            // If updating, replace dropdown with readonly input
+            $('#lotuids').replaceWith('<input type="text" id="lotids" name="lotids" value="' + data.lotuids + '" readonly>');
+            $('#productuid').replaceWith('<input type="text" id="productuid" name="productuid" value="' + data.productuid + '" readonly>');
+			$('#lotidsDisplay').replaceWith('<input type="text" id="lotsuids" name="lotidsDisplay" value="' + data.lotidsDisplay + '" readonly>');
+
+        }
+    	
+    	$('#form-title').text('Update Batch Information Form');
+        $('#submitBtn').text('Update');	
+    }
+    
+    
+ 
+    
+   
+
+    </script>
+    
+</body>
+</html>

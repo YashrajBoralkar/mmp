@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stock Valuation</title>
+  <link rel="stylesheet" href="/css/empinfo.css">
+    <link rel="stylesheet" href="/css/hrms.css"> <!-- // for side bar code  -->
+         <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+     <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<style>
+h5{
+  margin: 10px;
+}
+</style>
+<body>
+<div th:replace="~{INVENTORY.html :: sidebarFragment}"></div> <!-- // for side bar code  -->
+
+  <form id="stockForm">
+   <div class="form-container"  style="padding: 42px;" >
+      <input type="hidden" id="id" name="id" value="">
+      <h2>Stock Valuation Form</h2>
+
+      <!-- First Row -->
+      <div class="form-row">
+        
+        <div class="form-group">        
+          <label for="stockuid" >Stock UID **</label>
+          <select  id="stockuid"  name="stockuid" onchange="fetchStockValuationDetails(this.value)" >
+            <option value="">Select Stock UID</option>
+            <option th:each="uid : ${Stockuid}" th:value="${uid}" th:text="${uid}"></option>	
+          </select>
+              
+        </div>
+        <div class="form-group">
+          <label for="stockname">Stock Name</label>
+          <input type="text" id="stockname" name="stockname" value="" required>
+        </div>
+
+        <div class="form-group">
+          <label for="stockcategory">Stock Category</label>
+          <input type="text" id="stockcategory" name="stockcategory" value="" required>   
+        </div>
+
+       
+      </div>
+      <br>
+
+      <!-- Second Row -->
+      <div class="form-row">
+        <div class="form-group">
+          <label for="valuationmethod">Valuation Method:</label>
+          <select id="valuationmethod" name="valuationmethod" required>
+              <option value="">Select Valuation Method</option>
+              <option value="FIFO">FIFO</option>
+              <option value="LIFO">LIFO</option>
+          </select>
+       </div>
+        <div class="form-group">
+          <label for="unitcost">Unit Cost:</label>
+          <input type="number" id="unitcost" name="unitcost" step="0.01" required>
+        </div>
+   
+        <div class="form-group">
+          <label for="unitquantity">Unit Quantity:</label>
+           <input type="number" id="unitquantity" name="unitquantity" required>
+        </div>
+      </div>
+      <br>
+      <!-- Third Row -->
+    
+      <div class="form-row">
+        <div class="form-group">
+          <label for="totalcost">Total Cost:</label>
+          <input type="number" id="totalcost" name="totalcost" step="0.01" readonly>
+        </div>
+
+        <div class="form-group" >
+          <label for="valuationdate">Valuation Date:</label>
+          <input type="date" id="valuationdate" name="valuationdate" required>
+        </div>
+        
+      </div>
+      <div class="form-actions">
+        <button type="button" id="submitBtn" onclick="submitForm()">Submit</button>
+       <div th:if="${successMessage}" class="success-message" th:value="${successMessage}"></div>                      
+                        
+      </div>
+    </div> 
+    </form>
+
+
+      
+     <script>
+    // Fetch stock dropdown data on page load
+    document.addEventListener("DOMContentLoaded", function () {
+        fetchStockDropdown();
+    });
+
+   
+
+    function calculateTotalCost() {
+        const unitCost = parseFloat(document.getElementById('unitcost').value) || 0;
+        const unitQuantity = parseInt(document.getElementById('unitquantity').value) || 0;
+        const totalCost = unitCost * unitQuantity;
+        document.getElementById('totalcost').value = totalCost.toFixed(2);
+    }
+
+    document.getElementById('unitcost').addEventListener('input', calculateTotalCost);
+    document.getElementById('unitquantity').addEventListener('input', calculateTotalCost);
+
+    function submitForm() {
+        const formElement = document.getElementById('stockForm');
+        const formData = new FormData(formElement);
+        const id = document.getElementById('id').value;
+
+        let url, successMessage;
+
+        if (!id) {
+            url = '/savestockvaluation';
+            successMessage = 'Stock saved successfully!';
+        } else {
+            url = '/updateStock';
+            successMessage = 'Stock updated successfully!';
+        }
+
+        $.ajax({
+            url: url,
+            type: 'POST', // Explicitly set to POST
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function () {
+                alert('Stock saved successfully!');
+                resetForm();
+                window.location.href = '/inventory/stockvaluationGrid';
+            },
+            error: function () {
+                alert('Error saving stock. Please ensure all fields are correctly filled.');
+            }
+        });
+    }
+
+    s
+    function resetForm() {
+        $('#stockForm')[0].reset();
+        $('#id').val('');
+        $('#form-title').text('stockForm');
+        $('#submitBtn').text('Submit');
+    }
+	
+	function fetchStockValuationDetails(stockuid) {
+				    if (!stockuid) return;
+
+				    $.ajax({
+				        url: '/getValuationDetails',
+				        method: 'GET',
+				        data: { stockuid: stockuid },
+				        success: function(response) {
+				            if (response && response.length > 0) { // Ensure response is not empty
+				                let stockData = response[0]; // Get first object from the list
+				                $('#stockname').val(stockData.stockname || '');
+								$('#stockcategory').val(stockData.category || '');
+
+				            } else {
+				                alert('No data found for the selected product.');
+				            }
+				        },
+				        error: function(xhr, status, error) {
+				            console.error('Error fetching product details:', error);
+				            alert('Error fetching product details. Please try again.');
+				        }
+				    });
+				}
+				
+				
+</script>
+
+
+</body>
+</html>

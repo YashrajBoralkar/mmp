@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shift Scheduling Form</title>
+  <link rel="stylesheet" href="/css/hrms.css">
+  <link rel="stylesheet" href="/css/empinfo.css">
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+<div th:replace="~{HRMS.html :: sidebarFragment}"></div> <!-- // for side bar code  -->
+
+<form id="shiftForm" enctype="multipart/form-data">
+  <div class="form-container">
+	
+      <input type="hidden" id="id" name="id" th:value="${shift?.id}">
+	  
+      <h2 id="form-title">Shift Scheduling Form</h2>
+		<br>
+      <!-- First Row -->
+	  
+      <div class="form-row">
+        <div class="form-group">
+          <label for="employeeuid">Employee ID:</label>
+          <select id="employeeuid" name="employeeuid" onchange="fetchEmployeDetails(this.value)"
+		  th:if="${shift == null or shift.id == null}">
+            <option value="">Select Employee ID</option>
+            <option th:each="uid : ${employeeuid}" th:value="${uid}" th:text="${uid}"></option>
+          </select>
+		  <input type="text" id="employeeuid" name="employeeuid" th:if="${shift?.id != null}"
+		  						             th:value="${shift?.employeeuid}" readonly>
+        </div>
+        <div class="form-group">
+          <label>First Name:</label>
+          <input type="text" id="first_name" name="first_name" readonly>
+        </div>
+        <div class="form-group">
+          <label>Last Name:</label>
+          <input type="text" id="last_name" name="last_name" readonly>
+        </div>
+      </div>
+
+      <!-- Second Row -->
+      <div class="form-row">
+        <div class="form-group">
+          <label>Department Name:</label>
+          <input type="text" id="departmentname" name="departmentname" readonly>
+        </div>
+        <div class="form-group">
+          <label for="shiftName">Shift Name :</label>
+          <select id="shiftName" name="shiftName" th:value="${shift?.shiftName}" required>
+            <option value="">Select Shift Name</option>
+            <option value="Standard Day Shift" th:selected="${shift?.shiftName == 'Standard Day Shift'}">Standard Day Shift</option>
+            <option value="Morning Shift" th:selected="${shift?.shiftName == 'Morning Shift'}">Morning Shift</option>
+            <option value="Afternoon or Mid-Shift" th:selected="${shift?.shiftName == 'Afternoon or Mid-Shift'}">Afternoon or Mid-Shift</option>
+            <option value="Evening Shift" th:selected="${shift?.shiftName == 'Evening Shift'}">Evening Shift</option>
+            <option value="Night Shift" th:selected="${shift?.shiftName == 'Night Shift'}">Night Shift</option>
+            <option value="Rotational Shift" th:selected="${shift?.shiftName == 'Rotational Shift'}">Rotational Shift</option>
+            <option value="Flexible Shift" th:selected="${shift?.shiftName == 'Flexible Shift'}">Flexible Shift</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="shiftDate">Shift Date :</label>
+          <input type="date" id="shiftDate" name="shiftDate" th:value="${shift?.shiftDate}" required>
+        </div>
+      </div>
+
+      <!-- Third Row -->
+      <div class="form-row">
+        <div class="form-group">
+          <label for="startTime">Shift Start Time : </label>
+          <input type="time" id="startTime" name="startTime" th:value="${shift?.startTime}" required>
+        </div>
+        <div class="form-group">
+          <label for="endTime">Shift End Time :</label>
+          <input type="time" id="endTime" name="endTime" th:value="${shift?.endTime}" required>
+        </div>
+        <div class="form-group">
+          <label for="shiftDuration">Shift Duration </label>
+          <input type="text" id="shiftDuration" name="shiftDuration" th:value="${shift?.shiftDuration}" readonly>
+        </div>
+      </div>
+
+      <!-- Fourth Row -->
+      <div class="form-row">
+        <div class="form-group">
+          <label for="shiftStatus">Shift Status :</label>
+          <select id="shiftStatus" name="shiftStatus" th:value="${shift?.shiftStatus}" required>
+            <option value="">Select Shift Status</option>
+            <option value="Active" th:selected="${shift?.shiftStatus == 'Active'}">Active</option>
+            <option value="Inactive" th:selected="${shift?.shiftStatus == 'Inactive'}">Inactive</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="shiftType">Shift Type :</label>
+          <select id="shiftType" name="shiftType" style="width: 250px;" th:value="${shift?.shiftType}" required>
+            <option value="">Select Shift Type</option>
+            <option value="Regular" th:selected="${shift?.shiftType == 'Regular'}">Regular</option>
+            <option value="Overtime" th:selected="${shift?.shiftType == 'Overtime'}">Overtime</option>
+            <option value="Flexi Shift" th:selected="${shift?.shiftType == 'Flexi Shift'}">Flexi Shift</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="remarks">Remarks/Comments :</label>
+          <input type="text" id="remarks" name="remarks" th:value="${shift?.remarks}">
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="form-actions">
+        <button type="button" id="submitBtn" style="width: 120px;margin-left: 12px;" onclick="submitForm()">Submit</button>
+        <button type="button" id="backBtn" style="width: 120px;margin-left: 12px;" onclick="goback()">Back</button>
+        <div id="message"></div>
+      </div>
+    </div>
+</form>
+<script> 
+function goBack() {
+	window.location.href = '/dashboard';
+	}
+</script>
+<script>
+  $(document).ready(function() {
+    // Auto-fill Item details when updating
+    var existingEmployeeuid = $('#employeeuid').val();
+    if (existingEmployeeuid) {
+      fetchEmployeDetails(existingEmployeeuid);
+    }
+  });	
+
+  function fetchEmployeDetails(employeeuid) {
+    if (!employeeuid) return;
+    $.ajax({
+      url: '/shift/Details',
+      method: 'GET',
+      data: { employeeuid: employeeuid },
+      success: function(response) {
+        $('#first_name').val(response.firstName);
+        $('#last_name').val(response.lastName);
+        $('#departmentname').val(response.departmentname);
+      },
+      error: function() {
+        alert('Error fetching employee details. Please try again.');
+      }
+    });
+  }
+
+  // Auto calculate shift duration
+  document.addEventListener("DOMContentLoaded", function () {
+    document.getElementById("startTime").addEventListener("change", calculateShiftDuration);
+    document.getElementById("endTime").addEventListener("change", calculateShiftDuration);
+  });
+
+  function calculateShiftDuration() {
+    const startTime = document.getElementById("startTime").value;
+    const endTime = document.getElementById("endTime").value;
+    if (startTime && endTime) {
+      let start = new Date(`1970-01-01T${startTime}:00`);
+      let end = new Date(`1970-01-01T${endTime}:00`);
+      if (end < start) end.setDate(end.getDate() + 1);
+      let duration = (end - start) / (1000 * 60);
+      let hours = Math.floor(duration / 60);
+      let minutes = duration % 60;
+      document.getElementById("shiftDuration").value = `${hours} hours ${minutes} minutes`;
+    }
+  }
+
+  // Popup Validation
+  function validateForm() {
+    const employeeuid = document.getElementById('employeeuid').value.trim();
+    const shiftName = document.getElementById('shiftName').value.trim();
+    const shiftDate = document.getElementById('shiftDate').value.trim();
+    const startTime = document.getElementById('startTime').value.trim();
+    const endTime = document.getElementById('endTime').value.trim();
+    const shiftType = document.getElementById('shiftType').value.trim();
+    const shiftStatus = document.getElementById('shiftStatus').value.trim();
+    const remarks = document.getElementById('remarks').value.trim();
+    const duration = document.getElementById('shiftDuration').value.trim();
+
+    if (!employeeuid) { alert("Please select Employee UID."); return false; }
+    if (!shiftName) { alert("Please select Shift Name."); return false; }
+    if (!shiftDate) { alert("Please select Shift Date."); return false; }
+    if (!startTime) { alert("Please enter Shift Start Time."); return false; }
+    if (!endTime) { alert("Please enter Shift End Time."); return false; }
+    if (!shiftType) { alert("Please select Shift Type."); return false; }
+    if (!shiftStatus) { alert("Please select Shift Status."); return false; }
+    if (!remarks) { alert("Please enter Remarks/Comments."); return false; }
+    if (!duration) { alert("Shift Duration could not be calculated. Please check Start and End Time."); return false; }
+
+    return true;
+  }
+
+  function submitForm() {
+    if (!validateForm()) return;
+
+    const formData = new FormData(document.getElementById('shiftForm'));
+    const id = $('#id').val();
+    let url, successMessage;
+
+    if (!id) {
+      url = '/saveshift';
+      successMessage = 'Shift Details saved successfully!';
+    } else {
+      url = '/updateExistingShift';
+      successMessage = 'Shift Details updated successfully!';
+    }
+
+    $.ajax({
+      url: url,
+      type: 'POST',
+      data: formData,
+      processData: false,
+      contentType: false,
+      success: function(response) {
+        alert(successMessage);
+        resetForm();
+        window.location.href = '/hrms/AttendanceGrid';
+      },
+      error: function() {
+        alert('Error saving shift. Please fill data.');
+      }
+    });
+  }
+
+  function resetForm() {
+    $('#shiftForm')[0].reset();
+    $('#id').val('');
+    $('#message').text('');
+    $('#form-title').text('Shift Scheduling Form');
+    $('#submitBtn').text('Submit');
+  }
+
+  function goback() {
+    window.location.href = '/hrms/AttendanceGrid';
+  }
+</script>
+</body>
+</html>

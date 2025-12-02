@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<title>Preventive Maintenance Schedule</title>
+
+	<link rel="stylesheet" href="/css/empinfo.css">
+  <link rel="stylesheet" href="/css/hrms.css"> <!-- // for side bar code  -->
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+  
+</head>
+<body>
+	<div th:replace="~{MAINTENANCEMANAGEMENTDEPERTMENT.html :: sidebarFragment}"></div> 
+	 <div class="form-container">
+  <div class="form-section active" id="section1" style="margin-left: 20px; margin-right: 20px;">
+    <form id="maintenanceform">
+      <h2>Preventive Maintenance Schedule</h2>
+	  <br>
+
+      <input type="hidden" id="id" name="id" th:value="${pmsf?.id}" />
+
+      <!-- Row 1: Equipment Master UID and Equipment Name -->
+      <div class="form-row">
+        <div class="form-group">
+          <label for="equipmentmasteruid">Equipment Master UID</label>
+          <select id="equipmentmasteruid" class="form-control" name="equipmentmasteruid"
+                  onchange="fetchEquipmentMasterDetails(this.value)" th:if="${equipment == null or equipment.id == null}">
+            <option value="">Select Equipment Master UID</option>
+            <option th:each="uid : ${equipmentmasteruid}" th:value="${uid}" th:text="${uid}"></option>
+          </select>
+          <input type="text" id="equipmentmasteruid" name="equipmentmasteruid"
+                 th:value="${equipment?.equipmentmasteruid}" readonly class="form-control"
+                 th:if="${equipment?.id != null}" />
+        </div>
+
+        <div class="form-group">
+          <label for="equipmentname">Equipment Name</label>
+          <input type="text" class="form-control" id="equipmentname" name="equipmentname" readonly />
+        </div>
+      </div>
+
+      <!-- Row 2: Maintenance Task & Frequency -->
+      <div class="form-row">
+        <div class="form-group">
+          <label for="maintenancetask">Maintenance Task</label>
+          <textarea class="form-control" id="maintenancetask" name="maintenancetask" rows="3" required
+                    th:text="${pmsf?.maintenancetask}" style="width: 287px; height: 36px;"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="frequency">Frequency</label>
+          <select class="form-control" id="frequency" name="frequency" required>
+            <option value="">-- Select Frequency --</option>
+            <option value="Weekly" th:selected="${pmsf?.frequency == 'Weekly'}">Weekly</option>
+            <option value="Monthly" th:selected="${pmsf?.frequency == 'Monthly'}">Monthly</option>
+            <option value="Quarterly" th:selected="${pmsf?.frequency == 'Quarterly'}">Quarterly</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Row 3: Next Due Date & Assigned Technician -->
+      <div class="form-row">
+        <div class="form-group">
+          <label for="nextduedate">Next Due Date</label>
+          <input type="date" class="form-control" id="nextduedate" name="nextduedate"
+                 th:value="${pmsf?.nextduedate}" required />
+        </div>
+
+        <div class="form-group">
+          <label for="assignedtechnician">Assigned Technician</label>
+          <input type="text" class="form-control" id="assignedtechnician" name="assignedtechnician"
+                 th:value="${pmsf?.assignedtechnician}" required />
+        </div>
+      </div>
+
+      <!-- Row 4: Checklist Items & Status -->
+      <div class="form-row">
+        <div class="form-group">
+          <label for="checklistitems">Checklist Items</label>
+          <textarea class="form-control" id="checklistitems" name="checklistitems" rows="4" required
+                    th:text="${pmsf?.checklistitems}"style="width: 287px; height: 36px;"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="status">Status</label>
+          <select class="form-control" id="status" name="status" required>
+            <option value="">-- Select Status --</option>
+            <option value="Pending" th:selected="${pmsf?.status == 'Pending'}">Pending</option>
+            <option value="Completed" th:selected="${pmsf?.status == 'Completed'}">Completed</option>
+            <option value="Overdue" th:selected="${pmsf?.status == 'Overdue'}">Overdue</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Submit Button -->
+      <div class="form-actions">
+        <button type="button" id="submitBtn" class="btn btn-primary" onclick="submitForm()">Submit</button>
+		<button type="button" id="backBtn" onclick="goBack()">Back</button>
+
+      </div>
+
+      <!-- Success Message -->
+      <div th:if="${successMessage}" class="success-message text-success text-center mt-2"
+           th:text="${successMessage}"></div>
+    </form>
+  </div>
+</div>
+
+	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+	<script>
+	$(document).ready(function() {
+	     // Auto-fill Item details when updating
+	     var existingequipmentmasteruid= $('#equipmentmasteruid').val();
+	     if (existingequipmentmasteruid) {
+	     	fetchEquipmentMasterDetails(existingequipmentmasteruid);
+	     }
+	 });
+	 function fetchEquipmentMasterDetails(equipmentmasteruid) {
+		  if (!equipmentmasteruid) return; 
+
+		     $.ajax({
+		 		url: '/fetchequipmentmasterdata',
+		 		method: 'GET',
+		 		data: { equipmentmasteruid: equipmentmasteruid },
+		 		success: function(response) {
+		 			$('#equipmentname').val(response.equipmentname);	
+		 	},
+		 	error:function() {
+		    	alert('Error fetching Equipment Master Details. Please try again.');
+			}
+		 });
+		 } 	
+	 
+	 function submitForm() {
+			const form = document.getElementById('maintenanceform'); 
+
+			
+
+			const formData = new FormData(form);
+			const id = $('#id').val();
+
+			let url, successMessage;
+			if (!id) {
+				url = '/savepreventivemaintenanceschedule';
+				successMessage = 'saved successfully!';
+			} else {
+				url = '/updatepreventivemaintenanceschedule';
+				successMessage = 'updated successfully!';
+			}
+
+			$.ajax({
+				url: url,
+				type: 'POST',
+				data: formData,
+				processData: false,
+				contentType: false,
+				success: function () {
+					alert(successMessage);
+					window.location.href = '/maintenancemanagementdepartment/preventivemaintenanceschedulegrid';
+				},
+				error: function () {
+					alert('Error saving preventive maintenance schedule. Please try again.');
+				}
+			});
+		}
+	 $(document).ready(function() {
+
+			// ✅ Validation for text fields (Only alphabets and spaces)
+			function validateTextField(selector) {
+				$(selector).on('input', function() {
+					let value = $(this).val();
+					if (!/^[a-zA-Z\s]*$/.test(value)) {
+						alert('Only alphabets and spaces are allowed.');
+						$(this).val(value.replace(/[^a-zA-Z\s]/g, ''));
+					}
+				});
+			}
+
+			// Apply validation on specified fields (text)
+			validateTextField('#maintenancetask');
+			validateTextField('#assignedtechnician');
+		});
+	</script>
+</body>
+</html>

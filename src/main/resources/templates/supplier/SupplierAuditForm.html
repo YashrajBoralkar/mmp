@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title> Supplier Audit Form</title>
+  <link rel="stylesheet" href="/css/empinfo.css">
+  <link rel="stylesheet" href="/css/hrms.css">
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    .error-border {
+      border: 2px solid red;
+    }
+
+    .form-actions {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+
+<body>
+  <div th:replace="~{SUPPLIER.html :: sidebarFragment}"></div>
+
+  <form id="supplierauditform" class="form-container">
+    <input type="hidden" id="id" name="id" th:value="${audit?.id}">
+    <h2>RM Supplier Audit Form</h2>
+	<br>
+    <!-- First Row -->
+    <div class="form-row">
+      <div class="form-group">
+        <label>RM Supplier ID:</label>
+        <select id="rawmaterialsupplieruid" name="rawmaterialsupplieruid" onchange="fetchSupplierDetailsinAudit(this.value)" th:if="${audit == null or audit.id == null}" required>
+          <option value=""> Select Supplier ID</option>
+          <option th:each="uid :${rawmaterialsupplieruid}" th:value="${uid}" th:text="${uid}"></option>
+        </select>
+        <input type="text" id="rawmaterialsupplieruid" name="rawmaterialsupplieruid" th:value="${audit?.rawmaterialsupplieruid}" onchange="fetchSupplierDetailsinAudit(this.value)" readonly th:if="${audit?.id != null}">
+      </div>
+
+      <div class="form-group">
+        <label for="suppliername">Supplier Name:</label>
+        <input type="text" id="suppliername" name="suppliername" readonly>
+      </div>
+    </div>
+
+
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label" for="auditdate">Audit Date:</label>
+        <input type="date" id="auditdate" name="auditdate" th:value="${audit?.auditdate}" required>
+      </div>
+
+      <div class="form-group">
+        <label for="auditorname">Auditor Name:</label>
+ <!-- CREATE MODE -->	
+				<select id="auditorname" name="auditorname" th:if="${audit == null or audit.id == null}" required>
+					<option value="">Select auditor name</option>
+					<option th:each="entry : ${auditornameMap}" th:value="${entry.key + ' - ' + entry.value}"	th:text="${entry.key + ' - ' + entry.value}">
+					</option>
+				</select>
+			<!-- EDIT MODE -->
+			<input type="text" id="auditorname" name="auditorname" th:value="${audit.auditorname}" th:if="${audit?.id != null}"readonly />
+         </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label for="qualitycompliancescore">Quality Compliance Score &nbsp; (1-10):</label>
+        <input type="number" id="qualitycompliancescore" name="qualitycompliancescore" min="1" max="10" th:value="${audit?.qualitycompliancescore}" required>
+      </div>
+
+      <div class="form-group">
+        <label for="safetystandardscompliance">Safety Standards Compliance:</label>
+        <br>
+        <select id="safetystandardscompliance" name="safetystandardscompliance" th:value="${audit?.safetystandardscompliance}" required>
+          <option value="">Select</option>
+          <option value="Yes" th:selected="${audit?.safetystandardscompliance == 'Yes'}">Yes</option>
+          <option value="No" th:selected="${audit?.safetystandardscompliance == 'No'}">No</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label for="deliveryperformance">Delivery Performance:</label>
+        <input type="text" id="deliveryperformance" name="deliveryperformance" th:value="${audit?.deliveryperformance}" required pattern="[A-Za-z\s]+" title="Only alphabets are allowed" />
+      </div>
+
+      <div class="form-group">
+        <label for="correctiveactionrequired">Corrective Action Required:</label>
+        <input type="text" id="correctiveactionrequired" name="correctiveactionrequired" th:value="${audit?.correctiveactionrequired}" required>
+      </div>
+    </div>
+
+	<div class="form-row">
+   	 <div class="form-group">
+      <label for="auditoutcome">Audit Outcome:</label>
+      <select id="auditoutcome" name="auditoutcome" th:value="${audit?.auditoutcome}" required>
+        <option value="">Select</option>
+        <option value="Passed" th:selected="${audit?.auditoutcome == 'Passed'}">Passed</option>
+        <option value="Failed" th:selected="${audit?.auditoutcome == 'Failed'}">Failed</option>
+        <option value="Conditional Approval" th:selected="${audit?.auditoutcome == 'Conditional Approval'}">Conditional Approval</option>
+      </select>
+    </div>
+    </div>
+
+     <div class="form-actions">
+			<button type="button" id="submitBtn" onclick="submitForm()" style="margin-left: 180px;">Submit</button>
+			<div th:if="${successMessage}" class="success-message" th:text="${successMessage}"></div>
+			<button type="button" class="back-button" onclick="goback();" style="margin-right: 155px;">Back</button>
+
+		</div>
+  </form>
+
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script>
+function goBack() {
+	window.location.href = '/dashboard';
+  }
+</script>
+
+  <script>
+    $(document).ready(function () {
+      var existingSupplieruid = $('#rawmaterialsupplieruid').val();
+      if (existingSupplieruid) {
+        fetchSupplierDetailsinAudit(existingSupplieruid);
+      }
+
+    });
+
+    function fetchSupplierDetailsinAudit(rawmaterialsupplieruid) {
+      if (!rawmaterialsupplieruid) return;
+      $.ajax({
+        url: '/supplieraudit/fetchSupplierDetails',
+        method: 'GET',
+        data: { rawmaterialsupplieruid: rawmaterialsupplieruid },
+        success: function (response) {
+        	if (response && response.length > 0) {
+	            const supplierDetail = response[0];
+	            $('#suppliername').val(supplierDetail.suppliername || '');
+	          } else {
+	            alert("No details found for the selected Supplier UID.");
+	          }        },
+        error: function (xhr, status, error) {
+          console.error('Error fetching supplier details:', error);
+          alert('Error fetching supplier details. Please try again.');
+        }
+      });
+    }
+
+    function goback() {
+      window.location.href = '/supplier/supplierauditgrid';
+    }
+
+    function submitForm() {
+      const form = document.getElementById('supplierauditform');
+
+      const requiredFields = [
+        'supplieruid',
+        'suppliername',
+        'employeeuid',
+        'auditdate',
+        'auditorname',
+        'qualitycompliancescore',
+        'safetystandardscompliance',
+        'deliveryperformance',
+        'correctiveactionrequired',
+        'auditoutcome'
+      ];
+
+      let isValid = true;
+      requiredFields.forEach(function (fieldId) {
+        const field = document.getElementById(fieldId);
+        if (field && !field.value.trim()) {
+          field.classList.add('error-border');
+          isValid = false;
+        } else if (field) {
+          field.classList.remove('error-border');
+        }
+      });
+
+      if (!isValid) {
+        alert("Please fill all mandatory fields.");
+        return;
+      }
+
+      const formData = new FormData(form);
+      const id = $('#id').val();
+      let url;
+
+      if (!id) {
+        url = '/supplierauditform/save';
+        successMessage = 'Raw Material Supplier Audit Saved Successfully!';
+
+      } else {
+        url = '/supplierauditform/update';
+        successMessage = 'Raw Material Supplier Audit Updated Successfully!';
+
+      }
+
+      $.ajax({
+        url: url,
+        type: 'POST',
+        data: formData,
+        processData: false,
+        contentType: false,
+        success: function () {
+        	alert(successMessage)
+        	resetForm();
+          window.location.href = '/supplier/supplierauditgrid';
+        },
+        error: function () {
+          alert('❌ Error saving Supplier Audit. Please try again.');
+        }
+      });
+    }
+
+    function resetForm() {
+      $('#supplierauditform')[0].reset();
+      $('#id').val('');
+      $('#form-title').text(' ');
+      $('#submitBtn').text('Submit');
+    }
+  </script>
+</body>
+</html>

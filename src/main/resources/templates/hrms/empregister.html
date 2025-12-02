@@ -1,0 +1,1007 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Registration Form</title>
+	<link rel="stylesheet" href="/css/empinfo.css">
+	<link rel="stylesheet" href="/css/hrms.css">
+	
+	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+	
+
+	<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+	
+	
+</head>
+
+<body>
+	<div th:replace="~{HRMS.html :: sidebarFragment}"></div> <!-- // for side bar code  -->
+<div class="form-container">
+	<form id="employeeForm" enctype="multipart/form-data" autocomplete="off" >
+ 
+		<div id="message" class="success-message"></div>
+
+
+		<!-- Hidden ID Field -->
+		<input type="hidden" id="id" name="id" th:if="${employee != null}" th:value="${employee.id}">
+
+
+
+		<!-- Personal Information Section -->
+		<div class="form-section active" id="section1" style="margin-left: 20px; margin-right: 20px;">
+			<h2>Personal Information</h2>
+			<!-- First Row -->
+			<div class="form-row">
+				<div class="form-group">
+					<label for="firstName">First Name:</label>
+					<input type="text" id="firstName" name="firstName" th:value="${employee?.firstName}"
+						required>
+				</div>
+				<div class="form-group">
+					<label for="middleName">Middle Name:</label>
+					<input type="text" id="middleName" name="middleName" th:value="${employee?.middleName}"
+						 required>
+				</div>
+				<div class="form-group">
+					<label for="lastName">Last Name:</label>
+					<input type="text" id="lastName" name="lastName" th:value="${employee?.lastName}"
+						required>
+				</div>
+		
+				
+
+				<!-- Department UID Dropdown -->
+				<div class="form-group">
+       <label for="departmentname">Department</label>
+	   <select  id="departmentname"  name="departmentname" th:if="${employee == null or employee.id == null}">
+				<option value="">-- Select Department --</option>
+			    <option th:each="uid : ${dname}" th:value="${uid}" th:text="${uid}"></option>	
+			 </select>										   		 			        
+			 <input type="text" id="departmentname" name="departmentname" th:value="${employee?.departmentname}" readonly th:if="${employee?.id != null}">
+			
+    </div>
+
+				
+			</div>
+			<!-- Second Row -->
+			<div class="form-row">
+				<div class="form-group">
+					<label for="dateOfBirth">Date of Birth:</label>
+					<input type="date" id="dateOfBirth" name="dateOfBirth" 
+					       th:value="${employee?.dateOfBirth}" required>
+
+				</div>
+				<div class="form-group">
+					<label for="gender">Gender:</label>
+					<select id="gender" name="gender"  required>
+					  <option value="">Select</option>
+					  <option value="Male" th:selected="${employee?.gender == 'Male'}">Male</option>
+					  <option value="Female" th:selected="${employee?.gender == 'Female'}">Female</option>
+					  <option value="Other" th:selected="${employee?.gender == 'Other'}">Other</option>
+					</select>
+
+
+
+				</div>
+				<div class="form-group">
+					<label for="maritalStatus">Marital Status:</label>
+					<select id="maritalStatus" name="maritalStatus"  required>
+					  <option value="">Not selected</option>
+					  <option value="Single" th:selected="${employee?.maritalStatus== 'Single'}">Single</option>
+					  <option value="Married" th:selected="${employee?.maritalStatus== 'Married'}">Married</option>
+					  <option value="Divorced" th:selected="${employee?.maritalStatus== 'Divorced'}">Divorced</option>
+					  <option value="Widowed" th:selected="${employee?.maritalStatus== 'Widowed'}">Widowed</option>
+					</select>
+				</div>
+			</div>
+
+			<!-- Third Row -->
+			<div class="form-row">
+				<div class="form-group">
+					<label for="nationality">Nationality:</label>
+					<input type="text" id="nationality" name="nationality" th:value="${employee?.nationality}"
+						required>
+
+				</div>
+			</div>
+			<div class="form-actions">
+				<button class="next-btn" type="button" onclick="nextSection(1)">Next</button>
+			</div>
+		</div>
+
+
+		<!-- ---------------------------------------------------------------------------------------------------------------- -->
+
+		<!-- Address Details Section -->
+		<div class="form-section" id="section2" style="margin-left: 20px; margin-right: 20px;">
+			<h2>Address Details</h2>
+			<!-- First Row -->
+			<div class="form-row">
+				<div class="form-group">
+					<label for="permanentAddressLine1">Permanent Address Line 1:</label>
+					<input type="text" id="permanentAddressLine1" name="permanentAddressLine1"
+						th:value="${employee?.permanentAddressLine1}"  required>
+
+				</div>
+				<div class="form-group">
+					<label for="permanentAddressLine2">Permanent Address Line 2:</label>
+					<input type="text" id="permanentAddressLine2" name="permanentAddressLine2"
+						th:value="${employee?.permanentAddressLine2}"  required>
+
+				</div>
+				<div class="form-group">
+					<label for="permanentCity">Permanent City:</label>
+					<input type="text" id="permanentCity" name="permanentCity" th:value="${employee?.permanentCity}"
+						 required>
+
+				</div>
+			</div>
+
+			<div class="form-row">
+				<div class="form-group">
+					<label for="permanentZipCode">Permanent Zip Code:</label>
+					<input type="text" id="permanentZipCode" name="permanentZipCode"
+						th:value="${employee?.permanentZipCode}"  required>
+
+				</div>
+				<div class="form-group">
+					<label for="permanentState">Permanent State:</label>
+					<input type="text" id="permanentState" name="permanentState" th:value="${employee?.permanentState}"
+						 required>
+
+				</div>
+				<div class="form-group">
+					<label for="permanentCountry">Permanent Country:</label>
+					<input type="text" id="permanentCountry" name="permanentCountry"
+						th:value="${employee?.permanentCountry}"  required>
+
+				</div>
+			</div>
+
+			<div class="form-row" style="margin-top: 10px;">
+			    <label style="display: flex; align-items: center;">
+			        <input type="checkbox" id="sameAsPermanent" onclick="copyAddressIfChecked()" style="width: 16px; height: 16px; margin-right: 8px;">
+			        Same as Permanent Address
+			    </label>
+			</div>
+			<div class="form-row">
+				<div class="form-group">
+					<label for="currentAddressLine1">Current Address Line 1:</label>
+					<input type="text" id="currentAddressLine1" name="currentAddressLine1"
+						th:value="${employee?.currentAddressLine1}"  required>
+
+				</div>
+				<div class="form-group">
+					<label for="currentAddressLine2">Current Address Line 2:</label>
+					<input type="text" id="currentAddressLine2" name="currentAddressLine2"
+						th:value="${employee?.currentAddressLine2}" required>
+
+				</div>
+				<div class="form-group">
+					<label for="currentCity">Current City:</label>
+					<input type="text" id="currentCity" name="currentCity" th:value="${employee?.currentCity}"
+						 required>
+
+				</div>
+			</div>
+
+			<div class="form-row">
+				<div class="form-group">
+					<label for="currentState">Current State:</label>
+					<input type="text" id="currentState" name="currentState" th:value="${employee?.currentState}"
+						 required>
+
+				</div>
+				<div class="form-group">
+					<label for="currentCountry">Current Country:</label>
+					<input type="text" id="currentCountry" name="currentCountry" th:value="${employee?.currentCountry}"
+						 required>
+
+				</div>
+				<div class="form-group">
+					<label for="currentZipCode">Current Zip Code:</label>
+					<input type="text" id="currentZipCode" name="currentZipCode" th:value="${employee?.currentZipCode}"
+						 required>
+
+				</div>
+			</div>
+			<div class="form-actions">
+				<button class="prev-btn" type="button" onclick="prevSection(2)">Previous</button>
+				<button class="next-btn" type="button" onclick="nextSection(2)">Next</button>
+			</div>
+		</div>
+
+		<!-- ------------------------------------------------------------------------------------------------------------------------------------------- -->
+
+
+		<div class="form-section" id="section3" style="margin-left: 20px; margin-right: 20px;">
+		
+			<h2>Contact Details</h2>
+			<!-- First Row -->
+			<div class="form-row">
+				<div class="form-group">
+					<label for="primaryContactNumber">Primary Contact Number:</label>
+					<input type="tel" id="primaryContactNumber" name="primaryContactNumber"
+						th:value="${employee?.primaryContactNumber}"  required>
+
+				</div>
+				<div class="form-group">
+					<label for="alternateContactNumber">Alternate Contact Number:</label>
+					<input type="tel" id="alternateContactNumber" name="alternateContactNumber"
+						th:value="${employee?.alternateContactNumber}"  
+						required>
+
+				</div>
+				<div class="form-group">
+					<label for="personalEmail">Personal Email:</label>
+					<input type="email" id="personalEmail" name="personalEmail" th:value="${employee?.personalEmail}"   
+						required>
+
+				</div>
+			</div>
+
+			<!-- sec Row -->
+
+			<div class="form-row">
+				<div class="form-group">
+					<label for="bloodGroup">Blood Group:</label>
+					<input type="text" id="bloodGroup" name="bloodGroup" th:value="${employee?.bloodGroup}"
+						 required>
+
+				</div>
+				<div class="form-group">
+					<label for="emergencyContactName">Emergency Contact Name:</label>
+					<input type="text" id="emergencyContactName" name="emergencyContactName"
+						th:value="${employee?.emergencyContactName}"  required>
+
+				</div>
+				<div class="form-group">
+					<label for="emergencyRelationship">Emergency Relationship:</label>
+					<input type="text" id="emergencyRelationship" name="emergencyRelationship"
+						th:value="${employee?.emergencyRelationship}"  required>
+
+				</div>
+			</div>
+
+			<div class="form-row">
+				<div class="form-group">
+					<label for="emergencyContactNumber">Emergency Contact Number:</label>
+					<input type="tel" id="emergencyContactNumber" name="emergencyContactNumber"
+						th:value="${employee?.emergencyContactNumber}" 
+						required>
+
+				</div>
+				<div class="form-group">
+					<label for="emergencyEmail">Emergency Email:</label>
+					<input type="text" id="emergencyEmail" name="emergencyEmail" th:value="${employee?.emergencyEmail}"
+						 required>
+
+				</div>
+				<div class="form-group">
+					<label for="passportNumber">Passport Number:</label>
+					<input type="text" id="passportNumber" name="passportNumber" th:value="${employee?.passportNumber}"
+						 >
+
+				</div>
+			</div>
+
+			<div class="form-row">
+				<div class="form-group">
+
+					<label for="visaNumber">Visa Number:</label>
+					<input type="text" id="visaNumber" name="visaNumber" th:value="${employee?.visaNumber}"
+						>
+
+				</div>
+				<div class="form-group">
+					<label for="visaExpiryDate">Visa Expiry Date:</label>
+					<input type="date" id="visaExpiryDate" name="visaExpiryDate" th:value="${employee?.visaExpiryDate}"
+						>
+						<span id="visaExpiryDateError" class="error-message"></span>
+
+				</div>
+		
+				</div>
+
+		<!--	<h2>Document Details</h2> -->
+			<!-- First Row -->
+			<div class="form-row">
+			    <!-- Aadhar/SSN File -->
+				<div class="form-group">
+				        <label for="aadharSsnFile">Aadhar/SSN File:</label>
+
+				        <!-- Show existing file download link if present -->
+				        <div th:if="${employee?.aadharSsnFileName}">
+				            <a th:href="@{/files/{fileName}(fileName=${employee.aadharSsnFileName})}" 
+				               th:text="'View: ' + ${employee.aadharSsnFileName}" 
+				               target="_blank"
+				              style="margin-top: 5px; display: inline-block;"></a>
+				        </div>
+
+				        <!-- File input -->
+				        <input type="file" id="aadharSsnFile" name="aadharSsnFile" 
+				               accept=".pdf,.doc,.docx" class="form-control" />
+				    </div>
+					
+					
+
+			    <!-- Profile Photo File -->
+				<div class="form-group">
+				       <label for="uploadProfilePhotoFile">Upload Profile Photo:</label>
+				       <div th:if="${employee?.uploadProfilePhotoFileName}">
+				           <a th:href="@{/files/{fileName}(fileName=${employee.uploadProfilePhotoFileName})}"
+				              th:text="'View: ' + ${employee.uploadProfilePhotoFileName}"
+				              target="_blank" style="margin-top: 5px; display: inline-block;"></a>
+				       </div>
+				       <input type="file" id="uploadProfilePhotoFile" name="uploadProfilePhotoFile"
+				              accept=".pdf,.doc,.docx" class="form-control" />
+				   </div>
+
+			    <!-- PAN/TAX ID File -->
+				<div class="form-group">
+				       <label for="panTaxIdFile">PAN/TAX ID File:</label>
+				       <div th:if="${employee?.panTaxIdFileName}">
+				           <a th:href="@{/files/{fileName}(fileName=${employee.panTaxIdFileName})}"
+				              th:text="'View: ' + ${employee.panTaxIdFileName}"
+				              target="_blank" style="margin-top: 5px; display: inline-block;"></a>
+				       </div>
+				       <input type="file" id="panTaxIdFile" name="panTaxIdFile"
+				              accept=".pdf,.doc,.docx" class="form-control" />
+				   </div>
+			</div>
+
+			<div class="form-row">
+			    <!-- Education Certificates -->
+				<div class="form-group">
+				        <label for="educationCertificatesFile">Education Certificates File:</label>
+				        <div th:if="${employee?.educationCertificatesFileName}">
+				            <a th:href="@{/files/{fileName}(fileName=${employee.educationCertificatesFileName})}"
+				               th:text="'View: ' + ${employee.educationCertificatesFileName}"
+				               target="_blank" style="margin-top: 5px; display: inline-block;"></a>
+				        </div>
+				        <input type="file" id="educationCertificatesFile" name="educationCertificatesFile"
+				               accept=".pdf,.doc,.docx" class="form-control" />
+				    </div>
+
+			    <!-- Professional Certificates -->
+				<div class="form-group">
+				        <label for="professionalCertificatesFile">Professional Certificates File:</label>
+				        <div th:if="${employee?.professionalCertificatesFileName}">
+				            <a th:href="@{/files/{fileName}(fileName=${employee.professionalCertificatesFileName})}"
+				               th:text="'View: ' + ${employee.professionalCertificatesFileName}"
+				               target="_blank" style="margin-top: 5px; display: inline-block;"></a>
+				        </div>
+				        <input type="file" id="professionalCertificatesFile" name="professionalCertificatesFile"
+				               accept=".pdf,.doc,.docx" class="form-control" />
+				    </div>
+
+			    <!-- Resume File -->
+				<div class="form-group">
+				       <label for="resumeFile">Resume File:</label>
+				       <div th:if="${employee?.resumeFileName}">
+				           <a th:href="@{/files/{fileName}(fileName=${employee.resumeFileName})}"
+				              th:text="'View: ' + ${employee.resumeFileName}"
+				              target="_blank" style="margin-top: 5px; display: inline-block;"></a>
+				       </div>
+				       <input type="file" id="resumeFile" name="resumeFile"
+				              accept=".pdf,.doc,.docx" class="form-control" />
+				   </div>
+			</div>
+		
+
+			
+			
+
+			<div class="form-actions">
+				<button class="prev-btn" type="button" onclick="prevSection(3)">Previous</button>
+
+				<button type="button" id="submitBtn" onclick="submitEmployeeForm()">Submit</button>
+				<div th:if="${successMessage}" class="success-message" th:text="${successMessage}"></div>
+				
+
+
+			</div>
+			
+
+
+			<!-- <div class="form-actions"> -->
+			<!--   <button class="prev-btn" onclick="prevSection(3)">Previous</button> -->
+			<!--   <button class="next-btn" onclick="nextSection(3)">Next</button> -->
+			<!-- </div> -->
+		</div>
+
+
+
+		<!--  <div class="form-section" id="section4" style="margin-left: 257px; margin-right: 14px;"> -->
+
+		<!-- </div> -->
+		</div>
+		</div>
+	</form>
+	
+	
+	<script>
+	    function copyAddressIfChecked() {
+	        const isChecked = document.getElementById("sameAsPermanent").checked;
+
+	        const permanentFields = {
+	            line1: document.getElementById("permanentAddressLine1").value,
+	            line2: document.getElementById("permanentAddressLine2").value,
+	            city: document.getElementById("permanentCity").value,
+	            state: document.getElementById("permanentState").value,
+	            country: document.getElementById("permanentCountry").value,
+	            zip: document.getElementById("permanentZipCode").value
+	        };
+
+	        const currentFields = {
+	            line1: document.getElementById("currentAddressLine1"),
+	            line2: document.getElementById("currentAddressLine2"),
+	            city: document.getElementById("currentCity"),
+	            state: document.getElementById("currentState"),
+	            country: document.getElementById("currentCountry"),
+	            zip: document.getElementById("currentZipCode")
+	        };
+
+	        if (isChecked) {
+	            currentFields.line1.value = permanentFields.line1;
+	            currentFields.line2.value = permanentFields.line2;
+	            currentFields.city.value = permanentFields.city;
+	            currentFields.state.value = permanentFields.state;
+	            currentFields.country.value = permanentFields.country;
+	            currentFields.zip.value = permanentFields.zip;
+
+	            Object.values(currentFields).forEach(field => field.setAttribute("readonly", "readonly"));
+	        } else {
+	            Object.values(currentFields).forEach(field => {
+	                field.removeAttribute("readonly");
+	                field.value = "";
+	            });
+	        }
+	    }
+	</script>
+
+	</body>
+	
+	<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+	
+	<script>
+		
+		
+		
+// 		document.addEventListener("DOMContentLoaded", function () {
+// 		    const dropdown = document.getElementById('departmentUid');
+// 		    const selectedUid = dropdown.getAttribute('data-selected');
+
+// 		    fetch('/api/departments')
+// 		        .then(res => res.json())
+// 		        .then(data => {
+// 		            dropdown.innerHTML = '<option value="">-- Select Department UID --</option>'; // Reset
+
+// 		            data.forEach(dept => {
+// 		                const option = document.createElement('option');
+// 		                option.value = dept.departmentUid;
+// 		                option.text = dept.departmentUid;
+
+// 		                if (dept.departmentUid === selectedUid) {
+// 		                    option.selected = true;
+// 		                }
+
+// 		                dropdown.appendChild(option);
+// 		            });
+
+// 		            // Call department name fetch only AFTER options are loaded
+// 		            if (selectedUid) {
+// 		                updateDepartmentNameAjax(selectedUid);
+// 		            }
+// 		        })
+// 		        .catch(err => console.error('Error loading departments:', err));
+// 		});
+
+// 		function updateDepartmentNameAjax(uidFromDropdown) {
+// 		    const uid = uidFromDropdown || document.getElementById("departmentuid").value;
+
+// 		    if (!uid) {
+// 		        document.getElementById("departmentname").value = "";
+// 		        return;
+// 		    }
+
+// 		    fetch(`/getDepartmentName/${uid}`)
+// 		        .then(response => response.text())
+// 		        .then(name => {
+// 		            document.getElementById("departmentname").value = name;
+// 		        })
+// 		        .catch(error => {
+// 		            console.error('Error fetching department name:', error);
+// 		            document.getElementById("departmentname").value = "";
+// 		        });
+// 		}
+			
+			
+			function beautifyLabel(fieldName) {
+				    // Converts camelCase or field names into readable labels
+				    return fieldName
+				        .replace(/([A-Z])/g, ' $1')
+				        .replace(/^./, str => str.toUpperCase());
+				}
+				
+				
+							
+	async function validateEmployeeFormFields() {
+	    const requiredFields = [
+	        'firstName', 'middleName', 'lastName', 'dateOfBirth', 'gender',
+	        'maritalStatus', 'nationality', 'departmentname',
+
+	        'permanentAddressLine1', 'permanentAddressLine2', 'permanentCity', 'permanentState',
+	        'permanentCountry', 'permanentZipCode',
+
+	        'currentAddressLine1', 'currentAddressLine2', 'currentCity', 'currentState',
+	        'currentCountry', 'currentZipCode',
+
+	        'primaryContactNumber', 'alternateContactNumber', 'personalEmail', 'bloodGroup',
+
+	        'emergencyContactName', 'emergencyRelationship', 'emergencyContactNumber', 'emergencyEmail',
+
+	       
+	    ];
+
+	    // Check for empty required fields
+	    for (let fieldId of requiredFields) {
+	        const field = document.getElementById(fieldId);
+	        if (!field || !field.value.trim()) {
+	            Swal.fire({
+	                icon: 'warning',
+	                title: 'Missing Field',
+	                text: `Please fill the "${beautifyLabel(fieldId)}" field.`,
+	            });
+	            if (field) field.focus();
+	            return false;
+	        }
+	    }
+
+		
+		const textFieldRegex = /^[A-Z][a-zA-Z\s'-]*$/;
+		const textFields = [
+		    { id: 'firstName', label: 'First Name' },
+		    { id: 'middleName', label: 'Middle Name' },
+		    { id: 'lastName', label: 'Last Name' },
+			{id: 'nationality', label: 'Nationality'},
+			{ id: 'permanentCity', label: 'Permanent City' },
+			{ id: 'permanentState', label: 'Permanent State' },
+			{ id: 'permanentCountry', label: 'Permanent Country' },
+			{ id: 'currentCity', label: 'Current City' },
+			{ id: 'currentState', label: 'Current State' },
+			{ id: 'currentCountry', label: 'Current Country' },
+			{ id: 'emergencyContactName', label: 'Emergency Contact Name' },
+			{ id: 'emergencyRelationship', label: 'Emergency Relationship' },
+			
+			
+		];
+
+		for (let field of textFields) {
+		    const value = document.getElementById(field.id).value.trim();
+
+		    if (value === "") {
+		        Swal.fire({
+		            icon: 'warning',
+		            title: 'Missing Field',
+		            text: `${field.label} is required.`,
+		        });
+		        document.getElementById(field.id).focus();
+		        return false;
+		    }
+
+		    if (!textFieldRegex.test(value)) {
+		        Swal.fire({
+		            icon: 'error',
+		            title: 'Invalid Format',
+		            text: `${field.label} must start with a capital letter, contain only letters, and not start with a space.`,
+		        });
+		        document.getElementById(field.id).focus();
+		        return false;
+		    }
+		}
+
+		
+	    // Validate email fields
+	    const emailRegex = /^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/;
+	    const emailFields = ['personalEmail', 'emergencyEmail'];
+	    for (let fieldId of emailFields) {
+	        const value = document.getElementById(fieldId).value.trim();
+	        if (!emailRegex.test(value)) {
+	            Swal.fire({
+	                icon: 'error',
+	                title: 'Invalid Email',
+	                text: `Please enter a valid email in "${beautifyLabel(fieldId)}".`,
+	            });
+	            document.getElementById(fieldId).focus();
+	            return false;
+	        }
+	    }
+
+	    // Validate 10-digit phone numbers
+	    const phoneRegex = /^[6-9]\d{9}$/;
+	    const phoneFields = ['primaryContactNumber', 'alternateContactNumber', 'emergencyContactNumber'];
+	    for (let fieldId of phoneFields) {
+	        const value = document.getElementById(fieldId).value.trim();
+	        if (!phoneRegex.test(value)) {
+	            Swal.fire({
+	                icon: 'error',
+	                title: 'Invalid Phone Number',
+	                text: `Enter a valid 10-digit phone number in "${beautifyLabel(fieldId)}".`,
+	            });
+	            document.getElementById(fieldId).focus();
+	            return false;
+	        }
+	    }
+		
+		const employeeUid = document.getElementById("id")?.value || ""; // hidden input in edit form
+
+		const fieldsToCheck = [
+		    { id: 'primaryContactNumber', param: 'primaryContactNumber' },
+		    { id: 'personalEmail', param: 'personalEmail' },
+			{ id: 'passportNumber', param: 'passportNumber' },
+			{ id: 'visaNumber', param: 'visaNumber' }
+		];
+
+		for (let { id, param } of fieldsToCheck) {
+		    const value = document.getElementById(id).value.trim();
+			
+			if (!value) continue; // ⬅️ Skip empty fields
+
+
+		    // 👇 pass employeeUid to backend to skip checking own record
+			const isDuplicate = await $.get(`/check-duplicate?${param}=${encodeURIComponent(value)}&id=${employeeUid}`);
+
+		    if (isDuplicate === true || isDuplicate === 'true') {
+		        Swal.fire({
+		            icon: 'warning',
+		            title: 'Duplicate Found',
+		            text: beautifyLabel(param) + " already exists!",
+		        });
+		        document.getElementById(id).focus();
+		        return false;
+		    }
+		}
+
+
+	    // Validate Age: Minimum 21 years
+	    const dobInput = document.getElementById("dateOfBirth");
+	    const dob = new Date(dobInput.value);
+	    const today = new Date();
+	    let age = today.getFullYear() - dob.getFullYear();
+	    const monthDiff = today.getMonth() - dob.getMonth();
+	    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
+	        age--;
+	    }
+	    if (age < 21) {
+	        Swal.fire({
+	            icon: 'error',
+	            title: 'Invalid Age',
+	            text: 'Employee must be at least 21 years old.',
+	        });
+	        dobInput.focus();
+	        return false;
+	    }
+
+	    // Validate Blood Group
+	    const blood = document.getElementById("bloodGroup").value.trim().toUpperCase();
+	    const bloodPattern = /^(A|B|AB|O)[+-]$/;
+	    if (!bloodPattern.test(blood)) {
+	        Swal.fire({
+	            icon: 'error',
+	            title: 'Invalid Blood Group',
+	            text: 'Enter a valid blood group like A+, B-, O+, etc.',
+	        });
+	        document.getElementById("bloodGroup").focus();
+	        return false;
+	    }
+		
+		const passportNumberRegex = /^[A-PR-WYa-pr-wy][1-9]\d\s?\d{4}[1-9]$/; // Indian passport format (adjust if needed)
+
+		const passportFields = [
+		    { id: 'passportNumber', label: 'Passport Number' }
+		];
+
+		for (let field of passportFields) {
+		    const value = document.getElementById(field.id).value.trim();
+
+		    if (value === "") {
+		        Swal.fire({
+		            icon: 'warning',
+		            title: 'Missing Field',
+		            text: `${field.label} is required.`,
+		        });
+		        document.getElementById(field.id).focus();
+		        return false;
+		    }
+
+		    if (!passportNumberRegex.test(value)) {
+		        Swal.fire({
+		            icon: 'error',
+		            title: 'Invalid Passport Number',
+		            text: `${field.label} is invalid. Example: A1234567`,
+		        });
+		        document.getElementById(field.id).focus();
+		        return false;
+		    }
+		}
+
+		
+		const visaNumberRegex = /^[A-Za-z0-9]{5,20}$/; // Customize the length if needed
+		const visaFields = [
+		    { id: 'visaNumber', label: 'Visa Number' }
+		];
+
+		for (let field of visaFields) {
+		    const value = document.getElementById(field.id).value.trim();
+
+		    if (value === "") {
+		        Swal.fire({
+		            icon: 'warning',
+		            title: 'Missing Field',
+		            text: `${field.label} is required.`,
+		        });
+		        document.getElementById(field.id).focus();
+		        return false;
+		    }
+
+		    if (!visaNumberRegex.test(value)) {
+		        Swal.fire({
+		            icon: 'error',
+		            title: 'Invalid Visa Number',
+		            text: `${field.label} should be alphanumeric (no special characters) and 5–20 characters long.`,
+		        });
+		        document.getElementById(field.id).focus();
+		        return false;
+		    }
+		}
+
+
+	    // Visa Expiry Date must be in the future
+	    const visaDate = new Date(document.getElementById("visaExpiryDate").value);
+	    if (visaDate <= today) {
+	        Swal.fire({
+	            icon: 'error',
+	            title: 'Invalid Visa Expiry Date',
+	            text: 'Visa Expiry Date must be in the future.',
+	        });
+	        document.getElementById("visaExpiryDate").focus();
+	        return false;
+	    }
+// 		const fileFields = [
+// 		       { id: 'aadharSsnFile', label: 'Aadhar/SSN File' },
+// 		       { id: 'uploadProfilePhotoFile', label: 'Upload Profile Photo' },
+// 		       { id: 'panTaxIdFile', label: 'PAN/TAX ID File' },
+// 		       { id: 'educationCertificatesFile', label: 'Education Certificates File' },
+// 		       { id: 'professionalCertificatesFile', label: 'Professional Certificates File' },
+// 		       { id: 'resumeFile', label: 'Resume File' }
+// 		   ];
+
+// 		   const allowedExtensions = ['pdf', 'doc', 'docx'];
+// 		   const maxSizeInBytes = 2 * 1024 * 1024; // 2MB
+
+// 		   for (let field of fileFields) {
+// 		       const fileInput = document.getElementById(field.id);
+		       
+// 		       if (!fileInput || !fileInput.files.length) {
+// 		           Swal.fire({
+// 		               icon: 'warning',
+// 		               title: 'Missing File',
+// 		               text: `Please upload the "${field.label}".`
+// 		           });
+// 		           fileInput?.focus();
+// 		           return false;
+// 		       }
+
+// 		       const file = fileInput.files[0];
+// 		       const extension = file.name.split('.').pop().toLowerCase();
+
+// 		       if (!allowedExtensions.includes(extension)) {
+// 		           Swal.fire({
+// 		               icon: 'error',
+// 		               title: 'Invalid File Type',
+// 		               text: `"${field.label}" must be a PDF, DOC, or DOCX file.`
+// 		           });
+// 		           fileInput.focus();
+// 		           return false;
+// 		       }
+
+// 		       if (file.size > maxSizeInBytes) {
+// 		           Swal.fire({
+// 		               icon: 'error',
+// 		               title: 'File Too Large',
+// 		               text: `"${field.label}" must be less than 2 MB.`
+// 		           });
+// 		           fileInput.focus();
+// 		           return false;
+// 		       }
+// 		   }
+		   
+		  
+
+	    return true;
+	}
+
+	async function submitEmployeeForm() {
+	    const isValid = await validateEmployeeFormFields();
+	    if (!isValid) return;
+
+	    const form = document.getElementById("employeeForm");
+	    const formData = new FormData(form);
+	    
+	    // Get ID or UID (you can use either one based on your design)
+	    const employeeUid = $('#id').val(); // or use 'id' field if that is what you use to check update
+	    let url, successMessage;
+
+	    if (!employeeUid) {
+	        url = "/employee_registration";
+	        successMessage = "Employee registered successfully!";
+	    } else {
+	        url = "/update_employee"; // make sure you have this backend endpoint
+	        successMessage = "Employee updated successfully!";
+	    }
+
+	    $.ajax({
+	        url: url,
+	        type: "POST",
+	        data: formData,
+	        processData: false,
+	        contentType: false,
+	        success: function (response) {
+	            Swal.fire("Success", successMessage, "success");
+	            resetEmployeeForm(); // reset form if needed
+	            setTimeout(() => {
+	                window.location.href = "/hrms/EmpGrid";
+	            }, 2000);
+	        },
+			error: function (xhr, status, error) {
+			    let message = "Something went wrong. Please try again!";
+			    
+			    if (xhr.status === 400 || xhr.status === 409) { // conflict or bad request
+			        message = xhr.responseText || "Duplicate contact number or email.";
+			    }
+
+			    Swal.fire("Error", message, "error");
+			}
+
+	    });
+	}
+
+
+	function resetEmployeeForm() {
+	    $('#employeeForm')[0].reset();
+	}
+
+	// Beautify Field Names for SweetAlert messages
+	function beautifyLabel(fieldId) {
+	    return fieldId.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
+	}
+	
+	function submitForm() {
+	    if (validateEmployeeFormFields()) {
+	        document.getElementById('employeeForm').submit(); // Proceed only if validation passed
+	    }
+	}
+	
+	function nextSection(current) {
+	    if (validateSection(current)) {
+	        document.getElementById(`section${current}`).classList.remove('active');
+	        document.getElementById(`section${current + 1}`).classList.add('active');
+	    }
+	}
+
+	function prevSection(current) {
+	    document.getElementById(`section${current}`).classList.remove('active');
+	    document.getElementById(`section${current - 1}`).classList.add('active');
+	}
+
+	function validateSection(current) {
+	    const requiredFields = document.querySelectorAll(`#section${current} [required]`);
+	    let valid = true;
+
+	    for (let field of requiredFields) {
+	        const val = field.value.trim();
+	        const label = field.previousElementSibling ? field.previousElementSibling.textContent.replace(":", "") : field.name;
+
+	        if (!val) {
+	            Swal.fire({
+	                icon: 'warning',
+	                title: 'Required Field',
+	                text: `Please fill the "${label}" field.`,
+	            });
+	            field.focus();
+	            valid = false;
+	            break;
+	        }
+
+	        // Additional field-specific validation
+	        if (field.id === "dateOfBirth") {
+	            const dob = new Date(field.value);
+	            const today = new Date();
+	            let age = today.getFullYear() - dob.getFullYear();
+	            const monthDiff = today.getMonth() - dob.getMonth();
+	            if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
+	                age--;
+	            }
+	            if (age < 21) {
+	                Swal.fire({
+	                    icon: 'error',
+	                    title: 'Invalid Age',
+	                    text: 'Employee must be at least 21 years old.',
+	                });
+	                field.focus();
+	                valid = false;
+	                break;
+	            }
+	        }
+
+	        if (field.type === "email") {
+	            const emailPattern = /^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/;
+	            if (!emailPattern.test(field.value)) {
+	                Swal.fire({
+	                    icon: 'error',
+	                    title: 'Invalid Email',
+	                    text: `Please enter a valid email address.`,
+	                });
+	                field.focus();
+	                valid = false;
+	                break;
+	            }
+	        }
+
+	        if (field.type === "tel") {
+	            const phonePattern = /^[6-9]\d{9}$/;
+	            if (!phonePattern.test(field.value)) {
+	                Swal.fire({
+	                    icon: 'error',
+	                    title: 'Invalid Phone Number',
+	                    text: `Enter a valid 10-digit phone number starting with 6-9.`,
+	                });
+	                field.focus();
+	                valid = false;
+	                break;
+	            }
+	        }
+
+	        if (field.id === "bloodGroup") {
+	            const bg = field.value.trim().toUpperCase();
+	            const pattern = /^(A|B|AB|O)[+-]$/;
+	            if (!pattern.test(bg)) {
+	                Swal.fire({
+	                    icon: 'error',
+	                    title: 'Invalid Blood Group',
+	                    text: 'Use format like A+, O-, etc.',
+	                });
+	                field.focus();
+	                valid = false;
+	                break;
+	            }
+	        }
+
+	        if (field.id === "visaExpiryDate") {
+	            const visaDate = new Date(field.value);
+	            const today = new Date();
+	            if (visaDate <= today) {
+	                Swal.fire({
+	                    icon: 'error',
+	                    title: 'Invalid Visa Expiry Date',
+	                    text: 'Visa Expiry Date must be in the future.',
+	                });
+	                field.focus();
+	                valid = false;
+	                break;
+	            }
+	        }
+	    }
+
+	    return valid;
+	}
+	
+
+	
+	</script>
+	
+	
+</html>

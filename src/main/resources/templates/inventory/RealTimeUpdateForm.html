@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Real Time Update</title>
+	<link rel="stylesheet" href="/css/empinfo.css">
+	     <link rel="stylesheet" href="/css/hrms.css"> <!-- // for side bar code  -->
+	     <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+       /* Container holding all the boxes */
+.boxes-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: flex-start;
+    margin-top: 20px;
+}
+
+/* Each box item */
+.box {
+    border: 1px solid #ccc;
+    padding: 20px;
+    border-radius: 8px;
+    background: #f4f4f4;
+    flex: 1 1 400px; /* Default width */
+    max-width: 420px; /* Two boxes per row on desktop */
+    box-sizing: border-box;
+    transition: all 0.3s ease-in-out;
+}
+
+/* Responsive layout for tablets and mobile */
+@media (max-width: 1024px) {
+    .box {
+        max-width: 100%; /* One box per row */
+    }
+}
+
+/* Layout for form rows inside boxes */
+.form-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    margin-bottom: 15px;
+}
+
+/* Styling for input/select groups */
+.form-group {
+    flex: 1 1 45%;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Label styling */
+.form-group label {
+    margin-bottom: 5px;
+    font-weight: 500;
+}
+
+/* Inputs and selects */
+.form-group input,
+.form-group select {
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+</style>
+</head>
+<body>
+	<div th:replace="~{INVENTORY.html :: sidebarFragment}"></div> <!-- // for side bar code  -->     
+   <div class="form-container">
+  <div class="form-section active" id="section1" style="margin: 20px;">
+    <form id="realtimeForm" onsubmit="return false;">
+      <input type="hidden" id="realtimeupdateuid" name="realtimeupdateuid" />
+
+    
+        <h2>Real Time Update</h2>
+
+        <!-- Row 1: Product Type, Product UID, Transaction Type -->
+        <div class="form-row">
+          <div class="form-group">
+            <label for="producttype">Product Type</label>
+            <select id="producttype" name="producttype" required>
+              <option value="">-- Select Product Type --</option>
+              <option value="rawmaterial">Raw Material</option>
+              <option value="goods">Goods</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="productuid">Product ID</label>
+            <select id="productuid" name="productuid" required>
+              <option value="">-- Select Product ID --</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="transactiontype">Transaction Type</label>
+            <select id="transactiontype" name="transactiontype" required>
+              <option value="">-- Select Transaction Type --</option>
+            </select>
+          </div>
+        </div>
+
+
+      <!-- Box Container -->
+<div class="boxes-container" id="boxesContainer">
+  <div class="box" id="box-0" data-latest="0">
+    
+    <div class="form-row">
+      <div class="form-group">
+        <label for="warehouseuid-0">Warehouse ID</label>
+        <select class="warehouse-uid-select" id="warehouseuid-0" name="warehouseuid"required>
+          <option value="">-- Select Warehouse --</option>
+          <!-- Add options dynamically -->
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="transactiontype-0">Transaction Type</label>
+        <select class="box-transaction-type" id="transactiontype-0" name="innertransactiontype" required>
+          <!-- Add options dynamically -->
+        </select>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label for="quantity-0">Quantity</label>
+        <input type="number" class="quantity" id="quantity-0" name="quantity" required>
+      </div>
+
+      <div class="form-group">
+        <label for="realtimequantity-0">Realtime Quantity</label>
+        <input type="number" class="realtimequantity" id="realtimequantity-0" name="realtimequantity" readonly>
+      </div>
+    </div>
+
+  </div>
+</div>
+        <!-- Add More Button -->
+         <div class="form-actions" style="display: flex;
+        justify-content: flex-end; /* Push content to the right */
+        margin-top: 20px;">
+        <button type="button" onclick="addMoreBox()">+ Add More</button></div>
+
+        <!-- Row 3: Global Quantity and Transaction Date -->
+        <div class="form-row">
+          <div class="form-group">
+            <label for="globalrealtimequantity">Global Realtime Quantity</label>
+            <input type="number" id="globalrealtimequantity" name="globalrealtimequantity" readonly data-base="0">
+          </div>
+
+          <div class="form-group">
+            <label for="transactiondate">Transaction Date</label>
+            <input type="date" id="transactiondate" name="transactiondate" required>
+          </div>
+        </div>
+
+        <!-- Submit Button -->
+         <div class="form-actions">
+        <button type="button" id="submitBtn" onclick="submitRealTimeForm()">Submit</button>
+        <button type="button" onclick="goback()" class="btn btn-secondary">Back</button>
+        </div>
+    </form>
+  </div>
+</div>
+
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+// =============================
+// 🌟 NAVIGATION FUNCTIONS
+// =============================
+
+// Go back to Realtime Update Grid
+function goback() {
+    window.location.href = '/inventory/realtimeupdategrid';
+}
+
+// Go back to Dashboard
+function goBack() {
+    window.location.href = '/dashboard';
+}
+
+
+// =============================
+// ⚙️ TRANSACTION CONFIGURATION
+// =============================
+
+// Available transaction options for each product type
+const transactionOptions = {
+    goods: ['Sale', 'Transfer', 'Add Inventory','Remove from inventory'],
+    rawmaterial: ['Production', 'Purchase', 'Return', 'Transfer','Remove from inventory']
+};
+
+
+// =============================
+// 🔁 INNER TRANSACTION LOGIC
+// =============================
+
+// Determine valid inner transactions based on product type and main transaction
+function getInnerOptions(productType, mainTxnLower) {
+    if (mainTxnLower === 'transfer') {
+        if (productType === 'Goods') {
+            return [
+                { v: 'transfer', label: 'Transfer' },
+                { v: 'add inventory', label: 'Add Inventory' }
+            ];
+        } else if (productType === 'rawmaterial') {
+            return [
+                { v: 'transfer', label: 'Transfer' },
+                { v: 'purchase', label: 'Purchase' }
+            ];
+        }
+    }
+    // Default: return the same transaction as both main & inner
+    return [{ v: mainTxnLower, label: capitalizeWords(mainTxnLower) }];
+}
+
+
+// =============================
+// 🧠 HELPER FUNCTIONS
+// =============================
+
+// Capitalize words, e.g. "add inventory" → "Add Inventory"
+function capitalizeWords(s) {
+    return s.split(' ')
+        .map(w => w.charAt(0).toUpperCase() + w.slice(1))
+        .join(' ');
+}
+
+// Determine if transaction increases or decreases stock
+// Determine whether transaction should increase or decrease quantity
+function isPositiveEffect(productType, transactionType) {
+    productType = (productType || "").toLowerCase();
+    transactionType = (transactionType || "").toLowerCase();
+
+    // Define positive transactions for each product type
+    if (productType === "goods") {
+        // These transaction types will increase stock for goods
+        return [
+            "add inventory",
+            "purchase",
+            "receive",
+            "inward",
+            "production output"
+        ].includes(transactionType);
+    } 
+    else if (productType === "rawmaterial") {
+        // These will increase stock for raw materials
+        return [
+            "purchase",
+            "inward",
+            "receive"
+        ].includes(transactionType);
+    }
+
+    // Default (if not matched): decrease stock
+    return false;
+}
+
+
+// =============================
+// 📦 DOM ELEMENT REFERENCES
+// =============================
+
+const productTypeEl = document.getElementById('producttype');
+const productUIDEl = document.getElementById('productuid');
+const transactionTypeEl = document.getElementById('transactiontype');
+const boxesContainer = document.getElementById('boxesContainer');
+const globalRealtimeEl = document.getElementById('globalrealtimequantity');
+const submitBtn = document.getElementById('submitBtn');
+let boxCount = 0;
+
+
+// =============================
+// 🚀 INITIAL SETUP
+// =============================
+
+// Auto-generate a unique realtime update UID when page loads
+window.addEventListener('load', () => {
+    document.getElementById('realtimeupdateuid').value = generateRealtimeupdateuid();
+});
+
+
+// =============================
+// 🔽 DYNAMIC DROPDOWNS
+// =============================
+
+// 1️⃣ When product type changes → load related product UIDs and transaction types
+productTypeEl.addEventListener('change', async () => {
+    const type = productTypeEl.value;
+
+    // Reset dropdowns
+    productUIDEl.innerHTML = `<option value="">-- Select Product ID --</option>`;
+    transactionTypeEl.innerHTML = `<option value="">-- Select Transaction Type --</option>`;
+    if (!type) return;
+
+    // Add transaction options dynamically
+    (transactionOptions[type] || []).forEach(opt => {
+        transactionTypeEl.innerHTML += `<option value="${opt.toLowerCase()}">${opt}</option>`;
+    });
+
+    // Fetch product UIDs for selected type
+    try {
+        const res = await fetch(`/productuids-by-type?producttype=${type}`);
+        const list = await res.json();
+        list.forEach(uid => {
+            productUIDEl.innerHTML += `<option value="${uid}">${uid}</option>`;
+        });
+    } catch (e) {
+        console.error('Failed to load product UIDs', e);
+    }
+});
+
+
+// 2️⃣ When product UID changes → fetch warehouses & global quantity
+productUIDEl.addEventListener('change', async () => {
+    const type = productTypeEl.value;
+    const uid = productUIDEl.value;
+    if (!type || !uid) return;
+
+    // Load warehouses for this product
+    try {
+        const res = await fetch(`/warehouses-by-producttype?producttype=${type}&productuid=${uid}`);
+        const warehouses = await res.json();
+
+        // Update all warehouse select elements
+        document.querySelectorAll('.warehouse-uid-select').forEach(select => {
+            select.innerHTML = `<option value="">-- Select Warehouse --</option>`;
+            warehouses.forEach(w => select.innerHTML += `<option value="${w}">${w}</option>`);
+        });
+    } catch (e) {
+        console.error('Warehouses load failed', e);
+    }
+
+    // Load latest global realtime quantity
+    try {
+        const rr = await fetch(`/latest-globalrealtimequantity?productuid=${encodeURIComponent(uid)}&producttype=${encodeURIComponent(type)}`);
+        const global = await rr.json();
+        globalRealtimeEl.dataset.base = parseFloat(global || 0);
+        globalRealtimeEl.value = parseFloat(global || 0);
+    } catch (e) {
+        console.warn('Global quantity fetch failed', e);
+        globalRealtimeEl.dataset.base = 0;
+        globalRealtimeEl.value = 0;
+    }
+});
+
+
+// =============================
+// 🔁 INNER TRANSACTION CHANGES
+// =============================
+
+// Update all box inner transaction dropdowns when main transaction changes
+transactionTypeEl.addEventListener('change', () => {
+    const mainTxn = transactionTypeEl.value;
+    const productType = productTypeEl.value;
+    document.querySelectorAll('.box').forEach(box => {
+        const select = box.querySelector('.box-transaction-type');
+        updateBoxInnerOptions(select, productType, mainTxn);
+    });
+});
+
+
+// Update options in one box's inner transaction dropdown
+function updateBoxInnerOptions(selectElem, productType, mainTxn) {
+    if (!selectElem) return;
+    selectElem.innerHTML = '';
+    if (!mainTxn) {
+        selectElem.innerHTML = `<option value="">-- Select --</option>`;
+        return;
+    }
+    const opts = getInnerOptions(productType, mainTxn.toLowerCase());
+    opts.forEach(o => selectElem.innerHTML += `<option value="${o.v}">${o.label}</option>`);
+}
+
+
+// =============================
+// 🏭 FETCH LATEST WAREHOUSE QTY
+// =============================
+
+document.addEventListener('change', async (e) => {
+    if (!e.target.classList.contains('warehouse-uid-select')) return;
+
+    const warehouseuid = e.target.value;
+    const box = e.target.closest('.box');
+    const productuid = productUIDEl.value;
+
+    if (!productuid || !warehouseuid) {
+        box.dataset.latest = 0;
+        box.querySelector('.realtimequantity').value = 0;
+        updateGlobalRealtime();
+        return;
+    }
+
+    try {
+        const res = await fetch(`/latest-quantity-by-warehouse?productuid=${encodeURIComponent(productuid)}&warehouseuid=${encodeURIComponent(warehouseuid)}`);
+        const latest = await res.json();
+        box.dataset.latest = parseFloat(latest || 0);
+        box.querySelector('.realtimequantity').value = parseFloat(latest || 0);
+        updateGlobalRealtime();
+    } catch (err) {
+        console.error('Failed fetching latest by warehouse', err);
+    }
+});
+
+
+// =============================
+// 📊 REALTIME CALCULATION EVENTS
+// =============================
+
+// Recalculate when quantity or transaction type changes
+document.addEventListener('input', (e) => {
+    if (e.target.classList.contains('quantity')) {
+        recalculateBoxRealtime(e.target.closest('.box'));
+    }
+});
+
+document.addEventListener('change', (e) => {
+    if (e.target.classList.contains('box-transaction-type')) {
+        recalculateBoxRealtime(e.target.closest('.box'));
+    }
+});
+
+
+// =============================
+// 🔢 CALCULATION FUNCTIONS
+// =============================
+
+// Recalculate single box realtime quantity
+function recalculateBoxRealtime(box) {
+    const latest = parseFloat(box.dataset.latest || 0);
+    const qty = parseFloat(box.querySelector('.quantity').value || 0);
+    const txnType = (box.querySelector('.box-transaction-type').value || transactionTypeEl.value).toLowerCase();
+    const positive = isPositiveEffect(productTypeEl.value, txnType);
+
+    let newRealtime = positive ? latest + qty : latest - qty;
+    if (newRealtime < 0) newRealtime = 0;
+
+    box.querySelector('.realtimequantity').value = newRealtime;
+    updateGlobalRealtime();
+}
+
+
+// Update overall global realtime quantity
+function updateGlobalRealtime() {
+    let baseValue = parseFloat(globalRealtimeEl.dataset.base || 0);
+    let mainTxn = transactionTypeEl.value.toLowerCase();
+
+    // For transfer, keep the same global value
+    if (mainTxn === 'transfer') {
+        globalRealtimeEl.value = baseValue;
+        return;
+    }
+
+    let sumChange = 0;
+    document.querySelectorAll('.box').forEach(box => {
+        const latest = parseFloat(box.dataset.latest || 0);
+        const qty = parseFloat(box.querySelector('.quantity').value || 0);
+        const txnType = (box.querySelector('.box-transaction-type').value || transactionTypeEl.value).toLowerCase();
+        const positive = isPositiveEffect(productTypeEl.value, txnType);
+
+        let newRealtime = positive ? latest + qty : latest - qty;
+        if (newRealtime < 0) newRealtime = 0;
+
+        sumChange += (newRealtime - latest);
+    });
+
+    globalRealtimeEl.value = baseValue + sumChange;
+}
+
+
+// =============================
+// ➕ ADD & REMOVE BOXES
+// =============================
+
+// Clone an existing box and reset its fields
+function addMoreBox() {
+    const type = productTypeEl.value;
+    const mainTransaction = transactionTypeEl.value;
+    const productuid = productUIDEl.value;
+
+    if (!type || !mainTransaction || !productuid) {
+        alert("Please select product type, product UID, and transaction type first.");
+        return;
+    }
+
+    const originalBox = document.getElementById("box-0");
+    const newBox = originalBox.cloneNode(true);
+    const newBoxId = `box-${++boxCount}`;
+    newBox.id = newBoxId;
+    newBox.dataset.latest = 0;
+
+    // Reset values in cloned box
+    newBox.querySelector("select[name='warehouseuid']").value = "";
+    newBox.querySelector("select[name='innertransactiontype']").value = transactionTypeEl.value;
+    newBox.querySelector("input[name='quantity']").value = "";
+    newBox.querySelector("input[name='realtimequantity']").value = "0";
+
+    // Remove any old remove button
+    const oldRemove = newBox.querySelector('.remove-btn');
+    if (oldRemove) oldRemove.remove();
+
+    // Create a new remove button
+    const removeBtn = document.createElement('button');
+    removeBtn.type = 'button';
+    removeBtn.textContent = '✖';
+    removeBtn.className = 'remove-btn';
+    removeBtn.title = 'Remove this box';
+    removeBtn.style.cssText = `
+        all: unset;
+        color: red;
+        font-size: 18px;
+        cursor: pointer;
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        z-index: 10;
+    `;
+    removeBtn.onclick = () => {
+        newBox.remove();
+        updateGlobalRealtime();
+    };
+
+    newBox.style.position = 'relative';
+    newBox.insertBefore(removeBtn, newBox.firstChild);
+
+    boxesContainer.appendChild(newBox);
+}
+
+
+// =============================
+// 💾 SUBMIT FORM TO BACKEND
+// =============================
+
+function submitRealTimeForm() {
+    const realtimeupdateuid = document.getElementById('realtimeupdateuid').value;
+    const type = productTypeEl.value;
+    const productuid = productUIDEl.value;
+    const mainTxn = transactionTypeEl.value;
+    const globalRealtime = parseFloat(globalRealtimeEl.value || 0);
+    const date = document.getElementById('transactiondate').value;
+
+    // Basic validation
+    if (!type || !productuid || !mainTxn || !date) {
+        alert("Please fill in all required common fields.");
+        return;
+    }
+
+    const rows = [];
+    let valid = true;
+
+    // Collect data from each box
+    document.querySelectorAll('.box').forEach(box => {
+        const warehouseuid = box.querySelector("select[name='warehouseuid']").value;
+        const innertransactiontype = box.querySelector("select[name='innertransactiontype']").value;
+        const quantity = parseFloat(box.querySelector("input[name='quantity']").value || 0);
+        const realtimequantity = parseFloat(box.querySelector("input[name='realtimequantity']").value || 0);
+
+        if (!warehouseuid || !innertransactiontype || isNaN(quantity)) {
+            valid = false;
+            return;
+        }
+
+        rows.push({
+            realtimeupdateuid,
+            producttype: type,
+            productuid,
+            transactiontype: mainTxn,
+            warehouseuid,
+            innertransactiontype,
+            quantity: quantity.toString(),
+            realtimequantity,
+            globalrealtimequantity: globalRealtime,
+            transactiondate: date
+        });
+    });
+
+    if (!valid || rows.length === 0) {
+        alert('Please fill all fields in each box.');
+        return;
+    }
+
+    // Submit to backend
+    submitBtn.disabled = true;
+    fetch("/realtimeupdate/save", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(rows)
+    })
+    .then(res => {
+        submitBtn.disabled = false;
+        if (res.ok) {
+            alert("Real Time Update submitted successfully!");
+            window.location.href = "/inventory/realtimeupdategrid";
+        } else {
+            res.text().then(t => alert("Save failed: " + t));
+        }
+    })
+    .catch(err => {
+        submitBtn.disabled = false;
+        console.error(err);
+        alert("Error occurred while saving.");
+    });
+}
+
+
+// =============================
+// 🆔 UNIQUE ID GENERATOR
+// =============================
+
+function generateRealtimeupdateuid() {
+    const randomFourDigits = Math.floor(1000 + Math.random() * 9000);
+    return "RTU" + randomFourDigits;
+}
+
+
+// =============================
+// 🗑️ BOX REMOVAL FUNCTION
+// =============================
+
+function removeBox(boxId) {
+    const box = document.getElementById(boxId);
+    if (box) {
+        box.remove();
+        updateGlobalRealtime();
+    }
+}
+
+
+// =============================
+// 📅 DATE VALIDATION
+// =============================
+
+const dateInput = document.getElementById("transactiondate");
+const today = new Date().toISOString().split("T")[0];
+
+// Limit max date to today
+dateInput.setAttribute("max", today);
+
+// Validate if selected date is not future
+dateInput.addEventListener("change", function () {
+    const selectedDate = new Date(this.value);
+    const currentDate = new Date(today);
+    if (selectedDate > currentDate) {
+        alert("You can only select today's date or past dates.");
+        this.value = "";
+    }
+});
+
+
+// =============================
+// 🧱 BOX WIDTH ADJUSTMENT (Responsive)
+// =============================
+
+function adjustBoxWidth(boxElement) {
+    const fieldCount = boxElement.querySelectorAll('.form-group, label, input, select').length;
+    if (fieldCount <= 8) {
+        boxElement.style.flex = "1 1 300px";
+        boxElement.style.maxWidth = "42%";
+    } else if (fieldCount <= 12) {
+        boxElement.style.flex = "1 1 400px";
+        boxElement.style.maxWidth = "48%";
+    } else {
+        boxElement.style.flex = "1 1 100%";
+        boxElement.style.maxWidth = "100%";
+    }
+}
+
+</script>
+
+</body>
+</html>

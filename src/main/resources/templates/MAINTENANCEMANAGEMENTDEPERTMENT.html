@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Maintenance Management Department</title>
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <link rel="stylesheet" href="css/hrms.css">
+</head>
+
+<body>
+  <div class="maindashboard">
+    <!-- Sidebar Fragment -->
+    <div th:fragment="sidebarFragment">
+    <header class="header">
+      <div class="logo"></div>
+      <div class="search-box">
+        <input type="text" placeholder="Search..." id="search">
+        <button>Search</button>
+      </div>
+    </header>
+    
+    <div class="sidebar">
+         
+        <ul class="sidebar-menu">
+            <li><a th:href="@{/maintenancemanagementdepartment/equipmentmastergrid}">Equipment Master Form</a></li>
+            <li><a th:href="@{/maintenancemanagementdepartment/preventivemaintenanceschedulegrid}">Preventive Maintenance Schedule Form</a></li>
+            <li><a th:href="@{/maintenancemanagementdepartment/breakdownmaintenancereportgrid}">Breakdown Maintenance Report</a></li>
+            <li><a th:href="@{/maintenancemanagementdepartment/sparepartsinventorygrid}"> Spare Parts Inventory Form</a></li>
+            <li><a th:href="@{/maintenancemanagementdepartment/sparepartusageloggrid}">Spare Part Usage Log Form</a></li>
+            <li><a th:href="@{/maintenancemanagementdepartment/maintenanceworkordergrid}">Maintenance Work Order Form</a></li>
+            <li><a th:href="@{/maintenancemanagementdepartment/downtimeanalysisgrid}">Downstime Analysis Form</a></li>
+            <li><a th:href="@{/maintenancemanagementdepartment/maintenancehistoryloggrid}">Maintenance History Log</a></li>
+            <li><a th:href="@{/maintenancemanagementdepartment/technicianmastergrid}">Technician Master Form</a></li>
+			<li><a th:href="@{/maintenancemanagementdepartment/maintenancecosttrackinggrid}">Maintenance Cost Tracking Form</a></li>
+            <li><a th:href="@{/maintenancemanagementdepartment/annualmaintenancecontractregistergrid}">AMC (Annual Maintenance Contract) Register</a></li>            
+            <li><a th:href="@{/maintenancemanagementdepartment/calibrationrecordgrid}">Calibration Record Form</a></li>
+            <li><a th:href="@{/maintenancemanagementdepartment/safetyinsepctionchecklistgrid}">Safety Inspection Check List Form</a></li>
+            <li><a th:href="@{/maintenancemanagementdepartment/maintenancerequestinternalticketinggrid}">Maintenance Request Form (Internal Ticketing)</a></li>
+            </ul>
+    </div>
+</div>
+
+
+    <!-- Main Content -->
+    <div class="content" id="content-area">
+      <h1>Maintenance Management Department Section</h1>
+      <p>Select a sub-field from the sidebar to proceed.</p>
+
+      <!-- Back Button -->
+      <button class="back-btn" onclick="window.history.back();">
+        <i class="fas fa-arrow-left"></i> Back
+      </button>
+    </div>
+
+    <!-- Footer Fragment -->
+  
+    <footer th:fragment="footerFragment" >
+      <div class="footer">
+      <p>&copy; 2024 Your Company. All Rights Reserved.</p>
+    </div>
+    </footer>
+    
+  </div>
+
+  <script>
+    /**
+     * Function to load dynamic content into the content area.
+     * @param {string} path - The path to the content file.
+     * @param {string} title - The title to display in the content area.
+     */
+    function loadContent(path, title) {
+      const contentArea = document.getElementById('content-area');
+      contentArea.innerHTML = `<h1>${title}</h1>`; // Clear content and set title
+
+      fetch(path)
+        .then(response => {
+          if (!response.ok) throw new Error(`Failed to load ${path}: ${response.statusText}`);
+          return response.text();
+        })
+        .then(data => {
+          contentArea.innerHTML += data;
+        })
+        .catch(error => {
+          contentArea.innerHTML += '<p>Failed to load the content. Please try again later.</p>';
+          console.error(`Error loading content from ${path}:`, error);
+        });
+    }
+
+    /**
+     * Navigate back to the previous page in history.
+     */
+    function goBack() {
+      window.history.back();
+    }
+  </script>
+</body>
+
+</html>

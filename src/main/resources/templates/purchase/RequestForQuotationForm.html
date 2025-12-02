@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Request for Quotation Form</title>
+<link rel="stylesheet" href="/css/empinfo.css">
+  <link rel="stylesheet" href="/css/hrms.css"> 
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background-color: #f0f0f0;
+      padding: 10px 20px;
+    }
+
+    .search-box {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .search-box button,
+    .back-button {
+      padding: 6px 12px;
+      font-size: 14px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .search-box button:hover,
+    .back-button:hover {
+      background-color: #0056b3;
+    }
+  </style>
+  
+  <style>
+      #suppliertablelable label {
+          display: block;
+          font-size: 18px;
+          font-weight: 600;
+          margin-bottom: 10px;
+		  
+          color: #333;
+      }
+
+      #suppliersTable table {
+          width: 100%;
+          border-collapse: collapse;
+          border: 1px solid #ddd;
+          background-color: #f9f9f9;
+      }
+
+      #suppliersTable th,
+      #suppliersTable td {
+          padding: 10px;
+          border: 1px solid #ccc;
+          text-align: left;
+      }
+
+      #suppliersTable th {
+          background-color: #f0f0f0;
+          font-weight: bold;
+      }
+
+      #suppliersTable input[type="text"] {
+          width: 100%;
+          border: none;
+          background-color: transparent;
+          font-size: 14px;
+          color: #333;
+      }
+  </style>
+</head>
+
+<body>
+
+  <div th:replace="~{PURCHASE.html :: sidebarFragment}"></div> <!-- // for side bar code  -->                                                                        
+    
+   <form id="rfqform"  th:object="${rfq}"   class="form-container" autocomplete="off">
+  
+   
+    <h2>Request for Quotation Form</h2>   
+    <br>
+    
+     <input type="hidden" id="id" name="id" th:value="${rfq.id}">  
+	 <input type="hidden" id="existingSupplierDetails" th:value="${rfq.supplierdetails}">
+ 
+      <!-- First Row -->
+    
+      <div class="form-row" >
+      
+		<div class="form-group"> 
+		         <label for="rawmaterialuid">Raw Material ID:</label>
+				 <select id="rawmaterialuid" name="rawmaterialuid" 
+				         onchange="fetchrawmaterialDetails(this.value); fetchRawMaterialsWithSuppliers(this.value)" 
+				         th:if="${rfq == null or rfq.id == null}" required>
+				     <option value="">--Select Raw Material ID--</option>
+				     <option th:each="uid:${rawmaterialuid}" th:value="${uid}" th:text="${uid}"></option>
+				 </select>
+
+		         <input type="text" id="rawmaterialuid" name="rawmaterialuid" th:value="${rfq?.rawmaterialuid}" onchange="fetchproductDetails(this.value)" readonly th:if="${rfq?.id != null}">
+		            </div>
+					
+		       <div class="form-group">
+		         <label for="rawmaterialname">Raw Material Name:</label>
+		         <input type="text" id="rawmaterialname" name="rawmaterialname" readonly />
+		      </div>
+			
+			  <div class="form-group">
+        <label for="rfqdate">RFQ Date:</label>
+		 <input type="date" id="rfqdate" name="rfqdate" th:field="${rfq.rfqdate}" required>
+		 </div>
+      </div>
+
+   
+     
+      </div>
+	  
+
+	  <!-- Supplier Dropdown -->
+	  <div class="form-group" th:if="${rfq == null or rfq.id == null}">
+	      <label for="rawmaterialsupplieruid">Supplier ID :</label>
+	      <select id="rawmaterialsupplieruid" name="rawmaterialsupplieruid" 
+	              onchange="addSupplierRow(this.value)">
+	          <option value="">--Select Supplier ID--</option>
+	      </select>
+	  </div>
+<br>
+
+	  <!-- Supplier Table -->
+	  <label for="suppliersTable" id="suppliertablelable"  >Supplier Details:</label>
+	  <table id="suppliersTable" border="1" style="width:100%; border-collapse:collapse; margin-top:15px;">
+	    <thead>
+	      <tr>
+	        <th>RM Supplier ID</th>
+	        <th>RM Supplier Name</th>
+	        <th>Contact Number</th>
+	        <th>Quantity Required</th>
+	      </tr>
+	    </thead>
+	    <tbody>
+	      <!-- Rows will be added dynamically here -->
+	    </tbody>
+	  </table>
+
+        </br>
+		</br>
+     
+      <!-- fourth Row -->
+   
+     <div class="form-row">
+    
+		<div class="form-group">
+		  <label for="issuedby">Issued By:</label>
+
+		  <!-- Create Mode (New RFQ) -->
+		  <select id="issuedby" th:field="*{issuedby}" 
+		          th:if="${rfq == null or rfq.id == null}" required>
+		    <option value="" th:selected="${rfq.issuedby == null}">-- Select Employee --</option>
+		    <option th:each="entry : ${employeeMap}" 
+		            th:value="${entry.key}" 
+		            th:text="${entry.key + ' - ' + entry.value}">
+		    </option>
+		  </select>
+
+		  <!-- Update Mode (Freeze value with UID + Full Name) -->
+		  <input type="text"
+		         th:value="${rfq.issuedby + ' - ' + employeeMap[rfq.issuedby]}"
+		         readonly th:if="${rfq?.id != null}">
+		  <input type="hidden" name="issuedby" th:value="${rfq.issuedby}" th:if="${rfq?.id != null}">
+
+		</div>
+
+		</br>
+				</br>
+
+     <div class="form-group">
+       <label for="expecteddeliverydate">Expected Delivery Date:</label>
+	     <input type="date" id="expecteddeliverydate" name="expecteddeliverydate" th:field="${rfq.expecteddeliverydate}" required>
+     </div>
+    </div>
+
+   <!-- Fifth Row  -->
+    <div class="form-actions">
+  		<button type="button" id="submitBtn" onclick="submitForm()">Submit</button>
+   		   <div th:if="${successMessage}" class="success-message" th:text="${successMessage}"></div>                  
+          <button type="button" class="back-button" onclick="goback();" style="padding: 10px 18px;">Back</button>
+	
+    </div>
+  
+   </form>
+
+
+   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+   	<script>
+		function goback() {
+		window.location.href = '/purchase/requestforquotationgrid';
+	  }
+	
+	</script>
+	<script>
+function goBack() {
+	window.location.href = '/dashboard';
+  }
+</script>
+<script>
+			
+	$('#rawmaterialuid').on('change', function () {
+	    const uid = $(this).val();
+	    if (uid) {
+	        $.ajax({
+	            url: '/supplier/byRawMaterial/' + uid,
+	            method: 'GET',
+	            success: function (response) {
+	                let options = '<option value="">Select Supplier</option>';
+	                if (response.length > 0) {
+	                    response.forEach(s => {
+	                        options += `<option value="${s.rawmaterialsupplieruid}">${s.rawmaterialsupplieruid} </option>`;
+	                    });
+	                } else {
+	                    options = '<option value="">No suppliers found</option>';
+	                }
+	                $('#rawmaterialsupplieruid').html(options);
+	            },
+	            error: function () {
+	                alert('Error loading suppliers');
+	            }
+	        });
+	    }
+	});
+	       
+	function validateForm() {
+	    const rfqDate = document.getElementById('rfqdate').value;
+
+	    // Handle issuedBy differently for create vs update
+	    let issuedByElem = document.getElementById('issuedby');
+	    let issuedBy = "";
+	    if (issuedByElem) {
+	        issuedBy = issuedByElem.value.trim(); // dropdown case
+	    } else {
+	        issuedBy = document.querySelector("input[name='issuedby']").value.trim(); // hidden input case
+	    }
+
+	    const productUid = document.getElementById('rawmaterialuid').value;
+	    const productName = document.getElementById('rawmaterialname').value.trim();
+	    const expectedDeliveryDate = document.getElementById('expecteddeliverydate').value;
+
+		// ✅ Regex for Raw Material Name (letters, numbers, spaces, and symbols: - , . ( ) / & )
+		const nameRegex = /^[a-zA-Z0-9\s.,()\/&-]+$/;
+
+	    if (!rfqDate) {
+	        Swal.fire("Validation Error", "Please select RFQ Date.", "warning");
+	        return false;
+	    }
+
+	    if (!issuedBy) {
+	        Swal.fire("Validation Error", "Issued By is required.", "warning");
+	        return false;
+	    }
+
+	    if (!productUid) {
+	        Swal.fire("Validation Error", "Please select a Raw Material UID.", "warning");
+	        return false;
+	    }
+
+	    if (!productName) {
+	        Swal.fire("Validation Error", "Raw Material Name cannot be empty.", "warning");
+	        return false;
+	    } else if (!nameRegex.test(productName)) {
+	        Swal.fire("Validation Error", "Raw Material Name must contain only letters,symbols and digits.", "warning");
+	        return false;
+	    }
+
+	    if (!expectedDeliveryDate) {
+	        Swal.fire("Validation Error", "Please select Expected Delivery Date.", "warning");
+	        return false;
+	    }
+
+	    const rfqDateObj = new Date(rfqDate);
+	    const expectedDateObj = new Date(expectedDeliveryDate);
+
+	    if (expectedDateObj < rfqDateObj) {
+	        Swal.fire("Validation Error", "Expected Delivery Date cannot be earlier than RFQ Date.", "warning");
+	        return false;
+	    }
+
+	    if ($("#suppliersTable tbody tr").length === 0) {
+	        Swal.fire("Validation Error", "Please add at least one Supplier.", "warning");
+	        return false;
+	    }
+
+	    let validQty = true;
+	    $("#suppliersTable tbody tr").each(function () {
+	        const qty = $(this).find(".qty-input").val();
+	        if (!qty || qty <= 0) {
+	            validQty = false;
+	        }
+	    });
+
+	    if (!validQty) {
+	        Swal.fire("Validation Error", "Please enter valid quantity for all suppliers.", "warning");
+	        return false;
+	    }
+
+	    return true;
+	}
+
+					  /*  $(document).ready(function() {
+						    // Auto-fill Item details when updating
+						    var existingsupplieruid = $('#supplieruid').val();
+						    if (existingsupplieruid) {
+						    	fetchSupplierdetails(existingsupplieruid);
+						    }
+						});
+				function fetchSupplierdetails() {
+								    const supplieruid = $('#supplieruid').val();
+									if (!supplieruid) {
+								        return;
+								    }
+
+								    $.ajax({
+								        url: '/requestforquotation/getsupplieruidinfo',
+								        method: 'GET',
+								        data: { supplieruid: supplieruid },
+								        success: function (response) {
+								            console.log("Response from server:", response);
+								            if (response && response.length > 0) {
+								                const data = response[0];
+								                $('#suppliername').val(data.suppliername || '');
+								              //  $('#email').val(data.email || '');
+								                $('#contactnumber').val(data.mobilenumber || '');
+								          } else {
+								                alert("No details found for the selected Supplier UID.");
+								            }
+								        },
+								        error: function (xhr, status, error) {
+								            console.error("Error fetching Supplier details:", error);
+								            alert("An error occurred while fetching the Supplier details.");
+								        }
+								    });
+								}
+				*/
+					    $(document).ready(function() {
+						    // Auto-fill Item details when updating
+						    var existingProductid = $('#rawmaterialuid').val();
+						    if (existingProductid) {
+						    	fetchrawmaterialDetails(existingProductid);
+						    }
+						});
+					    function fetchrawmaterialDetails(rawmaterialuid) {
+					        if (!rawmaterialuid) return;
+
+					        $.ajax({
+					            url: '/requestforquotation/getrawmaterialdetails',
+					            method: 'GET',
+					            data: { rawmaterialuid: rawmaterialuid },
+					            success: function(response) {
+					                if (response && response.length > 0) {
+					                    const data = response[0];
+					                    $('#rawmaterialname').val(data.rawmaterialname || '');
+					                    
+					                } else {
+					                    alert('No data found for the selected product.');
+					                }
+					            },
+					            error: function(xhr, status, error) {
+					                console.error('Error fetching raw material details:', error);
+					                alert('Error fetching raw material  details. Please try again.');
+					            }
+					        });
+					    }
+					   
+						// Hide table initially
+						$(document).ready(function () {
+						    $('#suppliertablelable').hide();
+						    $('#suppliersTable').hide();
+
+						    // When updating, parse existing supplierdetails JSON
+						    const existingDetails = $('#existingSupplierDetails').val();
+						    if (existingDetails) {
+						        $('#suppliertablelable').show();
+						        $('#suppliersTable').show();
+
+						        try {
+						            const supplierdetails = JSON.parse(existingDetails);
+						            Object.keys(supplierdetails).forEach(uid => {
+						                const s = supplierdetails[uid];
+						                let row = `
+						                    <tr data-rawmaterialsupplieruid="${uid}">
+						                        <td><input type="hidden" name="supplierUid" value="${uid}">${uid}</td>
+						                        <td>${s.suppliername}</td>
+						                        <td>${s.mobilenumber}</td>
+						                        <td><input type="number" class="qty-input" data-supplier="${uid}" value="${s.qty}" required></td>
+						                    </tr>`;
+						                $("#suppliersTable tbody").append(row);
+						            });
+						        } catch (e) {
+						            console.error("Error parsing supplierdetails JSON:", e);
+						            alert('Error fetching supplier details. Please try again.');
+						        }
+						    }
+						});
+
+						
+						// Submit form with supplier details JSON
+						function submitForm() {
+						    if (!validateForm()) return;
+
+						    const formData = new FormData(document.getElementById('rfqform'));
+						    const id = $('#id').val();
+						    let url, successMessage;
+
+						    if (!id) {
+						        url = '/requestforquotation/save';
+						        successMessage = 'Request for Quotation saved successfully!';
+						    } else {
+						        url = '/requestforquotation/update';
+						        successMessage = 'Request for Quotation Updated successfully!';
+						    }
+
+						    // Collect supplier details
+						    let supplierdetails = {};
+						    $("#suppliersTable tbody tr").each(function () {
+						        const supplierUid = $(this).data("rawmaterialsupplieruid");
+						        const supplierName = $(this).find("td:eq(1)").text();
+						        const contactNumber = $(this).find("td:eq(2)").text();
+						        const qty = $(this).find(".qty-input").val();
+
+						        supplierdetails[supplierUid] = {
+						            suppliername: supplierName,
+						            mobilenumber: contactNumber,
+						            qty: qty
+						        };
+						    });
+
+						    console.log("Supplier Details JSON:", supplierdetails);
+
+						    // Append to formData
+						    formData.append("supplierdetails", JSON.stringify(supplierdetails));
+
+						    $.ajax({
+						        url: url,
+						        type: 'POST',
+						        data: formData,
+						        processData: false,
+						        contentType: false,
+						        success: function () {
+						            alert(successMessage);
+						            window.location.href = '/purchase/requestforquotationgrid';
+						        },
+						        error: function () {
+						            alert('Error saving. Please fill out all required fields correctly.');
+						        }
+						    });
+						}
+
+						// Fetch suppliers for the selected Raw Material UID
+						function fetchRawMaterialsWithSuppliers(rawmaterialuid) {
+						    console.log("Raw Material UID changed: " + rawmaterialuid);
+
+						    // ✅ Reset Fields & UI
+						    $('#rawmaterialname').val('');
+						    $('#suppliertablelable').hide();
+						    $('#suppliersTable').hide();
+						    $('#suppliersTable tbody').empty();
+						    $('#rawmaterialsupplieruid').html('<option value="">--Select Supplier--</option>');
+
+						    // ✅ Reset Additional Fields
+						    $('#rfqdate').val('');
+						    $('#expecteddeliverydate').val('');
+						    if ($('#issuedby').length) {
+						        $('#issuedby').val(''); // Only if editable (in create mode)
+						    }
+
+						    // ✅ Reset internal state
+						    window.supplierMap = {};
+
+						    if (!rawmaterialuid) return;
+
+						    // ✅ Fetch new suppliers
+						    $.ajax({
+						        url: '/requestforquotation/withsuppliers/' + rawmaterialuid,
+						        method: 'GET',
+						        success: function (response) {
+						            if (response && response.length > 0) {
+						                const supplierMap = {};
+						                response.forEach(item => {
+						                    supplierMap[item.rawmaterialsupplieruid] = {
+						                        name: item.suppliername,
+						                        contact: item.mobilenumber,
+						                        qty: 0
+						                    };
+						                });
+
+						                // ✅ Populate dropdown
+						                let options = '<option value="">--Select Supplier--</option>';
+						                Object.keys(supplierMap).forEach(uid => {
+						                    const s = supplierMap[uid];
+						                    options += `<option value="${uid}" 
+						                                     data-suppliername="${s.name}" 
+						                                     data-contact="${s.contact}" 
+						                                     data-qty="${s.qty}">
+						                                     ${uid}
+						                                </option>`;
+						                });
+						                $('#rawmaterialsupplieruid').html(options);
+						                window.supplierMap = supplierMap;
+						            } else {
+						                $('#rawmaterialsupplieruid').html('<option value="">No suppliers found</option>');
+						            }
+						        },
+						        error: function (xhr, status, error) {
+						            console.error("Error fetching suppliers:", error);
+						            alert("Error fetching suppliers. Please try again.");
+						        }
+						    });
+
+						    // ✅ Fetch and set raw material name
+						    fetchrawmaterialDetails(rawmaterialuid);
+						}
+
+
+
+						function addSupplierRow(supplierUid) {
+						    if (!supplierUid) return;
+
+						    $('#suppliertablelable').show();
+						    $('#suppliersTable').show();
+
+						    // ✅ Also include rawmaterialuid in duplicate check
+						    const rawmaterialuid = $('#rawmaterialuid').val();
+
+						    if ($(`#suppliersTable tbody tr[data-rawmaterialsupplieruid="${supplierUid}"][data-rawmaterialuid="${rawmaterialuid}"]`).length > 0) {
+						        alert("This supplier is already added for the selected Raw Material UID.");
+						        return;
+						    }
+
+						    // ✅ Get supplier details directly from supplierMap
+						    const supplier = window.supplierMap[supplierUid];
+
+						    let row = `
+						        <tr data-rawmaterialsupplieruid="${supplierUid}" data-rawmaterialuid="${rawmaterialuid}">
+						            <td><input type="hidden" name="supplierUid" value="${supplierUid}">${supplierUid}</td>
+						            <td>${supplier.name}</td>
+						            <td>${supplier.contact}</td>
+						            <td><input type="number" placeholder="Enter Quantity" class="qty-input" 
+						                       data-supplier="${supplierUid}" required></td>
+						        </tr>
+						    `;
+						    $("#suppliersTable tbody").append(row);
+						}
+
+
+
+
+
+						
+
+				    </script>
+				   
+</body>
+</html>

@@ -1,0 +1,898 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Stock Transfer</title>
+	<!-- Styles -->
+	<link rel="stylesheet" href="/css/empinfo.css">
+	<link rel="stylesheet" href="/css/hrms.css">
+	<!-- jQuery -->
+	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+	<!-- Google Fonts -->
+	<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+
+	<style>
+		h5 {
+			margin: 10px;
+		}
+
+		.form-container {
+			padding: 30px;
+			max-width: 900px;
+		}
+
+		.form-row {
+			display: flex;
+			gap: 20px;
+			margin-bottom: 15px;
+		}
+
+		.form-group {
+			flex: 1;
+			display: flex;
+			flex-direction: column;
+		}
+
+		.form-actions {
+			margin-top: 20px;
+		}
+	</style>
+</head>
+<body>
+
+	<!-- Sidebar -->
+	<div th:replace="~{INVENTORY.html :: sidebarFragment}"></div>
+
+	<!-- Stock Transfer Form -->
+	<form id="stocktransfer" autocomplete="off">
+		<div class="form-container">
+
+			<!-- Hidden IDs -->
+			<input type="hidden" id="id" name="id" th:value="${stocktransfer?.id}">
+			<input type="hidden" name="id" th:value="${warehouse?.id}" />
+
+			<h2>Stock Transfer Form</h2>
+
+			<!-- Row 1: Transfer Type + Product -->
+			<div class="form-row">
+				<div class="form-group">
+					<label for="transfertype">Transfer Type:</label>
+
+					<!-- Dropdown in Add mode -->
+					<select id="transfertype" name="transfertype"
+						th:if="${stocktransfer == null or stocktransfer.id == null}" required>
+						<option value="" disabled selected>Select transfer type</option>
+						<option value="Internal Transfer">Internal Transfer</option>
+						<option value="Inter-Warehouse Transfer">Inter-Warehouse Transfer</option>
+					</select>
+
+					<!-- Readonly text in Update mode -->
+					<input type="text" name="transfertype" th:if="${stocktransfer != null and stocktransfer.id != null}"
+						th:value="${stocktransfer.transfertype}" readonly>
+				</div>
+
+
+				<div class="form-group">
+					<label for="producttype">Product Type:</label>
+
+					<!-- Dropdown for Add mode -->
+					<select id="producttype" name="producttype"
+						th:if="${stocktransfer == null or stocktransfer.id == null}" required>
+						<option value="">-- Select Product Type --</option>
+						<option value="Goods">Goods</option>
+						<option value="Raw_Material">Raw Material</option>
+					</select>
+
+					<!-- Readonly input for Update mode -->
+					<input type="text" id="producttype" name="producttype"
+						th:if="${stocktransfer != null and stocktransfer.id != null}"
+						th:value="${stocktransfer.producttype}" readonly>
+				</div>
+
+
+
+
+				<!-- Product UID -->
+				<div class="form-group">
+					<label for="uidDropdown">Product ID:</label>
+					<!-- Show dropdown in Create mode -->
+					<select id="uidDropdown" name="productuid" required>
+					       <option value="">-- Select UID --</option>
+					   </select>
+					<!-- Show readonly text in Update mode -->
+					<input type="text" id="productuid" name="productuid" th:if="${stocktransfer?.id != null}"
+						th:value="${stocktransfer?.productuid}" readonly>
+				</div>
+
+				<div class="form-group">
+					<label for="productname">Product Name:</label>
+					<input type="text" id="productname" name="productname" th:value="${stocktransfer?.productname}"
+						readonly>
+				</div>
+			</div>
+
+			<!-- Row 2: Source Warehouse -->
+			<div class="form-row">
+				<!-- Source Warehouse UID -->
+				<div class="form-group">
+					<label for="sourceWarehouseUid">Source Warehouse ID:</label>
+					<!-- Dropdown for Create -->
+					<select id="sourceWarehouseUid" name="sourceWarehouseUid"
+						th:if="${stocktransfer == null or stocktransfer.id == null}" required>
+						<option value="">-- Select Warehouse ID --</option>
+					</select>
+					<!-- Input for Update -->
+					<input type="text" id="sourceWarehouseUid" name="sourceWarehouseUid"
+						th:if="${stocktransfer?.id != null}" th:value="${stocktransfer?.sourceWarehouseUid}" readonly>
+				</div>
+
+				<div class="form-group">
+					<label for="address">Source Location:</label>
+					<input type="text" id="address" name="address" th:value="${stocktransfer?.address}" readonly>
+				</div>
+
+				<div class="form-group">
+					<label for="actualquantity">Actual Quantity:</label>
+					<input type="text" id="actualquantity" name="actualquantity"
+						th:value="${stocktransfer?.actualquantity}" readonly>
+				</div>
+			</div>
+
+			<!-- Row 3: Transfer Details -->
+			<div class="form-row">
+				<div class="form-group">
+					<label for="quantitytotransfer">Quantity to Transfer:</label>
+					<input type="number" id="quantitytotransfer" name="quantitytotransfer"
+						th:value="${stocktransfer?.quantitytotransfer}" min="1" step="1" placeholder="Enter quantity"
+						required>
+				</div>
+
+				<div class="form-group">
+					<label for="transferdate">Transfer Date:</label>
+					<input type="date" id="transferdate" name="transferdate" th:value="${stocktransfer?.transferdate}"
+						required>
+				</div>
+
+				<div class="form-group">
+					<label for="sourcesection">Source Section:</label>
+					<input type="text" id="sourcesection" name="sourcesection"
+						th:value="${stocktransfer?.sourcesection}" required>
+				</div>
+			</div>
+
+			<!-- Row 4: Destination Warehouse -->
+			<div class="form-row">
+				<!-- Destination Warehouse UID -->
+				<div class="form-group">
+					<label for="destinationWarehouseUid">Destination Warehouse ID:</label>
+					<!-- Dropdown for Create -->
+					<select id="destinationWarehouseUid" name="destinationWarehouseUid"
+						th:if="${stocktransfer == null or stocktransfer.id == null}" required>
+						<option value="">-- Select Warehouse ID --</option>
+					</select>
+					<!-- Input for Update -->
+					<input type="text" id="destinationWarehouseUid" name="destinationWarehouseUid"
+						th:if="${stocktransfer?.id != null}" th:value="${stocktransfer?.destinationWarehouseUid}"
+						readonly>
+				</div>
+
+
+				<div class="form-group">
+					<label for="toaddress">Destination Location:</label>
+					<input type="text" id="toaddress" name="toaddress" th:value="${stocktransfer?.toaddress}" readonly>
+				</div>
+
+				<div class="form-group">
+					<label for="destinationsection">Destination Section:</label>
+					<input type="text" id="destinationsection" name="destinationsection"
+						th:value="${stocktransfer?.destinationsection}" required>
+				</div>
+			</div>
+
+			<!-- Row 5: Transfer Reason & Mode -->
+			<div class="form-row">
+				<div class="form-group">
+					<label for="reasonfortransfer">Reason for Transfer:</label>
+					<input type="text" id="reasonfortransfer" name="reasonfortransfer"
+						th:value="${stocktransfer?.reasonfortransfer}" maxlength="100" placeholder="Enter reason"
+						required>
+				</div>
+
+				<div class="form-group">
+					<label for="transfermode">Transfer Mode:</label>
+					<select id="transfermode" name="transfermode" th:value="${stocktransfer?.transfermode}" required>
+						<option value="" disabled selected>Select transfer mode</option>
+						<option value="Road" th:selected="${stocktransfer?.transfermode == 'Road'}">Road</option>
+						<option value="Air" th:selected="${stocktransfer?.transfermode == 'Air'}">Air</option>
+						<option value="Sea" th:selected="${stocktransfer?.transfermode == 'Sea'}">Sea</option>
+					</select>
+				</div>
+
+				<div class="form-group">
+					<label for="carriername">Carrier Name:</label>
+					<input type="text" id="carriername" name="carriername" th:value="${stocktransfer?.carriername}"
+						required>
+				</div>
+			</div>
+
+			<!-- Row 6: Cost & Approval -->
+			<div class="form-row">
+				<div class="form-group">
+					<label for="transfercost">Transfer Cost:</label>
+					<input type="number" id="transfercost" name="transfercost" min="0" step="0.01"
+						th:value="${stocktransfer?.transfercost}" required>
+				</div>
+
+				<div class="form-group">
+					<label for="requestedby">Requested By:</label>
+					<select id="requestedby" name="requestedby">
+						<option value="">-- Select --</option>
+						<option th:each="emp : ${employeeList}" th:value="${emp.empid + ' - ' + emp.name}"
+							th:text="${emp.empid + ' - ' + emp.name}"
+							th:selected="${emp.empid + ' - ' + emp.name == stocktransfer?.requestedby}"></option>
+					</select>
+				</div>
+
+				<div class="form-group">
+					<label for="approvedby">Approved By:</label>
+					<select id="approvedby" name="approvedby">
+						<option value="">-- Select --</option>
+						<option th:each="emp : ${employeeList}" th:value="${emp.empid + ' - ' + emp.name}"
+							th:text="${emp.empid + ' - ' + emp.name}"
+							th:selected="${emp.empid + ' - ' + emp.name == stocktransfer?.approvedby}"></option>
+					</select>
+				</div>
+
+				<div class="form-group">
+					<label for="approvaldate">Approval Date:</label>
+					<input type="date" id="approvaldate" name="approvaldate" th:value="${stocktransfer?.approvaldate}"
+						required>
+				</div>
+			</div>
+
+			<!-- Row 7: Remarks & Status -->
+			<div class="form-row">
+				<div class="form-group">
+					<label for="remarks">Remarks:</label>
+					<input type="text" id="remarks" name="remarks" th:value="${stocktransfer?.remarks}">
+				</div>
+
+				<div class="form-group">
+					<label for="status">Status:</label>
+					<select id="status" name="status" th:value="${stocktransfer?.status}" required>
+						<option value="" disabled selected>Select status</option>
+						<option value="Pending" th:selected="${stocktransfer?.status == 'Pending'}">Pending</option>
+						<option value="In Transit" th:selected="${stocktransfer?.status == 'In Transit'}">In Transit
+						</option>
+						<option value="Completed" th:selected="${stocktransfer?.status == 'Completed'}">Completed
+						</option>
+					</select>
+				</div>
+			</div>
+
+			<!-- Actions -->
+			<div class="form-actions">
+				<button type="button" id="submitBtn" onclick="submitForm()">Submit</button>
+				<button type="button" id="backBtn" onclick="goback()">Back</button>
+				<div th:if="${successMessage}" class="success-message" th:text="${successMessage}"></div>
+			</div>
+		</div>
+	</form>
+	
+<script>
+function goBack() {
+	window.location.href = '/dashboard';
+  }
+</script>
+	<script>
+		function goback() {
+			// Redirect to stock transfer grid page
+			window.location.href = '/inventory/stocktransfergrid';
+		}
+
+		function submitForm() {
+		    const form = document.getElementById('stocktransfer');
+		    const formData = new FormData(form);
+
+		    const isEditMode = !!$('#id').val(); // Edit mode if id exists
+
+		    // Get values from visible inputs or readonly
+		    const fields = {
+		        transfertype: $("#transfertype").is(":visible") ? $("#transfertype").val() : $("#transfertype:visible, input[name='transfertype']").val(),
+		        producttype: $("#producttype").is(":visible") ? $("#producttype").val() : $("#producttype:visible, input[name='producttype']").val(),
+		        productuid: $("#uidDropdown").is(":visible") ? $("#uidDropdown").val() : $("#productuid").val(),
+		        productname: $("#productname").val(),
+		        sourceWarehouseUid: $("#sourceWarehouseUid").val(),
+		        address: $("#address").val(),
+		        actualquantity: $("#actualquantity").val(),
+		        quantitytotransfer: $("#quantitytotransfer").val(),
+		        sourcesection: $("#sourcesection").val(),
+		        destinationWarehouseUid: $("#destinationWarehouseUid").val(),
+		        toaddress: $("#toaddress").val(),
+		        destinationsection: $("#destinationsection").val(),
+		        reasonfortransfer: $("#reasonfortransfer").val(),
+		        transfermode: $("#transfermode").val(),
+		        carriername: $("#carriername").val(),
+		        transfercost: $("#transfercost").val(),
+		        requestedby: $("#requestedby").val(),
+		        approvedby: $("#approvedby").val(),
+		        approvaldate: $("#approvaldate").val(),
+		        remarks: $("#remarks").val(),
+		        status: $("#status").val(),
+		        transferdate: $("#transferdate").val()
+		    };
+
+		    // Regex rules
+		    const regex = {
+		        uid: /^[A-Za-z0-9_-]+$/,
+		        name: /^[A-Za-z\s\.]{1,50}$/,
+		        section: /^[A-Za-z0-9\s!@#$%^&*(),.?":{}|<>_-]{1,50}$/,
+
+		        quantity: /^[1-9]\d*$/,
+		        cost: /^\d+(\.\d{1,2})?$/,
+		        reason: /^[A-Za-z0-9\s,.-]{1,100}$/,
+		        address: /^[A-Za-z0-9\s,.-]{1,100}$/,
+		        remarks: /^[A-Za-z0-9\s,.-]{0,200}$/,
+		        date: /^\d{4}-\d{2}-\d{2}$/
+		    };
+
+		    // -----------------------------
+		    // Validation
+		    // -----------------------------
+
+		    // Only validate editable fields in Edit mode
+		    if (!fields.transfertype) { alert("Select Transfer Type"); return; }
+		    if (!fields.producttype) { alert("Select Product Type"); return; }
+		    if (!fields.productuid || !regex.uid.test(fields.productuid)) { alert("Select Product UID"); return; }
+		    if (!fields.productname || !regex.name.test(fields.productname)) { alert("Select Product Name"); return; }
+		    if (!fields.sourceWarehouseUid || !regex.uid.test(fields.sourceWarehouseUid)) { alert("Select Source Warehouse UID"); return; }
+		    if (!fields.address || !regex.address.test(fields.address)) { alert("Select Source Address"); return; }
+		    if (!fields.actualquantity || !regex.quantity.test(fields.actualquantity)) { alert("Select Actual Quantity"); return; }
+		    if (!fields.quantitytotransfer || !regex.quantity.test(fields.quantitytotransfer) || parseInt(fields.quantitytotransfer) > parseInt(fields.actualquantity)) {
+		        alert("Invalid Quantity to Transfer"); return;
+		    }
+		    if (!fields.sourcesection || !regex.section.test(fields.sourcesection)) { alert("Select Source Section"); return; }
+		    if (!fields.destinationWarehouseUid || !regex.uid.test(fields.destinationWarehouseUid)) { alert("Select Destination Warehouse UID"); return; }
+		    if (!fields.toaddress || !regex.address.test(fields.toaddress)) { alert("Select Destination Address"); return; }
+		    if (!fields.destinationsection || !regex.section.test(fields.destinationsection)) { alert("Select Destination Section"); return; }
+		    if (!fields.reasonfortransfer || !regex.reason.test(fields.reasonfortransfer)) { alert("Select Reason"); return; }
+		    if (!fields.transfermode) { alert("Select Transfer Mode"); return; }
+		    if (!fields.carriername || !regex.name.test(fields.carriername)) { alert("Select Carrier Name"); return; }
+		    if (!fields.transfercost || !regex.cost.test(fields.transfercost)) { alert("Select Transfer Cost"); return; }
+		    if (!fields.requestedby) { alert("Select Requested By"); return; }
+		    if (!fields.approvedby) { alert("Select Approved By"); return; }
+			// Validate Transfer Date
+			let transferdate = document.getElementById("transferdate").value;
+			if (!transferdate) {
+			    alert("Please select a Transfer Date.");
+			    document.getElementById("transferdate").focus();
+			    return false;
+			}
+
+			// ✅ Validate Approval Date
+			let approvaldate = document.getElementById("approvaldate").value;
+			if (!approvaldate) {
+			    alert("Please select an Approval Date.");
+			    document.getElementById("approvaldate").focus();
+			    return false;
+			}
+
+			if (new Date(transferdate) < new Date(approvaldate)) {
+			    alert("Transfer Date cannot be before Approval Date.");
+			    document.getElementById("transferdate").focus();
+			    return false;
+			}
+
+		  
+
+		    if (fields.remarks && !regex.remarks.test(fields.remarks)) { alert("Select Remarks"); return; }
+		    if (!fields.status) { alert("Select Status"); return; }
+
+		    // Internal Transfer auto fix
+		    if (fields.transfertype === "Internal Transfer") {
+		        formData.set("destinationWarehouseUid", fields.sourceWarehouseUid);
+		    }
+
+		    // -----------------------------
+		    // Submit form
+		    // -----------------------------
+		    const url = isEditMode ? '/updatestocktransfer' : '/savestocktransfer';
+		    $.ajax({
+		        url: url,
+		        method: 'POST',
+		        data: formData,
+		        processData: false,
+		        contentType: false,
+		        success: function () {
+		            alert('Stock transfer saved successfully!');
+		            form.reset();
+		            window.location.href = '/inventory/stocktransfergrid';
+		        },
+		        error: function () { alert('Error saving stock transfer'); }
+		    });
+		}
+
+
+		// Prefill form
+		function prefillForm(data) {
+			$('#id').val(data.id);
+			$('#sourceWarehouseUid').val(data.sourceWarehouseUid);
+			$('#destinationWarehouseUid').val(data.destinationWarehouseUid);
+			$('#transferdate').val(data.transferdate);
+			$('#transfertype').val(data.transfertype);
+			$('#sourcesection').val(data.sourcesection);
+			$('#destinationsection').val(data.destinationsection);
+			$('#reasonfortransfer').val(data.reasonfortransfer);
+			$('#transfermode').val(data.transfermode);
+			$('#carriername').val(data.carriername);
+			$('#transfercost').val(data.transfercost);
+			$('#requestedby').val(data.requestedby);
+			$('#approvedby').val(data.approvedby);
+			$('#approvaldate').val(data.approvaldate);
+			$('#quantitytotransfer').val(data.quantitytotransfer);
+			$('#remarks').val(data.remarks);
+			$('#status').val(data.status);
+		}
+
+		$(document).ready(function () {
+
+			// When product type changes, fetch UIDs
+			$("#producttype").change(function () {
+				let type = $(this).val();
+				if (!type) return;
+
+				$.ajax({
+				    url: '/getProductUIDsByType',
+				    method: 'GET',
+				    data: { producttype: type },
+				    success: function (data) {
+				        let dropdown = $("#uidDropdown");
+				        dropdown.empty();
+				        dropdown.append('<option value="">-- Select UID --</option>');
+				        $.each(data, function (index, item) {
+				            dropdown.append('<option value="' + item.productuid + '">' + item.productuid + '</option>');
+				        });
+				    },
+				    error: function () {
+				        $("#uidDropdown").empty().append('<option value="">-- Select UID --</option>');
+				    }
+				});
+
+			});
+
+			// When Product Type changes, fetch UIDs + Names
+			$("#producttype").change(function () {
+				let type = $(this).val();
+				if (!type) {
+					$("#uidDropdown").empty().append('<option value="">-- Select UID --</option>');
+					$("#productname").val("");
+					return;
+				}
+
+
+				// AJAX call to get UIDs + Names by product type
+				$.ajax({
+					url: "/getProductDetailsByType", // backend expects producttype
+					type: "GET",
+					data: {producttype: type},   // ✅ sending producttype now
+					success: function (data) {
+						let dropdown = $("#uidDropdown");
+						dropdown.empty();
+						dropdown.append('<option value="">-- Select UID --</option>');
+						$.each(data, function (index, item) {
+							dropdown.append('<option value="' + item.productuid + '" data-name="' + item.productname + '">' + item.productuid + '</option>');
+						});
+					},
+					error: function () {
+						$("#uidDropdown").empty().append('<option value="">-- Select UID --</option>');
+					}
+				});
+			});
+
+			// When UID changes, auto-fill product name from the option’s data attribute
+			$("#uidDropdown").change(function () {
+				let name = $("#uidDropdown option:selected").data("name");
+				$("#productname").val(name || "");
+			});
+
+			// When Product UID changes, fetch warehouses
+			$("#uidDropdown").change(function () {
+				let productUid = $(this).val();
+				let productName = $("#uidDropdown option:selected").data("name");
+				$("#productname").val(productName || "");
+
+				if (!productUid) {
+					$("#sourceWarehouseUid").empty().append('<option value="">-- Select Source Warehouse --</option>');
+					$("#destinationWarehouseUid").empty().append('<option value="">-- Select Destination Warehouse --</option>');
+					return;
+				}
+
+				$.ajax({
+					url: "/getWarehousesByProduct",
+					type: "GET",
+					data: {productuid: productUid},
+					success: function (data) {
+						let sourceDropdown = $("#sourceWarehouseUid");
+						let destDropdown = $("#destinationWarehouseUid");
+
+						sourceDropdown.empty().append('<option value="">-- Select Source Warehouse --</option>');
+						destDropdown.empty().append('<option value="">-- Select Destination Warehouse --</option>');
+
+						$.each(data, function (index, item) {
+							sourceDropdown.append('<option value="' + item.warehouseuid + '">' + item.warehouseuid + '</option>');
+							destDropdown.append('<option value="' + item.warehouseuid + '">' + item.warehouseuid + '</option>');
+						});
+					}
+				});
+			});
+
+
+			
+
+			// Transfer Type logic for warehouses
+			$("#transfertype").change(function () {
+				let transferType = $(this).val();
+				if (transferType === "Internal Transfer") {
+					// make destination same as source
+					$("#destinationWarehouseUid").val($("#sourceWarehouseUid").val());
+					$("#destinationWarehouseUid").prop("disabled", true);
+				} else {
+					$("#destinationWarehouseUid").prop("disabled", false);
+				}
+			});
+
+		});
+
+
+		// Source Warehouse UID change
+		$("#sourceWarehouseUid").change(function () {
+			let warehouseUid = $(this).val();
+			let productUid = $("#uidDropdown").val(); // optional if you still need it
+			let productType = $("#producttype").val(); // get selected product type
+
+			if (!warehouseUid || !productType) {
+				$("#actualquantity, #address").val("");
+				return;
+			}
+
+			$.ajax({
+				url: '/getSourceWarehouseDetails',
+				method: 'GET',
+				data: {
+					warehouseuid: warehouseUid,
+					producttype: productType,
+					productuid: productType === "Raw_Material" ? $("#uidDropdown").val() : null
+
+				},
+				success: function (data) {
+					$("#actualquantity").val(data.actualquantity || "");
+					$("#address").val(data.sourcelocation || ""); // now matches DAO alias
+				},
+				error: function () {
+					$("#actualquantity, #address").val("");
+				}
+			});
+		});
+
+
+		// Destination Warehouse UID change
+		$("#destinationWarehouseUid").change(function () {
+			let uid = $(this).val();
+			if (!uid) {
+				$("#toaddress").val("");
+				return;
+			}
+			$.ajax({
+				url: "/getwarehousedatabyuid",
+				method: "GET",
+				data: {warehouseuid: uid},
+				success: function (data) {
+					$("#toaddress").val(data.length > 0 ? data[0].address : "");
+				},
+				error: function () {
+					$("#toaddress").val("");
+				}
+			});
+		});
+
+
+		// Load Warehouses
+		function loadWarehouses(productUid) {
+			$.ajax({
+				url: '/getWarehousesByProduct',
+				type: 'GET',
+				data: {productuid: productUid},
+				success: function (data) {
+					let dropdown = $("#sourceWarehouseUid");
+					dropdown.empty();
+					dropdown.append('<option value="">-- Select Warehouse UID --</option>');
+					$.each(data, function (index, item) {
+						dropdown.append('<option value="' + item.warehouseuid + '" data-name="' + item.warehousename + '">' + item.warehouseuid + '</option>');
+					});
+				},
+				error: function () {
+					$("#sourceWarehouseUid").empty().append('<option value="">-- Select Warehouse UID --</option>');
+				}
+			});
+		}
+		
+		// When Source Warehouse UID changes, update Destination Warehouse
+		$("#sourceWarehouseUid").change(function () {
+			let sourceUid = $(this).val();
+
+			// Get Transfer Type
+			let transferType = $("#transfertype").val();
+
+			// Destination dropdown
+			let destDropdown = $("#destinationWarehouseUid");
+
+			// Clear previous options
+			destDropdown.empty();
+			destDropdown.append('<option value="">-- Select Destination Warehouse --</option>');
+
+			if (!sourceUid) return;
+
+			$.ajax({
+				url: "/getDestinationWarehousesExcludingSource",
+				type: "GET",
+				data: {sourceuid: sourceUid},
+				success: function (data) {
+					// Populate destination excluding source
+					$.each(data, function (index, item) {
+						destDropdown.append('<option value="' + item.warehouseuid + '">' + item.warehouseuid + '</option>');
+					});
+
+					// If Internal Transfer, lock destination to source
+					if (transferType === "Internal Transfer") {
+						destDropdown.val(sourceUid).prop("disabled", true);
+					} else {
+						destDropdown.prop("disabled", false);
+					}
+				},
+				error: function () {
+					destDropdown.empty().append('<option value="">-- Select Destination Warehouse --</option>');
+				}
+			});
+		});
+
+
+		// Destination Warehouse UID change
+		$("#destinationWarehouseUid").change(function () {
+			let warehouseUid = $(this).val();
+
+			if (!warehouseUid) {
+				$("#toaddress").val("");
+				return;
+			}
+
+			$.ajax({
+				url: '/getDestinationWarehouseDetails',
+				method: 'GET',
+				data: {warehouseuid: warehouseUid},
+				success: function (data) {
+					$("#toaddress").val(data.warehousename || ""); // fill name/address
+				},
+				error: function () {
+					$("#toaddress").val("");
+				}
+			});
+		});
+
+		$(document).ready(function () {
+
+			function updateDestinationForInternal() {
+			    const transferType = $("#transfertype").val();
+			    const sourceUid = $("#sourceWarehouseUid").val();
+			    const sourceAddress = $("#address").val();
+			    const destDropdown = $("#destinationWarehouseUid");
+
+			    if (transferType === "Internal Transfer" && sourceUid) {
+			        // Clear existing options
+			        destDropdown.empty();
+
+			        // Add source UID as the only option
+			        destDropdown.append('<option value="' + sourceUid + '">' + sourceUid + '</option>');
+
+			        // Set value and disable
+			        destDropdown.val(sourceUid).prop("disabled", true);
+
+			        // Also set address
+			        $("#toaddress").val(sourceAddress);
+			    } else {
+			        // Re-enable dropdown and clear address
+			        destDropdown.prop("disabled", false);
+			        $("#toaddress").val(""); 
+			    }
+			}
+
+
+			// Source Warehouse change
+			$("#sourceWarehouseUid").change(function () {
+				const warehouseUid = $(this).val();
+				const productUid = $("#uidDropdown").val();
+				const productType = $("#producttype").val();
+
+				if (!warehouseUid) {
+					$("#actualquantity, #address").val("");
+					updateDestinationForInternal();
+					return;
+				}
+
+				// Fetch source warehouse details
+				$.ajax({
+					url: '/getSourceWarehouseDetails',
+					method: 'GET',
+					data: {
+						warehouseuid: warehouseUid,
+						producttype: productType,
+						productuid: productUid
+					},
+					success: function (data) {
+						$("#actualquantity").val(data.actualquantity || "");
+						$("#address").val(data.sourcelocation || "");
+
+						// Populate destination dropdown for Inter-Warehouse Transfer
+						if ($("#transfertype").val() === "Inter-Warehouse Transfer") {
+							$.ajax({
+								url: "/getDestinationWarehousesExcludingSource",
+								method: "GET",
+								data: {sourceuid: warehouseUid},
+								success: function (destData) {
+									const destDropdown = $("#destinationWarehouseUid");
+									destDropdown.empty().append('<option value="">-- Select Destination Warehouse --</option>');
+									$.each(destData, function (i, item) {
+										destDropdown.append('<option value="' + item.warehouseuid + '">' + item.warehouseuid + '</option>');
+									});
+								},
+								error: function () {
+									$("#destinationWarehouseUid").empty().append('<option value="">-- Select Destination Warehouse --</option>');
+								}
+							});
+						}
+
+						updateDestinationForInternal();
+					},
+					error: function () {
+						$("#actualquantity, #address").val("");
+						updateDestinationForInternal();
+					}
+				});
+			});
+
+			// Destination Warehouse change
+			$("#destinationWarehouseUid").change(function () {
+				const warehouseUid = $(this).val();
+				if (!warehouseUid) {
+					$("#toaddress").val("");
+					return;
+				}
+				$.ajax({
+					url: '/getDestinationWarehouseDetails',
+					method: 'GET',
+					data: {warehouseuid: warehouseUid},
+					success: function (data) {
+						$("#toaddress").val(data.warehousename || "");
+					},
+					error: function () {
+						$("#toaddress").val("");
+					}
+				});
+			});
+
+			// Transfer type change
+			$("#transfertype").change(function () {
+				updateDestinationForInternal();
+			});
+
+		});
+		
+		// -------------------------
+		// RESET FORM ON PRODUCT TYPE OR TRANSFER TYPE CHANGE
+		// -------------------------
+		// Reset all dependent fields except producttype or transfertype as needed
+		function resetFormFields(exclude = []) {
+		    // Conditionally reset producttype and transfertype
+		    if (!exclude.includes("producttype")) $("#producttype").val("");
+		    if (!exclude.includes("transfertype")) $("#transfertype").val("");
+
+		    // Reset dependent dropdowns
+		    $("#uidDropdown").empty().append('<option value="">-- Select UID --</option>');
+		    $("#sourceWarehouseUid").empty().append('<option value="">-- Select Source Warehouse --</option>');
+		    $("#destinationWarehouseUid").empty().append('<option value="">-- Select Destination Warehouse --</option>');
+
+		    // Reset text/number input fields
+		    $("#productname").val("");
+		    $("#actualquantity").val("");
+		    $("#address").val("");
+		    $("#toaddress").val("");
+		    $("#quantitytotransfer").val("");
+		    $("#sourcesection").val("");
+		    $("#destinationsection").val("");
+		    $("#reasonfortransfer").val("");
+		    $("#carriername").val("");
+		    $("#transfercost").val("");
+		    $("#remarks").val("");
+
+		    // Reset select dropdowns
+		    $("#transfermode").val("");
+		    $("#requestedby").val("");
+		    $("#approvedby").val("");
+		    $("#status").val("");
+
+		    // Reset date fields
+		    $("#transferdate").val("");
+		    $("#approvaldate").val("");
+		}
+		
+		
+		function allDataAvl() {
+		    let sourceWarehouseUid   = $("#sourceWarehouseUid").val();
+		    let destinationWarehouseUid = $("#destinationWarehouseUid").val();
+		    let productname          = $("#productname").val();
+		    let actualquantity       = $("#actualquantity").val();
+		    let address              = $("#address").val();
+		    let toaddress            = $("#toaddress").val();
+		    let quantitytotransfer   = $("#quantitytotransfer").val();
+		    let sourcesection        = $("#sourcesection").val();
+		    let destinationsection   = $("#destinationsection").val();
+		    let reasonfortransfer    = $("#reasonfortransfer").val();
+		    let carriername          = $("#carriername").val();
+		    let transfercost         = $("#transfercost").val();
+		    let remarks              = $("#remarks").val();
+		    let transfermode         = $("#transfermode").val();
+		    let requestedby          = $("#requestedby").val();
+		    let approvedby           = $("#approvedby").val();
+		    let status               = $("#status").val();
+		    let transferdate         = $("#transferdate").val();
+		    let approvaldate         = $("#approvaldate").val();
+
+		    if (
+		        sourceWarehouseUid &&
+		        destinationWarehouseUid &&
+		        productname &&
+		        actualquantity &&
+		        address &&
+		        toaddress &&
+		        quantitytotransfer &&
+		        sourcesection &&
+		        destinationsection &&
+		        reasonfortransfer &&
+		        carriername &&
+		        transfercost &&
+		        remarks &&
+		        transfermode &&
+		        requestedby &&
+		        approvedby &&
+		        status &&
+		        transferdate &&
+		        approvaldate
+		    ) {
+		        return true;
+		    } else {
+		        return false;
+		    }
+		}
+
+	
+
+		// On Product Type change
+		$("#producttype").change(function () {
+			if(allDataAvl()){
+				console.log("allDataAvl" + allDataAvl());
+		    resetFormFields(["producttype"]); // Keep producttype, reset everything else
+			}
+			//resetFormFields(["producttype", "transfertype"]);
+		});
+
+		// On Transfer Type change
+		$("#transfertype").change(function () {
+		    resetFormFields(["transfertype"]); // Keep transfertype, reset everything else
+			
+		});
+
+
+	</script>
+</body>
+
+</html>

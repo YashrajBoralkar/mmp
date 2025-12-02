@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Return Stock Inspection Form</title>
+  <link rel="stylesheet" href="/css/empinfo.css">
+  <link rel="stylesheet" href="/css/hrms.css"> <!-- // for side bar code  -->
+ <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+<div th:replace="~{INVENTORY.html :: sidebarFragment}"></div> <!-- // for side bar code -->
+
+   <form  id="returnstockform" enctype="multipart/form-data" class="form-container"  >
+    <!-- Personal Information Section -->
+    <input type="hidden" id="id" name="id"  th:value="${inspection.id}"/> 
+      <h2>Return Stock Inspection Form</h2>
+
+      <!-- First Row -->
+    
+      <div class="form-row">
+        
+        <div class="form-group">        
+          <label for="productuid">Product UID :</label>
+				<select  id="productuid" name="productuid"  onchange="fetchitemdetail()" th:if="${inspection == null or inspection.id == null}">
+				            <option value="">--Select Product UID--</option>
+				            <option th:each="uid : ${productuid}"
+				                    th:value="${uid}"
+				                    th:text="${uid}"></option>
+				        </select>
+						<input type="text" id="productuid" name="productuid" th:value="${inspection?.productuid}"  th:if="${inspection?.id != null}">
+        </div>
+
+        <div class="form-group">
+          <label >Product Name:</label>  
+		        <input type="text" id="productname" name="productname" readonly />
+        </div>
+
+        <div class="form-group">
+          <label for="quantityreturned">Quantity Returned:</label>
+          <input type="number" step="0" id="quantityreturned" name="quantityreturned" th:value="${inspection.quantityreturned}" min="0" >
+        </div>
+
+        
+        </div>
+
+      <!-- Second Row -->
+      <div class="form-row">
+        <div class="form-group">
+          <label for="stockcondition">Stock Condition:</label>
+          <select id="stockcondition" name="stockcondition" th:value="${inspection?.stockcondition}" >
+        <option value="" disabled selected>Select Stock Condition </option>
+              <option value="Good" th:selected="${inspection.stockcondition == 'Good'}">Good</option>
+              <option value="Damaged" th:selected="${inspection.stockcondition == 'Damaged'}">Damaged</option>
+              <option value="Defective" th:selected="${inspection.stockcondition == 'Defective'}">Defective</option>
+              <option value="Used/Worn" th:selected="${inspection.stockcondition == 'Used/Worn'}">Used/Worn</option>
+              <option value="Expired" th:selected="${inspection.stockcondition == 'Expired'}">Expired</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="inspectionnotes">Inspection Notes:</label>
+          <input type="text" id="inspectionnotes" name="inspectionnotes" th:value="${inspection.inspectionnotes}">
+	      </div>
+   
+        <div class="form-group">
+          <label for="restockingdecision">Restocking Decision:</label>
+          <select id="restockingdecision" name="restockingdecision" >
+        <option value="" disabled selected>Select Restocking Decision </option>
+              <option value="Restock as New" th:selected="${inspection.restockingdecision == 'Restock as New'}">Restock as New</option>
+              <option value="Restock as Open-Box/Refurbished" th:selected="${inspection.restockingdecision == 'Restock as Open-Box/Refurbished'}">Restock as Open-Box/Refurbished</option>
+              <option value="Send for Repair" th:selected="${inspection.restockingdecision == 'Send for Repair'}">Send for Repair</option>
+              <option value="Dispose / Write-Off" th:selected="${inspection.restockingdecision == 'Dispose / Write-Off'}">Dispose / Write-Off</option>
+              <option value="Return to Supplier" th:selected="${inspection.restockingdecision == 'Return to Supplier'}">Return to Supplier</option>
+          </select>
+        </div>
+
+        
+      </div>
+      <!-- Third Row -->
+      <div class="form-row">
+        <div class="form-group">
+          <label for="updatestockstatus">Update Stock Status:</label>
+          <input type="text" id="updatestockstatus" name="updatestockstatus" th:value="${inspection.updatestockstatus}" >  
+        </div>
+
+        <div class="form-group" >         
+          <label for="approvalworkflow">Approval Workflow:</label>
+          <input type="text" id="approvalworkflow" name="approvalworkflow" th:value="${inspection.approvalworkflow}">
+        </div>
+      
+          <div class="form-group">            
+            <label for="inspectedby">Inspected By:</label>
+            <input type="text" id="inspectedby" name="inspectedby" th:value="${inspection.inspectedby}" >
+          </div>
+</div>
+     <!-- Five Row  -->
+    <div class="form-row">
+      <div class="form-group">
+        <label for="inspectiondate">Inspection Date:</label>
+        <input type="date" id="inspectiondate" name="inspectiondate" th:value="${inspection.inspectiondate}" >
+     </div>
+
+    <div class="form-group">
+      <label for="decisionapprovedby">Decision Approved By:</label>
+      <input type="text" id="decisionapprovedby" name="decisionapprovedby" th:value="${inspection.decisionapprovedby}">
+    </div>
+
+    <div class="form-group">         
+      <label for="file">Attach Supporting Documents:</label>
+      <input type="file" id="file" name="file" accept=".pdf, .doc, .docx"> 
+    </div>
+    </div>
+  <div class="form-actions">
+      <button type="button" id="submitBtn" onclick="submitForm()">Submit</button>
+      <div th:if="${successMessage}" class="success-message" th:text="${successMessage}"></div>                     
+    </div>  
+</form>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+   <script>
+     
+     function submitForm() {
+         const form = document.getElementById('returnstockform');
+         const formData = new FormData(document.getElementById('returnstockform'));
+         const id = $('#id').val();
+       
+       let url, successmessage;
+       
+       if (!id){
+         url= '/returnstockinspection/save';
+         successMessage = 'Return Stock Inspection saved successfully!';
+       }else{
+         url='/returnstockinspection/update'
+         successMessage = 'Return Stock Inspection updated successfully!';
+
+       }
+       
+         
+         $.ajax({
+             url: url,
+             type: 'POST',
+             data: formData,
+             processData: false,
+             contentType: false,
+             success: function () {
+                 $('#message').text(successMessage);
+                 resetForm();
+                 window.location.href = '/inventory/returnmerchandiseauthorizationgrid';
+             },
+             error: function (xhr) {
+                 alert('Error saving stock transfer. Please try again.');
+                 console.error(xhr.responseText);
+             }
+         });
+     }
+
+     function resetForm() {
+         $('#returnstockform')[0].reset();
+         $('#id').val('');
+         $('#form-title').text('');
+         $('#submitBtn').text('Submit');
+     }
+
+     function prefillForm(data) {
+         $('#id').val(data.id);
+       $('#productuid').val(data.productuid);
+
+         $('#quantityreturned').val(data.quantityreturned);
+         $('#stockcondition').val(data.stockcondition);
+         $('#inspectionnotes').val(data.inspectionnotes);
+       $('#restockingdecision').val(data.restockingdecision);
+         $('#updatestockstatus').val(data.updatestockstatus);
+         $('#approvalworkflow').val(data.approvalworkflow);
+         $('#inspectedby').val(data.inspectedby);
+         $('#inspectiondate').val(data.inspectiondate);
+         $('#decisionapprovedby').val(data.decisionapprovedby);
+       if (data.id) {
+                    // If updating, replace dropdown with readonly input
+                  $('#productuid').replaceWith('<input type="text" id="productuid" name="productuid" value="' + data.productuid + '" readonly>'); 
+
+               }
+       
+         $('#form-title').text('Update Stock Transfer');
+         $('#submitBtn').text('Update');
+     }
+     
+     
+     
+
+     $(document).ready(function() {
+         // Auto-fill Item details when updating
+         var existingItemid = $('#productuid').val();
+         if (existingItemid) {
+           fetchitemdetail(existingItemid);
+         }
+     });
+     function fetchitemdetail() {
+         const productuid = $('#productuid').val();
+
+         if (!productuid) {
+             alert("Please select a Product ID.");
+             return;
+         }
+
+       
+         $.ajax({
+             url: '/getproductuids',
+             method: 'GET',
+             data: { productuid: productuid },
+             success: function (response) {
+                 console.log("Response from server:", response);
+                 if (response && response.length > 0) {
+                     const ItemDetail = response[0];
+                     $('#productname').val(ItemDetail.productname || '');
+                 } else {
+                     alert("No details found for the selected Product ID.");
+                 }
+             },
+             error: function (xhr, status, error) {
+                 console.error("Error fetching Product details:", error);
+                 alert("An error occurred while fetching the Product details.");
+             }
+         });
+     }
+     </script>
+
+</body>
+</html>

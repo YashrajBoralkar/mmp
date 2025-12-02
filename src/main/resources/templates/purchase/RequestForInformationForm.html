@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Request For Information Form</title>
+  <link rel="stylesheet" href="/css/empinfo.css">
+  <link rel="stylesheet" href="/css/hrms.css"> 
+   <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+
+  <div th:replace="~{PURCHASE.html :: sidebarFragment}"></div> <!-- // for side bar code  -->                                                                        
+    
+   <form  id="rfiform"  class="form-container">
+    <!-- Personal Information Section -->
+    <h2>Request For Information Form</h2>   
+
+    <br><br><br>
+    <input type="hidden" id="id" name="id" th:value="${rfiForm?.id}">
+     
+
+      <!-- First Row -->
+    
+      <div class="form-row" >
+        <div class="form-group">
+      <label for="rfiissuedate">Request for Information Issue Date :</label>
+        <input type="date" id="rfiissuedate" name="rfiissuedate" th:value="${rfiForm?.rfiissuedate}" required><br>
+		
+        </div>
+      
+      <div class="form-group">
+       <label for="supplieruid">Supplier ID :</label>
+		     <select id="supplieruid" name="supplieruid" onchange="fetchSupplierdetails()" required th:if="${rfiForm == null or rfiForm.id == null}">
+		         <option value="">--Select Supplier ID--</option>
+		         <option th:each="uid : ${supplieruid}"
+		                 th:value="${uid}"
+		                 th:text="${uid}"></option>
+		     </select>
+			<input type="text" id="supplieruid" name="supplieruid" th:value="${rfiForm?.supplieruid}" th:if="${rfiForm?.id != null}"><br>
+
+    </div>  
+      </div>
+
+      <!-- Second Row -->
+      <div class="form-row">
+        <div class="form-group">
+           <label for="suppliername" >Supplier Name :</label>
+		     <input type="text" id="suppliername" name="suppliername" readonly /><br>
+		
+    
+    </div>
+        <div class="form-group">           
+       <label for="industryexpertise">Industry Expertise :</label>
+		      <input type="text" id="industryexpertise" name="industryexpertise" th:value="${rfiForm?.industryexpertise}" required><br>
+			 
+      </div>
+    <div class="form-group">
+       <label for="productservicedetails">Product Service Details :</label>
+			        <input type="text" id="productservicedetails" name="productservicedetails" th:value="${rfiForm?.productservicedetails}" required><br>
+
+    </div>
+      </div>
+      <!-- Third Row -->
+             <div class="form-group">      
+              <label for="responsedeadline">Response Deadline :</label>
+	      <input type="date" id="responsedeadline" name="responsedeadline" th:value="${rfiForm?.responsedeadline}" required><br>
+
+ 
+      </div>  
+    
+    <div class="form-actions">
+       <button type="button" id="submitBtn" onclick="submitForm()">Submit</button>
+    <button type="button" class="back-button" onclick="goBack();">Back</button>	
+            <div th:if="${successMessage}" class="success-message" th:text="${successMessage}"></div>
+
+    </div>
+  
+   </form>
+   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+   	<script>
+		function goBack() {
+		window.location.href = '/purchase/requestforinformationgrid';
+	  }
+	</script>
+
+<script>
+		
+		function validateFields() {
+		        const rfiIssueDate = document.getElementById('rfiissuedate').value;
+		        const supplierUid = document.getElementById('supplieruid').value;
+		        const industryExpertise = document.getElementById('industryexpertise').value;
+		        const productServiceDetails = document.getElementById('productservicedetails').value;
+		        const responseDeadline = document.getElementById('responsedeadline').value;
+
+		        const regex = /^[A-Za-z\s]+$/; // Regex to allow only letters and spaces
+
+		        // Check if all required fields are filled
+		        if (!rfiIssueDate) {
+		            alert("Request for Information Issue Date is required.");
+		            return false;
+		        }
+				
+		        if (!supplierUid) {
+		            alert("Supplier UID is required.");
+		            return false;
+		        }
+		        if (!industryExpertise || !regex.test(industryExpertise)) {
+		            alert("Industry Expertise must contain only letters and spaces.");
+		            return false;
+		        }
+		       
+		        
+		        return true;
+		    }
+
+		    function submitForm() {
+		        if (!validateFields()) {
+		            return; // Stop submission if validation fails
+		        }
+
+			
+            const form = document.getElementById('rfiform');
+            const formData = new FormData(form);
+            const id = $('#id').val();
+            
+            let url, successMessage;
+
+            if (!id) {
+                url = '/requestforinformation/save';
+                successMessage = 'Request for Information Form saved successfully!';
+            } else {
+                url = '/requestforinformation/update';
+                successMessage = 'Request for Information Form updated successfully!';
+            }
+
+            $.ajax({
+                url: url,
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function () {
+                    alert(successMessage);
+                    resetForm();
+                    window.location.href = '/purchase/requestforinformationgrid';
+                },
+                error: function (xhr) {
+                    alert('Error saving saveRFIForm record. Please try again.');
+                    console.error(xhr.responseText);
+                }
+            });
+        }
+
+		function resetForm() {
+			          $('#rfiform')[0].reset();
+			          $('#id').val('');
+			          $('#form-title').text('RFI  Form');
+			          $('#submitBtn').text('Submit');
+			      }
+				  
+			function prefillForm(data) {
+			    $('#id').val(data.id);
+				$('#rfiissuedate').val(data.rfiissuedate); 
+			    $('#supplieruid').val(data.supplieruid);
+				$('#industryexpertise').val(data.industryexpertise);
+				$('#productservicedetails').val(data.productservicedetails);
+				$('#responsedeadline').val(data.responsedeadline);
+
+			    $('#form-title').text('Update RFI ');
+			    $('#submitBtn').text('Update');
+			}
+					
+			 $(document).ready(function() {
+				    // Auto-fill Item details when updating
+				    var existingsupplieruid = $('#supplieruid').val();
+				    if (existingsupplieruid) {
+				    	fetchSupplierdetails(existingsupplieruid);
+				    }
+				});
+		function fetchSupplierdetails() {
+						    const supplieruid = $('#supplieruid').val();
+
+						    if (!supplieruid) {
+						        return;
+						    }
+
+						    $.ajax({
+						        url: '/requestforinformation/getsupplieruidinfo',
+						        method: 'GET',
+						        data: { supplieruid: supplieruid },
+						        success: function (response) {
+						            console.log("Response from server:", response);
+						            if (response && response.length > 0) {
+						                const ItemDetail = response[0];
+						                $('#suppliername').val(ItemDetail.suppliername || '');
+						            } else {
+						                alert("No details found for the selected Supplier UID.");
+						            }
+						        },
+						        error: function (xhr, status, error) {
+						            console.error("Error fetching Item details:", error);
+						            alert("An error occurred while fetching the Item details.");
+						        }
+						    });
+						}
+				
+			
+    </script>
+ 
+   
+</body>
+</html>

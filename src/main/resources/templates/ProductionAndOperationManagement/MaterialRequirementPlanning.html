@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MRP Form</title>
+<link rel="stylesheet" href="/css/empinfo.css">
+<link rel="stylesheet" href="/css/hrms.css">
+<!-- // for side bar code  -->
+<link
+	href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap"
+	rel="stylesheet">
+</head>
+
+<body>
+
+	<div
+		th:replace="~{PRODUCTIONANDOPERATION.html :: sidebarFragment}"></div>
+	<!-- // for side bar code  -->
+
+	<form id="mrpform" class="form-container">
+		<!-- Personal Information Section -->
+		<h2>Material Requirement Planning (MRP) Form</h2>
+		<br>
+		<input type="hidden" id="id" name="id" th:value="${mrp?.id}">
+			<!-- First Row -->
+
+			<div class="form-row">
+				<div class="form-group">
+					<label>Production Planning ID :</label>
+					<select id="productionplanninguid" name="productionplanninguid" onchange="fetchProductionPlanningDetails(this.value)" th:if="${mrp == null or mrp.id == null}" required>
+						<option value="">Select Production ID</option>
+						<option th:each="uid : ${productionplanninguid}" th:value="${uid}" th:text="${uid}"></option>
+					</select> 
+					<input type="text" id="productionplanninguid" name="productionplanninguid" onchange="fetchProductionPlanningDetails(this.value)" th:value="${mrp?.productionplanninguid}" readonly th:if="${mrp?.id != null}">
+				</div>
+
+				<div class="form-group">
+					<label>Product ID :</label> 
+					<input type="text" id="productuid"	name="productuid" readonly>
+				</div>
+				<div class="form-group">
+					<label for="productname">Product Name :</label> 
+					<input type="text" id="productname" name="productname" readonly>
+				</div>
+			</div>
+			<!-- Second Row -->
+			<div class="form-row">
+				<div class="form-group">
+					<label for="requiredquantity">Required Quantity :</label> 
+					<input type="number" id="requiredquantity" name="requiredquantity" min="0" th:value="${mrp?.requiredquantity}" required>
+				</div>
+				<div class="form-group">
+					<label for="availablestock">Available Stock :</label> 
+					<input type="number" id="availablestock" name="availablestock" min="0" th:value="${mrp?.availablestock}" required>
+				</div>
+				<div class="form-group">
+					<label for="recorderlevel">Reorder Level :</label> 
+					<input type="number" id="recorderlevel" name="recorderlevel" min="0"th:value="${mrp?.recorderlevel}" required>
+				</div>
+			</div>
+
+			<div class="form-row">
+				<div class="form-group">
+					<label for="suppliername">Supplier Name :</label> 
+					<input type="text" id="suppliername" name="suppliername"th:value="${mrp?.suppliername}">
+				</div>
+			</div>
+			
+			<div class="form-row">
+				<div class="form-group">
+				<label for="supplierleadtime">Supplier Lead Time :</label> 
+				<br>
+				<input type="time" id="supplierleadtime" name="supplierleadtime" th:value="${mrp?.supplierleadtime}" required>
+				</div>
+				<div class="form-group">
+					<label for="supplierleaddate">Supplier Lead Date :</label> 
+					<br>
+					<input type="date" id="supplierleaddate" name="supplierleaddate" th:value="${mrp?.supplierleaddate}" required>
+				</div>
+				<div class="form-group">
+					<label for="procrequeststatus">Procurement Request Status :</label>
+					<select id="procrequeststatus" name="procrequeststatus" th:value="${mrp?.id}" required>
+						<option value="">-- Select Status --</option>
+						<option value="pending" th:selected="${mrp?.procrequeststatus == 'pending'}">Pending</option>
+						<option value="approved" th:selected="${mrp?.procrequeststatus == 'approved'}">Approved</option>
+						<option value="rejected" th:selected="${mrp?.procrequeststatus == 'rejected'}">Rejected</option>
+					</select>
+				</div>
+			</div>
+
+			<div class="form-actions">
+				<button type="button" id="submitBtn" onclick="submitForm()">Submit</button>
+				<button type="button" class="back-button" onclick="goback()">Back</button>
+				<div th:if="${successMessage}" class="success-message" th:text="${successMessage}"></div>
+			</div>
+	</form>
+
+	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+	<script>
+		function goback() {
+			window.location.href = '/productionandoperationmanagement/materialrequirementplanninggrid';
+		}
+		
+	</script>
+
+	<script>
+		$(document).ready(function() {
+			function validateTextInput(input) {
+				// Clean the input first
+				input.value = input.value.replace(/[^A-Za-z\s]/g, "");
+
+				// Then validate
+				const regex = /^[A-Za-z\s]+$/;
+				if (!regex.test(input.value)) {
+					input.setCustomValidity("Please enter only letters.");
+					input.reportValidity(); // Show native browser validation popup
+				} else {
+					input.setCustomValidity(""); // Clear the custom error
+				}
+			}
+
+			$('#suppliername').on('input', function() {
+				validateTextInput(this);
+			});
+		});
+
+		$(document).ready(function() {
+			// Auto-fill Item details when updating
+			var existingproductuid = $('#productionplanninguid').val();
+			if (existingproductuid) {
+				fetchProductionPlanningDetails(existingproductuid);
+			}
+		});
+		function fetchProductionPlanningDetails(productionplanninguid) {
+			if (!productionplanninguid)
+				return;
+
+			$.ajax({
+				url : '/getproductionplanningdetailsbyid',
+				method : 'GET',
+				data : {
+					productionplanninguid : productionplanninguid
+				},
+				success : function(response) {
+					$('#productuid').val(response.productuid);
+					$('#productname').val(response.productname);
+				},
+				error : function() {
+					alert('Error fetching Product Details. Please try again.');
+				}
+			});
+		}
+
+		function submitForm() {
+			let form = document.getElementById('mrpform');
+
+			if (!form.checkValidity()) {
+				alert('Please fill in all required fields.');
+				return;
+			}
+
+			const formData = new FormData(document.getElementById('mrpform'));
+			const id = $('#id').val();
+
+			let url, successMessage;
+
+			if (!id) {
+				url = '/savematerialrequirementplanning';
+				successMessage = 'Material Requirement Planning Form data saved successfully!';
+			} else {
+				url = '/updatematerialrequirementplanning';
+				successMessage = 'Material Requirement Planning Form data updated successfully!';
+			}
+
+			$
+					.ajax({
+						url : url,
+						type : 'POST',
+						data : formData,
+						processData : false,
+						contentType : false,
+						success : function(response) {
+							$('#message').text(successMessage); // Display success message
+							resetForm();
+							window.location.href = '/productionandoperationmanagement/materialrequirementplanninggrid';
+						},
+						error : function() {
+							alert('Error saving Material Requirement Planning Form . Please fill out the data.');
+						}
+					});
+		}
+		// Reset the form
+		function resetForm() {
+			$('#mrpform')[0].reset();
+			$('#id').val('');
+			$('#message').text(''); // Clear the message
+			$('#submitBtn').text('Submit');
+		}
+	</script>
+
+
+
+
+
+
+</body>
+</html>

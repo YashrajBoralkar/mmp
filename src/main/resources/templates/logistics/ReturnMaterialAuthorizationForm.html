@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Return Material Authorization Form</title>
+  <link rel="stylesheet" href="/css/empinfo.css">
+  <link rel="stylesheet" href="/css/hrms.css"> <!-- // for side bar code  -->
+ <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body> 
+<div th:replace="~{LOGISTICS.html :: sidebarFragment}"></div> <!-- // for side bar code  -->
+
+   <form id="rmaForm" class="form-container"   >
+    <!-- Personal Information Section -->
+    <input type="hidden" id="id" name="id" th:value="${updaterma?.id}">
+
+      <h2>Return Material Authorization Form</h2>
+
+      <!-- First Row -->    
+      <div class="form-row">        
+        <div class="form-group">        
+          <label for="returndate">Return Date:</label>
+		<input type="date" id="returndate" name="returndate"  th:value = "${updaterma?.returndate}" >
+        </div>
+
+        <div class="form-group">
+          <label for="requestername">Requester Name:</label>
+		  <input type="text" id="requestername" name="requestername"  th:value = "${updaterma?.requestername}" >
+        </div>
+
+        <div class="form-group">
+          <label for="returnreason">Return Reason:</label>
+          <input type="text" id="returnreason" name="returnreason" th:value = "${updaterma?.returnreason}" > 
+        </div>        
+
+      </div>
+
+      <!-- Second Row -->
+      <div class="form-row">
+        <div class="form-group">
+          <label>Batch UID:</label>
+          <select id="batchuid" name="batchuid" onchange="fetchBatchDetails(this.value)"  required th:if="${updaterma == null or updaterma.id == null}">
+              <option value="">Select Batch UID</option>
+              <option th:each="uid : ${batchuid}" th:value="${uid}" th:text="${uid}"></option>
+          </select>
+          <input type="text" id="batchuid" name="batchuid" th:value="${updaterma?.batchuid}" onchange="fetchBatchDetails(this.value)" readonly th:if="${updaterma != null and updaterma.id != null}">
+      </div>
+
+        <div class="form-group">
+          <label>Product Id :</label>
+		<input type="text" id="productuid" name="productuid" readonly>
+	      </div>
+   
+        <div class="form-group">
+          <label >Product Name :</label>  
+          <input type="text" id="productname" name="productname" readonly />
+        </div>
+
+       
+      </div>
+      <!-- Third Row -->
+      <div class="form-row">
+        <div class="form-group" >         
+          <label>Unit of Measure:</label>
+		<input type="text" id="unitofmeasure" name="unitofmeasure" readonly>
+        </div>
+        
+        <div class="form-group">
+          <label>Quantity Returned:</label>
+          <input type="number" id="quantityreturned" name="quantityreturned" th:value = "${updaterma?.quantityreturned}"   > 
+        </div>
+      
+          <div class="form-group">            
+            <label for="returnapprovedby">Return Approved By:</label>
+            <select id="returnapprovedby" name="returnapprovedby" th:value = "${updaterma?.returnapprovedby}" required>
+                 <option value="">Select </option>
+                <option value="Approved" th:selected="${updaterma?.returnapprovedby == 'Approved'}">Approved</option>
+                <option value="Rejected" th:selected="${updaterma?.returnapprovedby == 'Rejected'}">Rejected</option>
+                <option value="Pending" th:selected="${updaterma?.returnapprovedby == 'Pending'}">Pending</option>
+            </select>
+    
+          </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="suppliername">Supplier Name:</label>
+          <input type="text" id="suppliername" name="suppliername" th:value = "${updaterma?.suppliername}" >
+         </div>
+
+        <div class="form-group">
+          <label for="returnstatus">Return Status:</label>
+           <select id="returnstatus" name="returnstatus" th:value = "${updaterma?.returnstatus}" required>
+                 <option value="">Select </option>
+                <option value="Approved" th:selected="${updaterma?.returnstatus == 'Approved'}">Approved</option>
+                <option value="Rejected" th:selected="${updaterma?.returnstatus == 'Rejected'}">Rejected</option>
+                <option value="Under Review" th:selected="${updaterma?.returnstatus == 'Under Review'}">Under Review</option>
+            </select>      
+            </div>
+
+        <div class="form-group">
+          <label for="remarks">Remarks:</label>
+		<input type="text" id="remarks" name="remarks" th:value = "${updaterma?.remarks}" pattern="[A-Za-z ]+" title="Only letters and spaces are allowed" required >         
+        </div>
+      </div>
+
+    <div class="form-actions">
+      	<button type="button" id="submitBtn" onclick="SubmitForm()"> Submit </button>
+      <div th:if="${successMessage}" class="success-message" th:text="${successMessage}"></div>                    
+      <button type="button" class="back-button" onclick="goBack();">Back</button> 
+   
+    </div>
+   </form>
+
+   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+   <script>
+   function goBack() {
+		window.location.href = '/logistics/returnmaterialauthorizationgrid';
+	  }
+
+		$(document).ready(function() {
+				    // Auto-fill Item details when updating
+				    var existingBatchid = $('#batchuid').val();
+				    if (existingBatchid) {
+				    	fetchBatchDetails(existingBatchid);
+				    }
+				});
+		
+											 function fetchBatchDetails(batchuid) {
+											        if (!batchuid) return;
+
+											        $.ajax({
+											            url: '/returnmaterialauthorization/batchdetails',
+											            method: 'GET',
+											            data: { batchuid: batchuid },
+											            success: function(response) {
+															if(response && response.length > 0) {
+																let data = response[0];
+																$('#productuid').val(data.productuid || '');
+																$('#productname').val(data.productname || '');
+																$('#quantity').val(data.quantity || '');
+																$('#unitofmeasure').val(data.unitofmeasure || '');
+
+																
+														} else {
+															alert('No data found for the selected Batch.')
+														}														
+											        },
+											            error: function() {
+											                alert('Error fetching Batch details. Please try again.');
+											            }
+											        });
+													
+													}
+													
+													//update and delete 
+													function SubmitForm() {
+													        const formData = new FormData(document.getElementById('rmaForm'));
+													        const id = $('#id').val();
+
+													        let url, successMessage;
+
+													        if (!id) {
+													            url = '/returnmaterialauthorization/save';
+													            successMessage = 'Return Material Authorization saved successfully!';
+													        } else {
+													            url = '/returnmaterialauthorization/update';
+													            successMessage = 'Return Material Authorization updated successfully!';
+													        }
+
+													        $.ajax({
+													            url: url,
+													            type: 'POST',
+													            data: formData,
+													            processData: false,
+													            contentType: false,
+													            success: function(response) {
+																	
+													                $('#message').text(successMessage);
+													                resetForm();
+																	
+													                window.location.href = '/logistics/returnmaterialauthorizationgrid';
+													            },
+													            error: function() {
+													                alert('Error saving return material authorization. Please fill out all required fields.');
+													            }
+													        });
+													    }
+
+													    function resetForm() {
+													        $('#rmaForm')[0].reset();
+													        $('#id').val('');
+													        $('#message').text('');
+													        $('#submitBtn').text('Submit');
+													    }
+// 														function prefillForm(data) {
+// 																				        $('#id').val(data.id);
+// 																				        $('#batchuid').val(data.batchuid);
+																				       
+// 																						$('#form-title').text('Update Stock Dispatch Form');
+// 																						$('#submitBtn').text('Update');
+// 																				}
+																				
+																					   
+																					 
+																					           																					   			// Validation for text fields (No special characters or numbers allowed)
+																					   								    function validateTextField(selector) {
+																					   								        $(selector).on('input', function () {
+																					   								            let value = $(this).val();
+																					   								            if (!/^[a-zA-Z\s]*$/.test(value)) {
+																					   								                alert('Only alphabets and spaces are allowed.');
+																					   								                $(this).val(value.replace(/[^a-zA-Z\s]/g, '')); // Remove special characters and numbers
+																					   								            }
+																					   								        });
+																					   								    }
+
+																					   								    validateTextField('#requestername');
+																					   								    validateTextField('#returnstatus');
+																					   									validateTextField('#returnapprovedby');
+																														validateTextField('#returnreason');
+																														validateTextField('#remarks');
+																														validateTextField('#suppliername');		
+	</script>
+</body>
+</html>

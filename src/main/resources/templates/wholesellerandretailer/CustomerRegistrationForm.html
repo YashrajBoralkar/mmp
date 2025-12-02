@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Customer Registration Form</title>
+	<link rel="stylesheet" href="/css/empinfo.css">
+	<link rel="stylesheet" href="/css/hrms.css">
+	<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+	<div th:replace="~{WHOLESELLERANDRETAILER.html :: sidebarFragment}"></div> <!-- // for side bar code  -->
+
+	<form id="businessform" enctype="multipart/form-data" class="form-container">
+		<!-- Personal Information Section -->
+		<input type="hidden" id="id" name="id" th:value="${wr?.id}" />
+		<h2>Customer Registration Form</h2>
+		<br>
+
+		<!-- First Row -->
+
+		<div class="form-row">
+			<div class="form-group">
+				<label for="sellertype">Customer Type :</label>
+				<select name="customertype" id="sellertype" required>
+					<option value="">-- Select Customer --</option>
+					<option value="Wholesaler" th:selected="${wr?.customertype == 'Wholesaler'}">Wholesaler</option>
+					<option value="Retailer" th:selected="${wr?.customertype == 'Retailer'}">Retailer</option>
+					<option value="Other" th:selected="${wr?.customertype == 'Other'}">Other</option>
+
+				</select>
+			</div>
+
+			<div class="form-group">
+				<label for="companyname">Company Name :</label>
+				<input type="text" id="companyname" name="companyname" th:value="${wr?.companyname}"
+					placeholder="Enter company name" required>
+			</div>
+			<div class="form-group">
+				<label for="contactperson">Contact Person :</label>
+				<input type="text" id="contactperson" name="contactperson" th:value="${wr?.contactperson}"
+					placeholder="Enter contact person name" required>
+				<input type="text" id="productuid" name="productuid" th:value="${order?.productuid}" readonly
+					th:if="${order?.id != null}">
+			</div>
+		</div>
+		<br>
+		<!-- Second Row -->
+		<!-- Second Row: Description, Priority, Status -->
+		<div class="form-row">
+			<div class="form-group">
+				<label for="phonenumber">Phone Number :</label>
+				<input type="tel" id="phonenumber" name="phonenumber" th:value="${wr?.phonenumber}"
+					pattern="^[0-9]{10}$" placeholder="Enter 10-digit phone number" required>
+			</div>
+			<div class="form-group">
+				<label for="email">Email Address :</label>
+				<input type="email" id="email" name="email" th:value="${wr?.email}" placeholder="example@domain.com"
+					required>
+			</div>
+			<div class="form-group">
+				<label for="address">Business Address :</label>
+				<input type="text" id="address" name="address" rows="3" th:value="${wr?.address}"
+					placeholder="Enter business address" required>
+
+			</div>
+		</div>
+
+		<br>
+		<!-- Second Row -->
+		<div class="form-row">
+			<div class="form-group">
+				<label for="gstnumber">GST Number :</label>
+				<input type="text" id="gstnumber" name="gstnumber" th:value="${wr?.gstnumber}"
+					placeholder="e.g. 27ABCDE1234F1Z5" required>
+			</div>
+
+			<div class="form-group">
+				<label for="pannumber">PAN Number :</label>
+				<input type="text" id="pannumber" name="pannumber" th:value="${wr?.pannumber}"
+					pattern="^[A-Z]{5}[0-9]{4}[A-Z]{1}$" placeholder="e.g. ABCDE1234F" required>
+			</div>
+			<div class="form-group">
+				<label for="bankaccountnum">Bank Account Number :</label>
+				<input type="text" id="bankaccountnum" name="bankaccountnum" th:value="${wr?.bankaccountnum}"
+					placeholder="Enter bank account number" required>
+			</div>
+		</div>
+		<div class="form-row">
+
+			<div class="form-group">
+				<label for="ifsccode">IFSC Code :</label>
+				<input type="text" id="ifsccode" name="ifsccode" th:value="${wr?.ifsccode}"
+					placeholder="Enter IFSC code" required>
+			</div>
+			<div class="form-group">
+				<label for="accholder">Account Holder Name :</label>
+				<input type="text" id="accholder" name="accholder" th:value="${wr?.accholder}"
+					placeholder="Enter account holder name" required>
+			</div>
+
+			<div class="form-group">
+				<label for="file">Document :</label>
+				<!-- New file upload -->
+				<input type="file" id="file" name="file" onchange="validateFileSize()" accept=".pdf,.doc,.docx">
+				<div class="error" id="file-error" style="color: red;"></div>
+
+				<!-- Existing file view link -->
+				<div th:if="${wr?.id != null and wr?.customerdoc != null}">
+					<p>
+						Existing Document:
+						<a th:href="@{/customerregistration/file/{id}(id=${wr.id})}" target="_blank">
+							View Document
+						</a>
+					</p>
+				</div>
+
+			</div>
+
+		</div>
+
+
+
+		<!-- Five Row  -->
+		<div class="form-actions">
+			<div class="button-group">
+				<button type="button" id="submitBtn" onclick="submitForm()">Submit</button>
+				<button type="button" class="back-button" onclick="goback();">Back</button>
+			</div>
+			<div th:if="${successMessage}" class="success-message" th:text="${successMessage}"></div>
+		</div>
+
+	</form>
+	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+		function goback() {
+			window.location.href = '/customermanagement/sellerregistrationgrid';
+		}
+		function goBack() {
+			window.location.href = '/dashboard';
+		}
+	</script>
+	<script>
+
+		function isFormEmpty() {
+			const fields = [
+				'#sellertype',
+				'#companyname',
+				'#contactperson',
+				'#phonenumber',
+				'#email',
+				'#address',
+				'#gstnumber',
+				'#pannumber',
+				'#bankaccountnum',
+				'#ifsccode',
+				'#accholder',
+				'#file'
+			];
+
+			for (let i = 0; i < fields.length; i++) {
+				const field = $(fields[i]);
+				if (field.attr('type') === 'file') {
+					if (field[0].files.length > 0) return false; // file uploaded
+				} else if (field.val().trim() !== '') {
+					return false; // ekahi value filled aahe
+				}
+			}
+			return true; // saglya empty aahet
+		}
+
+
+		function validateForm() {
+		    // Customer Type
+		    if (!$('#sellertype').val().trim()) {
+		        alert("⚠️ Please select Customer Type.");
+		        return false;
+		    }
+
+		    // Company Name (सगळे allowed)
+		    const companyName = $('#companyname').val().trim();
+		    if (!companyName) {
+		        alert("⚠️ Company Name is required.");
+		        return false;
+		    }
+		    // ✅ Company name साठी कोणताही regex नाही, सगळे characters allowed
+
+		    // Contact Person (पूर्वीप्रमाणे validation)
+		    const contactPerson = $('#contactperson').val().trim();
+		    const nameRegex = /^[A-Za-z\s]+$/; // फक्त letters आणि spaces allowed
+		    if (!contactPerson) {
+		        alert("⚠️ Contact Person is required.");
+		        return false;
+		    } else if (!nameRegex.test(contactPerson)) {
+		        alert("⚠️ Contact Person can contain only letters and spaces.");
+		        return false;
+		    }
+
+		    // Phone Number
+		    const phone = $('#phonenumber').val().trim();
+		    const phoneRegex = /^[0-9]{10}$/;
+		    if (!phone) {
+		        alert("⚠️ Phone Number is required.");
+		        return false;
+		    } else if (!phoneRegex.test(phone)) {
+		        alert("⚠️ Phone Number must be exactly 10 digits.");
+		        return false;
+		    }
+
+		    // Email
+			// Email Validation
+			const email = $('#email').val().trim();
+
+			// Basic email regex (example@domain.com)
+			const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+
+			if (!email) {
+			    alert("⚠️ Email is required.");
+			    return false;
+			} else if (!emailRegex.test(email)) {
+			    alert("⚠️ Please enter a valid Email address (e.g. example@domain.com).");
+			    return false;
+			}
+
+
+		    // Address
+		    if (!$('#address').val().trim()) {
+		        alert("⚠️ Business Address is required.");
+		        return false;
+		    }
+			
+			
+		    // GST Number
+		    const gst = $('#gstnumber').val().trim();
+		    const gstRegex = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/;
+		    if (!gst) {
+		        alert("⚠️ GST Number is required.");
+		        return false;
+		    } else if (!gstRegex.test(gst)) {
+		        alert("⚠️ Invalid GST Number format.");
+		        return false;
+		    }
+
+		    // PAN Number
+		    const pan = $('#pannumber').val().trim();
+		    const panRegex = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
+		    if (!pan) {
+		        alert("⚠️ PAN Number is required.");
+		        return false;
+		    } else if (!panRegex.test(pan)) {
+		        alert("⚠️ Invalid PAN Number format.");
+		        return false;
+		    }
+
+		    // Bank Account Number
+		    const account = $('#bankaccountnum').val().trim();
+		    const accRegex = /^[0-9]{9,18}$/;
+		    if (!account) {
+		        alert("⚠️ Bank Account Number is required.");
+		        return false;
+		    } else if (!accRegex.test(account)) {
+		        alert("⚠️ Bank Account Number must be 9–18 digits.");
+		        return false;
+		    }
+
+		    // IFSC Code
+		    const ifsc = $('#ifsccode').val().trim();
+		    const ifscRegex = /^[A-Z]{4}0[A-Z0-9]{6}$/;
+		    if (!ifsc) {
+		        alert("⚠️ IFSC Code is required.");
+		        return false;
+		    } else if (!ifscRegex.test(ifsc)) {
+		        alert("⚠️ Invalid IFSC Code format.");
+		        return false;
+		    }
+
+		    // Account Holder Name
+		    const accHolder = $('#accholder').val().trim();
+		    const accHolderRegex = /^[^0-9]*$/;
+		    if (!accHolder) {
+		        alert("⚠️ Account Holder Name is required.");
+		        return false;
+		    } else if (!accHolderRegex.test(accHolder)) {
+		        alert("⚠️ Account Holder Name cannot contain numbers.");
+		        return false;
+		    }
+
+		    return true;
+		}
+
+	</script>
+
+
+
+	<script>
+		function submitForm() {
+
+			if (isFormEmpty()) {
+				alert("⚠️ Please fill out the form before submitting.");
+				return; // ❌ Stop submit
+			}
+
+			if (!validateForm()) {
+				return; // ❌ Stop if validation fails
+			}
+
+			const formData = new FormData(document.getElementById("businessform"));
+			const id = $('#id').val();
+			let url, successMessage;
+
+			if (!id) {
+				url = '/customerregistration/save';
+				successMessage = 'Supplier Audit saved successfully!';
+			} else {
+				url = '/customerregistration/update';
+				successMessage = 'Supplier Audit updated successfully!';
+			}
+			$.ajax({
+				url: url,
+				type: 'POST',
+				data: formData,
+				processData: false,
+				contentType: false,
+				success: function (response) {
+					alert(response.status);
+					resetForm();
+					window.location.href = '/customermanagement/sellerregistrationgrid';
+				},
+				error: function () {
+					alert('Error saving form.');
+				}
+			});
+		}
+
+		function validateFileSize() {
+			const fileInput = document.getElementById('file');
+			const errorDiv = document.getElementById('file-error');
+			errorDiv.textContent = ''; // Clear old error
+
+			if (fileInput.files.length > 0) {
+				const file = fileInput.files[0];
+				const maxSize = 20 * 1024 * 1024; // 20MB in bytes
+
+				if (file.size > maxSize) {
+					errorDiv.textContent = 'File must be less than 20MB.';
+					fileInput.value = ''; // Clear the file input
+				}
+			}
+		}
+
+		function resetForm() {
+			$('#businessform')[0].reset();
+		}
+	</script>
+	
+	<script>
+		$(document).ready(function () {
+			const isUpdate = $('#id').val(); // Value will exist only during update
+
+			if (isUpdate) {
+				// Disable dropdown (but remember: disabled fields are NOT submitted!)
+				$('#sellertype').prop('disabled', true);
+
+				// Make inputs readonly (they'll still be submitted)
+				/*$('#companyname').prop('disabled', true);
+				$('#contactperson').prop('disabled', true);
+				$('#bankaccountnum').prop('disabled', true);
+				$('#accholder').prop('disabled', true);
+				$('#ifsccode').prop('disabled', true);*/
+
+				// Hidden input to preserve sellertype value (since disabled fields are not submitted)
+				if (!$('input[name="sellertype"]').length) {
+					const hiddenSellertype = $('<input>').attr({
+						type: 'hidden',
+						name: 'sellertype',
+						value: $('#sellertype').val()
+					});
+					$('#businessform').append(hiddenSellertype);
+				}
+			}
+		});
+	</script>
+
+</body>
+
+</html>

@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LOT Information Form</title>
+  <link rel="stylesheet" href="/css/empinfo.css">
+  <link rel="stylesheet" href="/css/hrms.css"> <!-- // for side bar code  -->
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+<div th:replace="~{INVENTORY.html :: sidebarFragment}"></div> <!-- // for side bar code  -->
+
+   <form id="LotForm" action="/lottracking" method="post" class="form-container"  style="padding: 76px;">
+    <!-- Personal Information Section -->
+      <h2>LOT Tracking Form</h2>
+    
+
+      <!-- First Row -->
+    
+      <div class="form-row">
+        
+        <div class="form-group">
+          <label for="lotuid">Select LOT ID:</label>
+          <select id="lotuid" name="lotuid" onchange="fetchLotDetails()" required>
+              <option value="">--Select LOT ID--</option>
+              <option th:each="lotId : ${Lotids}"
+                      th:value="${lotId}"
+                      th:text="${lotId}"></option>
+          </select>
+      </div>
+
+      <div class="form-group">
+        <label for="productid">Product ID:</label>
+        <input type="text" id="productuid" name="productid" readonly>
+    </div>
+
+       
+
+    <div class="form-group">
+      <label for="productcategory">Product CATEGORY:</label>
+      <input type="text" id="productcategory" name="productcategory">
+  </div>
+        </div>
+
+      <!-- Second Row -->
+      <div class="form-row">
+        <div class="form-group">
+          <label for="productquantity">Product Quantity:</label>
+          <input type="text" id="productquantity" name="productquantity">
+      </div>
+
+      <div class="form-group">
+        <label for="productname">Product Name:</label>
+        <input type="text" id="productname" name="productname" >
+    </div>
+
+    <div class="form-group">
+      <label for="mfgdate">Manufacturing Date:</label>
+      <input type="date" id="mfgdate" name="mfgdate" >
+  </div>
+
+      </div>
+      <!-- Third Row -->
+      <div class="form-row">
+        
+    <div class="form-group">
+      <label for="expirydate">Expiry Date:</label>
+      <input type="date" id="expirydate" name="expirydate" >
+   </div>
+   <div class="form-group">
+    <label for="warrantyperiod">Warranty Period:</label>
+    <input type="text" id="warrantyperiod" name="warrantyperiod" >
+   </div>
+  <div class="form-group">
+    <label for="warehouseuid">Warehouse ID :</label>
+    <input type="text" id="warehouseuid" name="warehouseuid" readonly>
+  </div>
+      
+          
+        
+      </div>
+
+      <!-- four Row -->
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="warehousename">Warehouse Location:</label>
+          <input type="text" id="warehousename" name="warehousename" readonly >
+      </div>
+      <div class="form-group">
+        <label for="shelfnumber">Shelf Number:</label>
+        <input type="text" id="shelfnumber" name="shelfnumber"  >
+    </div> 
+      
+        
+    </div>
+   <div class="form-actions">
+      <button type="submit" onchange="updateLottrackdetails()">Update</button>  
+      <button type="button" onclick="goToDashboard()">Back to Dashboard</button>               
+    </div>
+  </form>
+
+
+
+   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    function goToDashboard() {
+        window.location.href = '/inventory/batchlotgrid'; // Update with your actual dashboard URL
+    }
+</script>
+   <script>
+    function fetchLotDetails() {
+        const lotuid = $('#lotuid').val();
+    
+        if (!lotuid) {
+            alert("Please select a Lot ID.");
+            return;
+        }
+    
+            $.ajax({
+                url: '/getlottrackingdetails',
+                method: 'GET',
+                data: { lotuid: lotuid },
+                success: function (response) {
+                    console.log("Response from server:", response);
+                    if (response && response.length > 0) {
+                        const LotDetail = response[0];
+                        $('#productuid').val(LotDetail.productuid || '');
+                        $('#productcategory').val(LotDetail.productcategory || '');
+                        $('#productquantity').val(LotDetail.productquantity || '');
+                        $('#productname').val(LotDetail.productname || '');
+                        $('#mfgdate').val(LotDetail.manufacturingdate || '');
+                        $('#expirydate').val(LotDetail.expirydate || '');
+                        $('#warrantyperiod').val(LotDetail.warrantyperiod || '');
+                        $('#warehouseuid').val(LotDetail.warehouseuid || '');
+                        $('#warehousename').val(LotDetail.warehousename || '');
+                        $('#shelfnumber').val(LotDetail.shelfnumber || '');
+                    } else {
+                        alert("No details found for the selected LOT ID.");
+                    }
+                },
+                error: function (xhr, status, error) {
+                    console.error("Error fetching LOT details:", error);
+                    alert("An error occurred while fetching the LOT details.");
+                }
+            });
+        }
+        
+        
+    function updateLottrackdetails()
+    {
+      $.ajax({
+          url: '/lottracking',
+          method: 'POST',
+          data: $('#LotForm').serialize(),
+          success: function (response) {
+              alert(response.message || `Updated ${response.rowsUpdated} records successfully.`);
+              window.location.href = '/';
+          },
+          error: function (xhr, status, error) {
+              console.error("Error:", error);
+              alert("Failed to update batch details.");
+          }
+      });
+      
+    }  
+        
+    </script>
+
+
+
+
+
+
+  
+
+
+</body>
+</html>

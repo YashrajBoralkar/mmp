@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+	<meta charset="UTF-8">
+	<title>Calibration Record Form</title>
+
+	<link rel="stylesheet" href="/css/empinfo.css">
+  <link rel="stylesheet" href="/css/hrms.css"> <!-- // for side bar code  -->
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+  
+</head>
+
+<body>
+	  <div th:replace="~{MAINTENANCEMANAGEMENTDEPERTMENT.html :: sidebarFragment}"></div> 
+	<div class="form-container">
+  <div class="form-section active" id="section1" style="margin-left: 20px; margin-right: 20px;">
+    <h2>Calibration Record Form</h2>
+
+    <form id="calibform">
+      <input type="hidden" id="id" name="id" th:value="${records?.id}">
+
+      <!-- Row 1: Equipment UID & Equipment Name -->
+      <div class="form-row">
+        <div class="form-group">
+          <label>Equipment Master UID</label>
+          <select id="equipmentmasteruid" name="equipmentmasteruid" 
+                  onchange="fetchEquipmentDetails(this.value)" 
+                  th:if="${records == null or records.id == null}" required>
+            <option value="">Select Equipment UID</option>
+            <option th:each="uid : ${equipmentmasteruid}" th:value="${uid}" th:text="${uid}"></option>
+          </select>
+
+          <input type="text" id="equipmentmasteruid" name="equipmentmasteruid" 
+                 th:value="${records?.equipmentmasteruid}" 
+                 onchange="fetchEquipmentDetails(this.value)" 
+                 readonly th:if="${records?.id != null}">
+        </div>
+
+        <div class="form-group">
+          <label>Equipment Name</label>
+          <input type="text" id="equipmentname" name="equipmentname" readonly>
+        </div>
+      </div>
+
+      <!-- Row 2: Serial Number -->
+      <div class="form-row">
+        <div class="form-group">
+          <label for="serialnumber">Serial Number:</label>
+          <input type="text" id="serialnumber" name="serialnumber"
+                 th:value="${records?.serialnumber}" required pattern="^[0-9]+$"
+                 title="Only numbers allowed." class="form-control">
+        </div>
+      </div>
+
+      <!-- Row 3: Calibration Date & Next Due Date -->
+      <div class="form-row">
+        <div class="form-group">
+          <label for="calibrationdate">Calibration Date:</label>
+          <input type="date" id="calibrationdate" name="calibrationdate"
+                 th:value="${records?.calibrationdate}" required class="form-control">
+        </div>
+
+        <div class="form-group">
+          <label for="nextduedate">Next Due Date:</label>
+          <input type="date" id="nextduedate" name="nextduedate"
+                 th:value="${records?.nextduedate}"  required class="form-control">
+        </div>
+      </div>
+
+      <!-- Row 4: Performed By & Status -->
+      <div class="form-row">
+        <div class="form-group">
+          <label for="performedby">Performed By:</label>
+          <select id="performedby" name="performedby" required class="form-control">
+            <option value="">-- Select Party --</option>
+            <option value="Internal Party" th:selected="${records?.performedby == 'Internal Party'}">Internal Party</option>
+            <option value="External Party" th:selected="${records?.performedby == 'External Party'}">External Party</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="status">Status:</label>
+          <select id="status" name="status" required class="form-control">
+            <option value="">-- Select Status --</option>
+            <option value="Pass" th:selected="${records?.status == 'Pass'}">Pass</option>
+            <option value="Fail" th:selected="${records?.status == 'Fail'}">Fail</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Submit Button -->
+      <div class="form-actions">
+        <button type="button" id="submitBtn" onclick="submitForm()">Submit</button>
+        <button type="button" id="backBtn" onclick="goBack()">Back</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+ 
+
+
+	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+	<script>
+
+	$(document).ready(function() {
+	    // Auto-fill Item details when updating
+	    var existingequipmentmasteruid = $('#equipmentmasteruid').val();
+	    if (existingequipmentmasteruid) {
+	    	fetchEquipmentDetails(existingequipmentmasteruid);
+	    }
+	});
+	function fetchEquipmentDetails(equipmentmasteruid) {
+	  if (!equipmentmasteruid) return; 
+
+	     $.ajax({
+	 		url: '/fetchEquipmentDetailsInCalibrationRecord',
+	 		method: 'GET',
+	 		data: { equipmentmasteruid: equipmentmasteruid },
+	 		success: function(response) {
+	 			$('#equipmentname').val(response.equipmentname);	
+	 	},
+	 	error:function() {
+	    alert('Error fetching Equipment Master Details. Please try again.');
+	 			                }
+	 							});
+	 } 
+	
+		
+		function submitForm() {
+			let form = document.getElementById('calibform');
+					    
+					    if (!form.checkValidity()) {
+					        alert('Please fill in all required fields.');
+					        return;
+					    }
+
+					   
+							    const formData = new FormData(document.getElementById('calibform'));
+							    const id = $('#id').val();
+
+							    let url, successMessage;
+
+							    if (!id) {
+							        url = '/savecalibrationrecord';
+							        successMessage = 'Calibration Record Form data saved successfully!';
+							    } else {
+							        url = '/updatecalibrationrecord';
+							        successMessage = 'Calibration Record Form data updated successfully!';
+							    }
+
+							    $.ajax({
+							        url: url,
+							        type: 'POST',
+							        data: formData,
+							        processData: false,
+							        contentType: false,
+							        success: function(response) {
+							            $('#message').text(successMessage); // Display success message
+							            resetForm();
+							            window.location.href = '/maintenancemanagementdepartment/calibrationrecordgrid';
+							        },
+							        error: function() {
+							            alert('Error saving Calibration Record Form . Please fill out the data.');
+							        }
+							    });
+							}
+							// Reset the form
+									function resetForm() {
+									    $('#calibform')[0].reset();
+										$('#id').val('');
+									    $('#message').text(''); // Clear the message
+									    $('#submitBtn').text('Submit');
+									}	
+							
+							</script>
+
+</body>
+
+</html>

@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Delivery Challan Form</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+        }
+
+        form {
+            max-width: 600px;
+            margin: auto;
+        }
+
+        label {
+            display: block;
+            margin-top: 15px;
+            font-weight: bold;
+        }
+
+        input[type="text"],
+        input[type="date"],
+        select {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+            box-sizing: border-box;
+        }
+
+        .submit-btn {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+        }
+
+        .error {
+            color: red;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+
+<body>
+
+<h1 style="text-align:center;">Delivery Challan</h1>
+
+<form id="delchallanform" onsubmit="submitForm(event)">
+    <input type="hidden" name="id" id="id" th:value="${challan?.id}">
+
+    <label for="orderuid">Order ID</label>
+    <select name="orderuid" id="orderuid" onchange="ordDetails(this.value)">
+        <option value="">-- Select Order ID --</option>
+        <option th:each="order : ${ret}" th:value="${order['orderid']}" th:text="${order['orderid']}"></option>
+    </select>
+    <span id="orderuid-error" class="error"></span>
+
+    <input type="text" name="displayid" id="displayid" th:value="${challan?.orderuid}" readonly >
+
+    <label for="quantityordered">Quantity Dispatched</label>
+    <input type="text" name="quantityordered" id="quantityordered" th:value="${challan?.quantityordered}" readonly>
+
+    <label for="itemdescription">Product Name</label>
+    <input type="text" name="itemdescription" id="itemdescription" th:value="${challan?.productname}" readonly>
+
+    <label for="dispatchdate">Dispatch Date</label>
+    <input type="date" name="dispatchdate" id="dispatchdate" th:value="${challan?.dispatchdate}" min="2000-01-01" max="2099-12-31" required>
+    <span id="dispatchdate-error" class="error"></span>
+
+    <label for="receivername">Receiver Name</label>
+    <input type="text" name="receivername" id="receivername" th:value="${challan?.receivername}" required>
+    <span id="receivername-error" class="error"></span>
+
+    <label for="vehiclenumber">Vehicle Number</label>
+    <input type="text" name="vehiclenumber" id="vehiclenumber" th:value="${challan?.vehiclenumber}">
+    <span id="vehiclenumber-error" class="error"></span>
+
+    <label for="drivername">Driver Name</label>
+    <input type="text" name="drivername" id="drivername" th:value="${challan?.drivername}" >
+    <span id="drivername-error" class="error"></span>
+
+    <label for="signature">Signature</label>
+    <input type="text" name="signature" id="signature" th:value="${challan?.signature}" required>
+    <span id="signature-error" class="error"></span>
+
+    <button type="submit" class="submit-btn">Submit</button>
+</form>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    function ordDetails(selleruid) {
+        if (!orderid) return;
+        $.ajax({
+            url: '/orduids',
+            method: 'GET',
+            data: {orderid: orderid},
+            success: function (response) {
+                $('#displayid').val(orderid);
+                $('#itemdescription').val(response.productname);
+                $('#quantityordered').val(response.quantityordered);
+            },
+            error: function () {
+                alert('Error fetching order details.');
+            }
+        });
+    }
+
+    function isValidName(name) {
+        return /^[A-Za-z\s]+$/.test(name.trim());
+    }
+
+	function isValidVehicleNumber(vehicleNumber) {
+	    const pattern = /^[A-Z]{2}\d{2}[A-Z]{1,2}\d{4}$/;
+	    return pattern.test(vehicleNumber.trim().toUpperCase());
+	}
+
+
+    function validateForm() {
+        let valid = true;
+
+        $('.error').text(''); // Clear previous errors
+
+        const receivername = $('#receivername').val().trim();
+        const vehiclenumber = $('#vehiclenumber').val().trim();
+        const drivername = $('#drivername').val().trim();
+        const signature = $('#signature').val().trim();
+		const displayid = $('#displayid').val().trim();
+		
+		if (!displayid) {
+		       $('#orderuid-error').text("Please select a valid Order ID.");
+		       valid = false;
+		   }
+
+        if (!isValidName(receivername)) {
+            $('#receivername-error').text("Only letters and spaces allowed.");
+            valid = false;
+        }
+
+        if (!isValidVehicleNumber(vehiclenumber)) {
+            $('#vehiclenumber-error').text("Only alphanumeric characters, spaces, or hyphens allowed.");
+            valid = false;
+        }
+
+        if (!isValidName(drivername)) {
+            $('#drivername-error').text("Only letters and spaces allowed.");
+            valid = false;
+        }
+
+        if (!isValidName(signature)) {
+            $('#signature-error').text("Only letters and spaces allowed.");
+            valid = false;
+        }
+
+        return valid;
+    }
+
+    function submitForm(event) {
+        event.preventDefault();
+
+        if (!validateForm()) {
+            return;
+        }
+
+        const dcId = $('#dcid').val();
+        const formData = new FormData(document.getElementById("delchallanform"));
+        const dcurl = dcId ? `/deliverychallanForm/updatechallan/${dcId}` : '/deliverychallanForm/addChallan';
+
+        $.ajax({
+            url: dcurl,
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function (response) {
+                alert(response.status);
+                resetForm();
+                window.location.href = '/deliverychallanForm/allChallans';
+            },
+            error: function () {
+                alert('Error saving form. Please fill out the data.');
+            }
+        });
+    }
+
+    function resetForm() {
+        $('#delchallanform')[0].reset();
+        $('.error').text('');
+        $('#dcid').val('');
+    }
+</script>
+
+</body>
+</html>

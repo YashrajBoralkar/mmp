@@ -1,0 +1,299 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Raw Material Receipt Note</title>
+  <link rel="stylesheet" href="/css/empinfo.css">
+      <link rel="stylesheet" href="/css/hrms.css"> <!-- // for side bar code  -->
+	 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+     <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+	  
+	  <style>
+	    /* Label styling */
+	    #materialQuantityLabel label {
+	        display: block;
+	        font-size: 18px;
+	        font-weight: 100;
+	        margin-bottom: 10px;
+	        color: #333;
+	    }
+
+	    /* Table wrapper styling */
+	    #materialQuantityTable {
+	        margin-top: 10px;
+	        border: 1px solid #ddd;
+	        padding: 10px;
+	        background-color: #f9f9f9;
+	        border-radius: 5px;
+	    }
+
+	    /* Table styling */
+	    #materialQuantityTable table {
+	        width: 100%;
+	        border-collapse: collapse;
+	    }
+
+	    #materialQuantityTable th,
+	    #materialQuantityTable td {
+	        padding: 10px;
+	        border: 1px solid #ccc;
+	        text-align: left;
+	    }
+
+	    #materialQuantityTable th {
+	        background-color: #f0f0f0;
+	        font-weight: 100;
+	    }
+
+	    /* Input field style */
+	    #materialQuantityTable input[type="text"] {
+	        width: 100%;
+	        border: none;
+	        background-color: transparent;
+	        font-size: 14px;
+	        color: #333;
+	    }
+	  </style>
+
+ 
+</head>
+
+<body>
+	   <div th:replace="~{PURCHASE.html :: sidebarFragment}"></div>                                                                         
+<div class="form-container">
+ <div class="form-section active" id="section1" style="margin-left: 20px; margin-right: 20px;">
+
+  <form id="rmrnForm">
+    <!-- Hidden Fields -->
+    <input type="hidden" id="id" name="id" th:value="${rmrn.id}">
+    <input type="hidden" id="rawmaterialdetails" name="rawmaterialdetails"> <!-- Store JSON -->
+
+    <!-- Title -->
+    <h2>Raw Material Receipt Note Form</h2>
+     <br>
+
+    <!-- Purchase Order Dropdown -->
+    <div class="form-row">
+      <div class="form-group">
+        <label for="poDropdown">Purchase Order:</label>
+        <select id="poDropdown" name="rawmaterialpurchaseorderuid"
+                onchange="fetchPoDetails(this.value)"
+                th:disabled="${rmrn?.id != null}">
+          <option value="">-- Select PO --</option>
+          <th:block th:each="po : ${orders}">
+            <option th:value="${po.rawmaterialpurchaseorderuid}"
+                    th:selected="${rmrn?.rawmaterialpurchaseorderuid == po.rawmaterialpurchaseorderuid}"
+                    th:text="${po.rawmaterialpurchaseorderuid}">
+            </option>
+          </th:block>
+        </select>
+      </div>
+    </div>
+
+	<!-- Materials Table -->
+	<div class="form-row">
+	  <div class="form-group" id="materialQuantityLabel">
+	    
+	    <!-- 🔹 This label is hidden initially -->
+	    <div id="materialLabelWrapper" style="display: none;">
+	      <label>Raw Material Details</label>
+	    </div>
+
+	    <!-- 🔹 This table is hidden initially -->
+	    <div id="materialQuantityTable" style="display: none;">
+	      <table>
+	        <thead>
+	          <tr>
+	            <th>Raw Material ID</th>
+	            <th>Raw Material Name</th>
+	            <th>Ordered Quantity</th>
+	          </tr>
+	        </thead>
+	        <tbody id="materialsTableBody">
+	          <!-- Filled dynamically via JS -->
+	        </tbody>
+	      </table>
+	    </div>
+	  </div>
+	</div>
+
+
+
+    <!-- Receiver Name -->
+    <div class="form-row">
+      <div class="form-group">
+        <label for="receivername">Received By:</label>
+        <!-- CREATE MODE -->
+        <select id="receivername" name="receivername" th:if="${rmrn == null or rmrn.id == null}" required>
+          <option value="">Select received by</option>
+          <option th:each="entry : ${receivernameMap}"
+                  th:value="${entry.key + ' - ' + entry.value}"
+                  th:text="${entry.key + ' - ' + entry.value}">
+          </option>
+        </select>
+
+        <!-- EDIT MODE -->
+        <input type="text" id="receivername" name="receivername"
+               th:value="${rmrn.receivername}" th:if="${rmrn?.id != null}" readonly />
+      </div>
+    
+
+    <!-- Approval Status -->
+      <div class="form-group">
+        <label for="rawmaterialstatus">Approval Status</label>
+        <select id="rawmaterialstatus" name="rawmaterialstatus" required>
+          <option value="" disabled selected>Select Approval</option>
+          <option value="Accepted" th:selected="${rmrn?.rawmaterialstatus == 'Accepted'}">Accepted</option>
+          <option value="Rejected" th:selected="${rmrn?.rawmaterialstatus == 'Rejected'}">Rejected</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Form Actions -->
+    <div class="form-row">
+      <div class="form-group form-actions">
+        <button type="button" id="submitBtn" onclick="submitRMRNForm()">Save</button>
+        <button type="button" class="back-button" onclick="goback();">Back</button>
+        <div th:if="${successMessage}" class="success-message" th:text="${successMessage}"></div>
+      </div>
+    </div>
+  </form>
+</div>
+</div>
+
+   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+ 
+
+<script>
+
+function goBack() {
+	window.location.href = '/dashboard';
+	}
+	
+function goback() {
+	window.location.href = '/purchase/rawmaterialreceiptnotegrid';
+	}
+	
+	
+	function fetchPoDetails(poUid) {
+	    const wrapper = document.getElementById("materialQuantityTable");
+	    const label = document.getElementById("materialLabelWrapper");
+	    const tbody = document.getElementById("materialsTableBody");
+
+	    if (!poUid) {
+	        wrapper.style.display = "none";
+	        label.style.display = "none";
+	        tbody.innerHTML = "";
+	        $('#rawmaterialdetails').val('');
+	        return;
+	    }
+
+	    fetch('/getPoDetails/' + poUid)
+	        .then(response => response.json())
+	        .then(data => {
+	            tbody.innerHTML = ""; 
+	            let rawMaterialDetails = {};
+
+	            if (data && data.length > 0) {
+	                data.forEach(material => {
+	                    const row = `
+	                        <tr>
+	                            <td>${material.rawmaterialuid}</td>
+	                            <td>${material.rawmaterialname}</td>
+	                            <td><input type="text" value="${material.orderedquantity}" readonly /></td>
+	                        </tr>
+	                    `;
+	                    tbody.insertAdjacentHTML("beforeend", row);
+
+	                    rawMaterialDetails[material.rawmaterialname] = {
+	                        rawmaterialuid: material.rawmaterialuid,
+	                        quantity: material.orderedquantity
+	                    };
+	                });
+
+	                $('#rawmaterialdetails').val(JSON.stringify(rawMaterialDetails));
+	                wrapper.style.display = "block";
+	                label.style.display = "block"; // 🔹 Show label
+	            } else {
+	                tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:#999;">No materials found</td></tr>`;
+	                wrapper.style.display = "block";
+	                label.style.display = "block"; // 🔹 Still show label even if table is empty
+	                $('#rawmaterialdetails').val('');
+	            }
+	        })
+	        .catch(err => {
+	            console.error("Error fetching PO details:", err);
+	            alert("Failed to fetch PO details.");
+	            wrapper.style.display = "none";
+	            label.style.display = "none";
+	            $('#rawmaterialdetails').val('');
+	        });
+	}
+
+
+
+	function submitRMRNForm() {
+
+	    // --- VALIDATION ---
+
+	    const po = $('#poDropdown').val();
+	    const receiver = $('#receivername').val();
+	    const status = $('#rawmaterialstatus').val();
+
+	    if (!po) {
+	        alert("⚠️ Please select a Purchase Order.");
+	        return;
+	    }
+
+	    if (!receiver) {
+	        alert("⚠️ Please select Receiver Name.");
+	        return;
+	    }
+
+	    if (!status) {
+	        alert("⚠️ Please select Approval Status.");
+	        return;
+	    }
+
+	    // --- SAVE / UPDATE PROCESS ---
+
+	    const id = $('#id').val();
+	    let url, successMessage;
+
+	    if (!id) {
+	        url = '/rawmaterialreceiptnote/save';
+	        successMessage = '✅ RMRN submitted successfully!';
+	    } else {
+	        url = '/rawmaterialreceiptnote/update';
+	        successMessage = '✅ RMRN updated successfully!';
+	    }
+
+	    $.ajax({
+	        url: url,
+	        type: 'POST',
+	        data: $('#rmrnForm').serialize(),
+	        success: function () {
+	            alert(successMessage);
+	            window.location.href = '/purchase/rawmaterialreceiptnotegrid';
+	        },
+	        error: function () {
+	            alert('❌ Error saving data. Please try again.');
+	        }
+	    });
+	}
+
+
+//✅ Auto-load PO details in edit mode
+$(document).ready(function() {
+    const poUid = $('#poDropdown').val();
+    const id = $('#id').val();
+    if (id && poUid) {
+        fetchPoDetails(poUid);
+    }
+});
+
+</script>  
+</body>
+</html>

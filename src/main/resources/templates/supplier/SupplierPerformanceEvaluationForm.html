@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<title>Supplier Performance Evaluation</title>
+	<link rel="stylesheet" href="/css/empinfo.css" />
+	<link rel="stylesheet" href="/css/hrms.css" />
+	<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap"rel="stylesheet" />
+</head>
+
+<body>
+	<div th:replace="~{SUPPLIER.html :: sidebarFragment}"></div>
+
+	<form id="supplierperformanceevaluationForm" class="form-container">
+		<input type="hidden" id="id" name="id" th:value="${supplier?.id}" />
+
+		<h2>Supplier Performance Evaluation</h2>
+		<br>
+		<div class="form-row">
+			<div class="form-group">
+				<label for="rawmaterialsupplieruid">RM Supplier ID:</label>
+				<select id="rawmaterialsupplieruid" name="rawmaterialsupplieruid" onchange="fetchSupplierDetails(this.value)"th:if="${supplier == null or supplier.id == null}">
+					<option value="">Select RM Supplier ID</option>
+					<option th:each="uid : ${rawmaterialsupplieruid}" th:value="${uid}" th:text="${uid}"></option>
+				</select>
+				<input type="text" id="rawmaterialsupplieruid" name="rawmaterialsupplieruid" th:value="${supplier?.rawmaterialsupplieruid}"onchange="fetchSupplierDetails(this.value)" readonly th:if="${supplier?.id != null}" />
+			</div>
+
+			<div class="form-group">
+				<label for="suppliername">RM Supplier Name:</label>
+				<input type="text" id="suppliername" name="suppliername" readonly />
+			</div>
+		</div>
+
+		<div class="form-row">
+			<div class="form-group">
+				<label for="evaluationperiod">Evaluation Period:</label>
+				<br>
+				<input type="month" id="evaluationperiod" name="evaluationperiod" th:value="${supplier?.evaluationperiod}" required />
+			</div>
+
+			<div class="form-group">
+				<label for="ontimedeliveryrate">On-Time Delivery Rate (%):</label>
+				<input type="number" id="ontimedeliveryrate" name="ontimedeliveryrate" th:value="${supplier?.ontimedeliveryrate}" min="0" max="100" step="0.01" required />
+			</div>
+
+			<div class="form-group">
+				<label for="qualityrating">Quality Rating:</label>
+				<br>
+				<input type="number" id="qualityrating" name="qualityrating" min="1" max="10"th:value="${supplier?.qualityrating}" required />
+			</div>
+		</div>
+
+		<div class="form-row">
+			<div class="form-group">
+				<label for="orderaccuracy">Order Accuracy (%):</label>
+				<input type="number" id="orderaccuracy" name="orderaccuracy" th:value="${supplier?.orderaccuracy}"min="0" max="100" step="0.01" required />
+			</div>
+
+			<div class="form-group">
+				<label for="responsivenessscore">Responsiveness Score:</label>
+				<input type="number" id="responsivenessscore" name="responsivenessscore" min="1" max="10" th:value="${supplier?.responsivenessscore}" required />
+			</div>
+
+			<div class="form-group">
+				<label for="compliancescore">Compliance Score:</label>
+				<input type="number" id="compliancescore" name="compliancescore" min="1" max="10" th:value="${supplier?.compliancescore}" required />
+			</div>
+		</div>
+
+		<div class="form-row">
+			<div class="form-group">
+				<label for="overallscore">Overall Score:</label>
+				<input type="text" id="overallscore" name="overallscore" th:value="${supplier?.overallscore}"required />
+			</div>
+
+			<div class="form-group">
+				<label for="performancestatus">Performance Status:</label>
+				<select id="performancestatus" name="performancestatus" required>
+					<option value="">Select status</option>
+					<option value="Satisfactory" th:selected="${supplier?.performancestatus == 'Satisfactory'}">Satisfactory</option>
+					<option value="Needs Improvement"th:selected="${supplier?.performancestatus == 'Needs Improvement'}">Needs Improvement</option>
+					<option value="Unsatisfactory" th:selected="${supplier?.performancestatus == 'Unsatisfactory'}">Unsatisfactory</option>
+				</select>
+			</div>
+
+			<div class="form-group">
+				<label for="actionrequired">Action Required:</label>
+				<select id="actionrequired" name="actionrequired" required>
+					<option value="">Select Action</option>
+					<option value="Continue Partnership"th:selected="${supplier?.actionrequired == 'Continue Partnership'}">Continue Partnership</option>
+					<option value="Probation" th:selected="${supplier?.actionrequired == 'Probation'}">Probation</option>
+					<option value="Termination" th:selected="${supplier?.actionrequired == 'Termination'}">Termination</option>
+				</select>
+			</div>
+		</div>
+
+		<div class="form-row">
+			<div class="form-group">
+				<label for="reviewedby">Reviewed By:</label>
+				<select id="reviewedby" name="reviewedby" th:if="${supplier == null or supplier.id == null}"required>
+					<option value="">Select Reviewer</option>
+					<option th:each="emp : ${employees}"
+						th:value="${emp.employeeUID + '-' + emp.firstName + ' ' + (emp.middleName == null ? '' : emp.middleName) + ' ' + emp.lastName}"
+						th:text="${emp.employeeUID + ' - ' + emp.firstName + ' ' + (emp.middleName == null ? '' : emp.middleName) + ' ' + emp.lastName}">
+					</option>
+				</select>
+					<input type="text" id="reviewedby" name="reviewedby" th:value="${supplier?.reviewedby}" readonly th:if="${supplier?.id != null}" />								
+			</div>
+		</div>
+
+
+		<div class="form-actions">
+			<button type="button" id="submitBtn" onclick="submitForm()">Submit</button>
+			<div id="message" th:if="${successMessage}" class="success-message" th:text="${successMessage}"></div>
+			<button type="button" class="back-button" onclick="goback();">Back</button>
+		</div>
+	</form>
+
+	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script> 
+function goBack() {
+	window.location.href = '/dashboard';
+	}
+</script>
+<script>
+
+    $(document).ready(function () {
+
+        // Load supplier details on update mode
+        const rawmaterialsupplieruid = $('#rawmaterialsupplieruid').val();
+        if (rawmaterialsupplieruid) {
+            fetchSupplierDetails(rawmaterialsupplieruid);
+        }
+
+    });
+
+    // ✅ Fetch Supplier Details
+    function fetchSupplierDetails(uid) {
+        if (!uid) return;
+
+        $.ajax({
+            url: '/supplier/fetchSupplierDetails',
+            method: 'GET',
+            data: { rawmaterialsupplieruid: uid },
+            success: function (response) {
+                if (response && response.length > 0) {
+                    let data = response[0];
+                    $('#suppliername').val(data.suppliername || '');
+                }
+            },
+            error: function () {
+                alert("Error fetching supplier details.");
+            }
+        });
+    }
+
+    // ✅ Simple Range Check
+    function checkRange(id, min, max) {
+        let el = document.getElementById(id);
+        let value = parseFloat(el.value);
+
+        if (isNaN(value)) {
+            alert(id + " must be a numeric value.");
+            el.focus();
+            return false;
+        }
+
+        if (value < min || value > max) {
+            alert(id + " must be between " + min + " and " + max);
+            el.focus();
+            return false;
+        }
+
+        return true;
+    }
+
+    // ✅ Final Simple Validation
+    function validateForm() {
+
+        // Required fields
+        const required = [
+            "rawmaterialsupplieruid",
+            "evaluationperiod",
+            "ontimedeliveryrate",
+            "qualityrating",
+            "orderaccuracy",
+            "responsivenessscore",
+            "compliancescore",
+            "overallscore",
+            "performancestatus",
+            "actionrequired",
+            "reviewedby"
+        ];
+
+        for (let id of required) {
+            let el = document.getElementById(id);
+            if (!el || !el.value.trim()) {
+                alert("Please fill out: " + id);
+                el.focus();
+                return false;
+            }
+        }
+
+        // Numeric validation
+        if (!checkRange("ontimedeliveryrate", 0, 100)) return false;
+        if (!checkRange("qualityrating", 1, 10)) return false;
+        if (!checkRange("orderaccuracy", 0, 100)) return false;
+        if (!checkRange("overallscore", 0, 100)) return false;
+
+        if (!checkRange("responsivenessscore", 1, 10)) return false;
+        if (!checkRange("compliancescore", 1, 10)) return false;
+
+        return true;
+    }
+
+    // ✅ Submit Form
+    function submitForm() {
+
+        if (!validateForm()) return;
+
+        const formData = new FormData(document.getElementById("supplierperformanceevaluationForm"));
+        const id = $("#id").val();
+
+        let url, successMessage;
+        if (!id) {
+			url = '/supplierperformanceevaluation/save';
+			successMessage = 'Supplier Performance Evaluation details saved successfully!';
+		} else {
+			url = '/supplierperformanceevaluation/update';
+			successMessage = 'Supplier Performance Evaluation details updated successfully!';
+		}
+
+        $.ajax({
+            url: url,
+            type: "POST",
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function () {
+            	alert(successMessage)
+				resetForm();
+            	window.location.href = "/supplier/supplierperformanceevaluationgrid";
+            },
+            error: function () {
+                alert("Error saving Supplier Evaluation.");
+            }
+        });
+    }
+    
+    function resetForm() {
+	    $('#supplierperformanceevaluationForm')[0].reset();
+	    $('#id').val('');
+	    $('#form-title').text('Supplier Performance Evaluation');
+	    $('#submitBtn').text('Submit');
+	  }
+	
+
+    function goback() {
+        window.location.href = "/supplier/supplierperformanceevaluationgrid";
+    }
+
+</script>
+</body>
+
+</html>

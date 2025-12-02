@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Raw Material Receipt Note Form</title>
+  <link rel="stylesheet" href="/css/empinfo.css" />
+  <link rel="stylesheet" href="/css/hrms.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet" />
+ 
+</head>
+<body>
+	 <!-- // for side bar code  <div th:replace="~{PURCHASE.html :: sidebarFragment}"></div>  -->                                                                        
+<div th:replace="~{INVENTORY.html :: sidebarFragment}"></div> <!-- // for side bar code  -->                                                     
+<div class="form-container">
+
+   <div class="form-section active" id="section1" style="margin-left: 20px; margin-right: 20px;">
+   <form  id="grnForm" >
+   
+    <!-- Personal Information Section -->
+	<input type="hidden" id="id" name="id" th:value="${grn.id}">
+    <h2 th:text="${grn?.id == null} ? 'Add New Goods Receipt Note' : 'Edit GRN'">Raw Material Receipt Note Form</h2>   
+     
+
+      <!-- First Row -->
+<div class="form-row" >
+    <div class="form-group">
+        <label for="rawmaterialpurchaseorderuid">Purchase Order:</label>
+        <select id="rawmaterialpurchaseorderuid" name="rawmaterialpurchaseorderuid" onchange="fetchPODetails(this.value)" th:if="${grn == null or grn.id == null}" required>
+            <option value="" disabled selected>Select PO</option>
+            <option th:each="order : ${orders}" 
+                    th:value="${order.rawmaterialpurchaseorderuid}" 
+                    th:text="${order.rawmaterialpurchaseorderuid}">
+            </option>
+        </select>
+        <input type="text" id="rawmaterialpurchaseorderuid" name="rawmaterialpurchaseorderuid" th:value="${grn?.rawmaterialpurchaseorderuid}" readonly th:if="${grn?.id != null}">	     
+    </div>
+
+    <div class="form-group">
+        <label for="materialname">Material Name</label>
+        <input type="text" id="materialname" name="materialname" th:value="${grn?.materialname}" readonly />
+    </div>
+
+</div>
+
+      <!-- Second Row -->
+<div class="form-row">
+    <div class="form-group">
+        <label for="materialcode">Material Code</label>
+        <input type="text" id="materialcode" name="materialcode" th:value="${grn?.materialcode}" readonly /> 
+    </div>
+
+    <div class="form-group">
+        <label for="orderedquantity">Ordered Quantity</label>
+        <input type="text" id="orderedquantity" name="orderedquantity" th:value="${grn?.orderedquantity}" readonly />
+    </div>
+	
+</div>
+
+
+ <!-- Third Row -->
+<div class="form-row">
+    <div class="form-group">
+        <label for="checkedby">Quality Check Status</label>
+        <input type="text" id="checkedby" name="checkedby"  readonly />
+    </div>
+
+    <div class="form-group">
+        <label for="receivername">Received By</label>
+        <input type="text" id="receivername" name="receivername" th:value="${grn?.receivername}" required />
+    </div>
+</div>
+
+
+<!-- Fourth Row -->
+<div class="form-row">
+    <div class="form-group">
+        <label for="rawmaterialstatus">Approval Status</label>
+        <select id="rawmaterialstatus" name="rawmaterialstatus" th:value="${grn?.rawmaterialstatus}" required>
+            <option value="" disabled selected>Select Approval</option>
+            <option value="Accepted" th:selected="${grn?.rawmaterialstatus == 'Accepted'}">Accepted</option>
+            <option value="Rejected" th:selected="${grn?.rawmaterialstatus == 'Rejected'}">Rejected</option>
+        </select>
+    </div>
+</div>
+
+   <!-- Five Row  -->
+    <div class="form-actions">
+  <div class="button-group">
+    <button type="button" id="submitBtn" onclick="submitGRNForm()">Save</button>
+    <button type="button" class="back-button" onclick="goBack();">Back</button>
+  </div>
+  <div th:if="${successMessage}" class="success-message" th:text="${successMessage}"></div>
+</div>
+</form>
+</div>
+</div>
+   
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+ <script>
+	const receiverNameInput = document.getElementById("receivername");
+
+	receiverNameInput.addEventListener("input", function () {
+	    const originalValue = this.value;
+	    const cleanedValue = originalValue.replace(/[^A-Za-z\s]/g, '');
+
+	    if (originalValue !== cleanedValue) {
+	      alert("Only alphabets and spaces are allowed!");
+	      this.value = cleanedValue;
+	    }
+	});
+</script>
+
+<script>
+	$(document).ready(function() {
+	    var existingPO = $('#rawmaterialpurchaseorderuid').val();
+	    if (existingPO) {
+	        fetchPODetails(existingPO);
+	    }
+	});
+
+	function fetchPODetails(poUid) {
+	    if (!poUid) return;
+
+	    $.ajax({
+	        url: '/getPoDetails/' + poUid,
+	        method: 'GET',
+	        success: function(data) {
+	            console.log(data);
+	            $('#materialname').val(data.materialname);
+	            $('#materialcode').val(data.materialcode);
+	            $('#orderedquantity').val(data.orderedquantity);
+				$('#checkedby').val(data.checkedby);
+
+	        },
+	        error: function(err) {
+	            alert("Failed to fetch PO details.");
+	        }
+	    });
+	}
+</script> 
+
+<script>
+  function submitGRNForm() {
+    const purchaseOrder = document.getElementById("rawmaterialpurchaseorderuid").value.trim();
+    const receiverName = document.getElementById("receivername").value.trim();
+    const approvalStatus = document.getElementById("rawmaterialstatus").value.trim();
+
+    // Validate required fields
+    if (!purchaseOrder) {
+      alert("Please select a Purchase Order.");
+      return;
+    }
+
+    if (!receiverName) {
+      alert("Please enter the name of the person who received the goods.");
+      return;
+    }
+
+    if (!approvalStatus) {
+      alert("Please select an Approval Status.");
+      return;
+    }
+
+    const formData = new FormData(document.getElementById('grnForm'));
+    const id = $('#id').val();
+	let url = '';
+
+	if (id) {
+	    url = '/update';
+	} else 
+	    url = '/save';
+	
+
+    let successMessage = id ? 'GRN updated successfully!' : 'GRN saved successfully!';
+
+    $.ajax({
+        url: url,
+        type: 'POST',
+        data: formData,
+        processData: false,
+        contentType: false,
+        success: function (response) {
+            $('#message').text(successMessage);
+            resetForm();
+            window.location.href = '/rawmaterialgrn';
+        },
+        error: function () {
+            alert('Error saving data. Please try again.');
+        }
+    });
+  }
+
+  function goBack() {
+    window.location.href = "/rawmaterialgrn";
+  }
+
+  function resetForm() {
+    $('#grnForm')[0].reset();
+    $('#id').val('');
+    $('#message').text('');
+    $('#submitBtn').text('Submit');
+  }
+</script>
+</body>
+</html>

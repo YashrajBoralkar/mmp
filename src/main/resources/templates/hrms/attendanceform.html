@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Attendance Form</title>
+<link rel="stylesheet" href="/css/empinfo.css">
+<link rel="stylesheet" href="/css/hrms.css">
+<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  .error {
+    color: red;
+    font-size: 13px;
+  }
+</style>
+</head>
+<body>
+<div th:replace="~{HRMS.html :: sidebarFragment}"></div>
+
+<form id="attendanceForm" th:object="${attendance}" enctype="multipart/form-data">
+  <input type="hidden" id="id" name="id" th:value="${attendance?.id}">
+
+  <div class="form-container">
+    <h2>Attendance Form</h2>
+	<br>
+    <!-- Employee Details -->
+    <div class="form-row">
+      <div class="form-group">
+        <label for="employeeuid">Employee ID:</label>
+        <select id="employeeuid" name="employeeuid" onchange="fetchEmployeeDetails(this.value)"
+                th:if="${attendance == null or attendance.id == null}">
+          <option value="">Select Employee ID</option>
+          <option th:each="uid : ${employeeuid}" th:value="${uid}" th:text="${uid}"></option>
+        </select>
+        <input type="text" id="employeeuid" name="employeeuid" th:if="${attendance?.id != null}" 
+               th:value="${attendance?.employeeuid}" readonly>
+      </div>
+
+      <div class="form-group">
+        <label>First Name:</label>
+        <input type="text" id="first_name" name="firstName" readonly>
+      </div>
+
+      <div class="form-group">
+        <label>Last Name:</label>
+        <input type="text" id="last_name" name="lastName" readonly>
+      </div>
+    </div>
+
+    <!-- Department & Date -->
+    <div class="form-row">
+      <div class="form-group">
+        <label>Department Name:</label>
+        <input type="text" id="departmentname" name="departmentName" readonly>
+      </div>
+
+      <div class="form-group">
+        <label for="attendanceDate">Attendance Date:</label>
+        <input type="date" id="attendanceDate" name="attendanceDate" th:value="${attendance?.attendanceDate}" required>
+      </div>
+
+      <div class="form-group">
+        <label for="attendanceStatus">Attendance Status:</label>
+        <select id="attendanceStatus" name="attendanceStatus" onchange="toggleAttendanceFields()">
+          <option value="">Select Status</option>
+          <option value="Present" th:selected="${attendance?.attendanceStatus == 'Present'}">Present</option>
+          <option value="Absent" th:selected="${attendance?.attendanceStatus == 'Absent'}">Absent</option>
+          <option value="Leave" th:selected="${attendance?.attendanceStatus == 'Leave'}">Leave</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Check-in / Check-out -->
+    <div class="form-row">
+      <div class="form-group">
+        <label for="checkInTime">Check-in Time:</label>
+        <input type="time" id="checkInTime" name="checkInTime" th:value="${attendance?.checkInTime}" disabled>
+      </div>
+      <div class="form-group">
+        <label for="checkOutTime">Check-out Time:</label>
+        <input type="time" id="checkOutTime" name="checkOutTime" th:value="${attendance?.checkOutTime}" disabled>
+      </div>
+      <div class="form-group">
+        <label for="totalWorkingTime">Total Working Time:</label>
+        <input type="text" id="totalWorkingTime" name="totalWorkingTime" th:value="${attendance?.totalWorkingTime}" readonly>
+      </div>
+    </div>
+
+    <!-- Breaks -->
+    <div class="form-row">
+      <div class="form-group">
+        <label for="breaks">Break:</label>
+        <select id="breaks" name="breaks" onchange="toggleBreakFields()">
+          <option value="">Select Break Option</option>
+          <option value="No" th:selected="${attendance?.breaks == 'No'}">No</option>
+          <option value="Yes" th:selected="${attendance?.breaks == 'Yes'}">Yes</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="breakStartTime">Break Start Time:</label>
+        <input type="time" id="breakStartTime" name="breakStartTime" th:value="${attendance?.breakStartTime}" disabled>
+      </div>
+      <div class="form-group">
+        <label for="breakEndTime">Break End Time:</label>
+        <input type="time" id="breakEndTime" name="breakEndTime" th:value="${attendance?.breakEndTime}" disabled>
+      </div>
+     
+    </div>
+
+    <!-- Remarks -->
+    <div class="form-row">
+     <div class="form-group">
+        <label for="totalBreakTime">Total Break Time:</label>
+        <input type="text" id="totalBreakTime" name="totalBreakTime" th:value="${attendance?.totalBreakTime}" readonly>
+      </div>
+      <div class="form-group" style="flex:1">
+        <label for="comments">Remarks:</label>
+        <input type="text" id="comments" name="comments" th:value="${attendance?.comments}">
+      </div>
+    </div>
+
+    <!-- Buttons -->
+    <div class="form-actions">
+      <button type="button" onclick="submitAttendanceForm()">Submit</button>
+      <button type="button" onclick="goback()" style="margin-left:20px;">Back</button>
+    </div>
+  </div>
+</form>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script> 
+function goBack() {
+	window.location.href = '/dashboard';
+	}
+</script>
+<script>
+  function goback() { window.history.back(); }
+
+  $(document).ready(function() {
+    const existingUID = $('#employeeuid').val() || $('#employeeuid').val();
+    if(existingUID) fetchEmployeeDetails(existingUID);
+
+    toggleAttendanceFields();
+    toggleBreakFields();
+
+    $('#checkInTime, #checkOutTime, #breakStartTime, #breakEndTime').on('change', calculateTimes);
+  });
+
+  function fetchEmployeeDetails(employeeuid) {
+    if(!employeeuid) return;
+    $.ajax({
+      url: '/attendance/details',
+      method: 'GET',
+      data: { employeeuid },
+      success: function(res){
+        $('#first_name').val(res.firstName || '');
+        $('#last_name').val(res.lastName || '');
+        $('#departmentname').val(res.departmentname || '');
+      },
+      error: function(){ Swal.fire('Error','Could not fetch employee details','error'); }
+    });
+  }
+
+  function toggleAttendanceFields(){
+    const status = $('#attendanceStatus').val();
+    if(status === 'Present'){
+      $('#checkInTime,#checkOutTime').prop('disabled', false);
+    } else {
+      $('#checkInTime,#checkOutTime').prop('disabled', true).val('');
+      $('#totalWorkingTime').val('');
+      $('#breakStartTime,#breakEndTime').prop('disabled', true).val('');
+      $('#totalBreakTime').val('');
+      $('#breaks').val('');
+    }
+  }
+
+  function toggleBreakFields(){
+    const brk = $('#breaks').val();
+    if(brk === 'Yes'){
+      $('#breakStartTime,#breakEndTime').prop('disabled', false);
+    } else {
+      $('#breakStartTime,#breakEndTime').prop('disabled', true).val('');
+      $('#totalBreakTime').val('');
+    }
+  }
+
+  function calculateTimes(){
+    const ci = $('#checkInTime').val(), co = $('#checkOutTime').val();
+    const bs = $('#breakStartTime').val(), be = $('#breakEndTime').val();
+    if(ci && co){ $('#totalWorkingTime').val(timeDiff(ci,co)); }
+    if(bs && be){ $('#totalBreakTime').val(timeDiff(bs,be)); }
+  }
+
+  function timeDiff(start,end){
+    const s = new Date(`1970-01-01T${start}`), e = new Date(`1970-01-01T${end}`);
+    if(s >= e) return '';
+    const mins = (e-s)/60000;
+    return `${Math.floor(mins/60)}h ${Math.round(mins%60)}m`;
+  }
+
+  function submitAttendanceForm(){
+    const id = $('#id').val();
+    const url = id ? '/updateExistingAttendance' : '/saveattendance';
+    const successMsg = id ? 'Attendance updated successfully!' : 'Attendance saved successfully!';
+
+    const employeeuid = $('#employeeuid').val() || $('#employeeUIDSelect').val();
+    if(!employeeuid || !$('#attendanceDate').val() || !$('#attendanceStatus').val() || !$('#comments').val()){
+      return Swal.fire('Warning','Please fill all required fields','warning');
+    }
+
+    const formData = new FormData($('#attendanceForm')[0]);
+    $.ajax({
+      url,
+      type:'POST',
+      data: formData,
+      processData:false,
+      contentType:false,
+      success:function(){
+        Swal.fire('Success', successMsg, 'success').then(()=>window.location.href='/hrms/AttendanceGrid');
+      },
+      error:function(){ Swal.fire('Error','Issue saving attendance','error'); }
+    });
+  }
+</script>
+
+</body>
+</html>

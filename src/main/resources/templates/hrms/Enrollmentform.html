@@ -1,0 +1,279 @@
+<!DOCTYPE html> 
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Enrollment Form</title>
+  <link rel="stylesheet" href="/css/hrms.css">
+  <link rel="stylesheet" href="/css/empinfo.css">
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div th:replace="~{HRMS.html :: sidebarFragment}"></div>
+
+  <form id="enrollmentForm">
+    <div class="form-container">
+      <input type="hidden" id="id" name="id" th:value="${enrollment?.id}">
+      <h2 id="form-title">New Enrollment</h2>
+
+      <!-- First Row -->
+      <div class="form-row">
+        <div class="form-group">
+          <label for="employeeuid">Employee UID:</label>
+          <select id="employeeuid" name="employeeuid" onchange="fetchEmployeeDetails(this.value)" 
+                  th:if="${enrollment == null or enrollment.id == null}">
+            <option value="">Select Employee UID</option>
+            <option th:each="uid : ${employeeuid}"
+                    th:value="${uid}"
+                    th:text="${uid}"
+                    th:selected="${uid == enrollment?.employeeuid}">
+            </option>
+          </select>
+          <input type="text" id="employeeuid" name="employeeuid"
+                 th:value="${enrollment?.employeeuid}"
+                 onchange="fetchEmployeeDetails(this.value)"
+                 th:if="${enrollment?.id != null}" readonly>
+        </div>
+
+        <div class="form-group">
+          <label>First Name:</label>
+          <input type="text" id="first_name" name="first_name" readonly>
+        </div>
+        <div class="form-group">
+          <label>Last Name:</label>
+          <input type="text" id="last_name" name="last_name" readonly>
+        </div>
+        <div class="form-group">
+          <label for="department">Department:</label>
+          <input type="text" id="departmentname" name="departmentname" readonly>
+        </div>
+        <div class="form-group">
+          <label for="designation">Designation:</label>
+          <input type="text" id="designation" name="designation" readonly>
+        </div>
+      </div>
+
+      <!-- Second Row -->
+      <div class="form-row">
+        <div class="form-group">
+          <label for="trainingUid">Training UID:</label>
+          <select id="trainingUid" name="trainingUid" onchange="fetchTrainingDetails(this.value)" 
+                  th:if="${enrollment == null or enrollment.id == null}">
+            <option value="">Select Training UID</option>
+            <option th:each="uid : ${trainingUid}"
+                    th:value="${uid}"
+                    th:text="${uid}"
+                    th:selected="${uid == enrollment?.trainingUid}">
+            </option>
+          </select>
+
+          <input type="text" id="trainingUid" name="trainingUid"
+                 th:value="${enrollment?.trainingUid}"
+                 onchange="fetchTrainingDetails(this.value)"
+                 th:if="${enrollment?.id != null}" readonly>
+        </div>
+        <div class="form-group">
+          <label for="trainingtitle">Training Title:</label>
+          <input type="text" id="trainingtitle" name="trainingtitle" readonly>
+        </div>
+        <div class="form-group">
+          <label for="trainerName">Trainer Name:</label>
+          <input type="text" id="trainerName" name="trainerName" readonly>
+        </div>
+        <div class="form-group">
+          <label for="duration">Duration :</label>
+          <input type="text" id="duration" name="duration" readonly>
+        </div>
+        <div class="form-group">
+          <label for="registrationDate">Registration Date:</label>
+          <input type="date" id="registrationDate" name="registrationDate" th:value="${enrollment?.registrationDate}" required>
+        </div>
+      </div>
+
+      <!-- Third Row -->
+      <div class="form-row">
+        <div class="form-group">
+          <label for="enrollmentStatus">Enrollment Status:</label>
+          <select id="enrollmentStatus" name="enrollmentStatus" required>
+            <option value="">Select Status</option>
+            <option value="Pending" th:selected="${enrollment?.enrollmentStatus == 'Pending'}">Pending</option>
+            <option value="Completed" th:selected="${enrollment?.enrollmentStatus == 'Completed'}">Completed</option>
+            <option value="In Progress" th:selected="${enrollment?.enrollmentStatus == 'In Progress'}">In Progress</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Fourth Row -->
+      <div class="form-row">
+        <div class="form-group">
+          <label for="completionDate">Completion Date :</label>
+          <input type="date" id="completionDate" name="completionDate" th:value="${enrollment?.completionDate}" required>
+        </div>
+        <div class="form-group">
+          <label for="progressDescription">Progress Description :</label>
+          <input type="text" id="progressDescription" name="progressDescription" 
+                 th:value="${enrollment?.progressDescription}" 
+                 pattern="[A-Za-z\s.,!?'-]+" 
+                 title="Only letters, spaces, and punctuation are allowed" required>
+        </div>
+        <div class="form-group">
+          <label for="trainerFeedback">Trainer Feedback:</label>
+          <input type="text" id="trainerFeedback" name="trainerFeedback" 
+                 th:value="${enrollment?.trainerFeedback}" 
+                 pattern="[A-Za-z\s.,!?'-]+" 
+                 title="Only letters, spaces, and punctuation are allowed" required>
+        </div>
+        <div class="form-group">
+          <label for="employeeFeedback">Employee Feedback:</label>
+          <input type="text" id="employeeFeedback" name="employeeFeedback" 
+                 th:value="${enrollment?.employeeFeedback}" minlength="10" maxlength="500"
+                 pattern="[A-Za-z\s.,!?'-]+" 
+                 title="Only letters, spaces, and punctuation are allowed" required>
+        </div>
+      </div>
+
+      <!-- Fifth Row -->
+      <div class="form-row">
+        <div class="form-group">
+          <label for="trainingContentFeedback">Training Content Feedback:</label>
+          <input type="text" id="trainingContentFeedback" name="trainingContentFeedback" 
+                 th:value="${enrollment?.trainingContentFeedback}" 
+                 pattern="[A-Za-z\s.,!?'-]+" 
+                 title="Only letters, spaces, and punctuation are allowed" required>
+        </div>
+        <div class="form-group">
+          <label for="qualityFeedback">Quality Feedback:</label>
+          <input type="text" id="qualityFeedback" name="qualityFeedback" th:value="${enrollment?.qualityFeedback}" required>
+        </div>
+        <div class="form-group">
+          <label for="overallRating">Overall Rating:</label>
+          <input type="number" id="overallRating" name="overallRating" min="1" max="5" step="1" th:value="${enrollment?.overallRating}" title="Rating must be between 1 and 5" required>
+        </div>
+        <div class="form-group">
+          <label for="additionalInfo">Additional Info:</label>
+          <input type="text" id="additionalInfo" name="additionalInfo" th:value="${enrollment?.additionalInfo}" maxlength="1000">
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="form-actions">
+        <button type="button" id="submitBtn" onclick="submitForm()">Submit</button>
+        <button type="button" style="width: 120px; margin-left: 20px;" onclick="goback()">Back</button>
+      </div>
+    </div>
+  </form>
+  
+<script> 
+function goBack() {
+	window.location.href = '/dashboard';
+	}
+</script>
+  <script>
+    $(document).ready(function () {
+      var existingTrainingUid = $('#trainingUid').val();
+      if (existingTrainingUid) fetchTrainingDetails(existingTrainingUid);
+
+      var existingEmployeeUid = $('#employeeuid').val();
+      if (existingEmployeeUid) fetchEmployeeDetails(existingEmployeeUid);
+    });
+
+    function fetchTrainingDetails(trainingUid) {
+      if (!trainingUid) return;
+      $.get('/enrollment/getTrainingDetails', { trainingUid: trainingUid }, function (response) {
+        $('#trainingtitle').val(response.trainingtitle);
+        $('#trainerName').val(response.trainerName);
+        $('#duration').val(response.duration);
+      }).fail(function () {
+        Swal.fire('Error', 'Error fetching training details. Please try again.', 'error');
+      });
+    }
+
+    function fetchEmployeeDetails(employeeuid) {
+      if (!employeeuid) return;
+      $.get('/enrollment/edetails', { employeeuid: employeeuid }, function (response) {
+        if (response) {
+          $('#first_name').val(response.firstName);
+          $('#last_name').val(response.lastName);
+          $('#departmentname').val(response.departmentName);
+        }
+      });
+      $.get('/enrollment/ddetails', { employeeuid: employeeuid }, function (response) {
+        if (response) $('#designation').val(response.designation);
+      });
+    }
+
+    // ✅ Validation helper
+    function isAlphabeticInput(value) {
+      const regex = /^[A-Za-z\s.,!?'-]+$/;
+      return regex.test(value);
+    }
+
+    function submitForm() {
+      const id = $('#id').val();
+      const employeeUID = $('#employeeuid').val().trim();
+      const firstName = $('#first_name').val().trim();
+      const lastName = $('#last_name').val().trim();
+      const departmentName = $('#departmentname').val().trim();
+      const trainingUid = $('#trainingUid').val().trim();
+      const registrationDate = $('#registrationDate').val().trim();
+      const enrollmentStatus = $('#enrollmentStatus').val().trim();
+      const completionDate = $('#completionDate').val().trim();
+      const progressDescription = $('#progressDescription').val().trim();
+      const trainerFeedback = $('#trainerFeedback').val().trim();
+      const employeeFeedback = $('#employeeFeedback').val().trim();
+      const trainingContentFeedback = $('#trainingContentFeedback').val().trim();
+      const qualityFeedback = $('#qualityFeedback').val().trim();
+      const overallRating = $('#overallRating').val().trim();
+
+      // 🔴 Required validations
+      if (!employeeUID) return Swal.fire('Missing Employee UID', 'Please select an Employee UID.', 'warning');
+      if (!firstName || !lastName || !departmentName) return Swal.fire('Employee Data Missing', 'Employee details could not be fetched.', 'warning');
+      if (!trainingUid) return Swal.fire('Missing Training UID', 'Please select a Training UID.', 'warning');
+      if (!registrationDate || !enrollmentStatus || !completionDate || !progressDescription || !trainerFeedback || !employeeFeedback || !trainingContentFeedback || !qualityFeedback || !overallRating) {
+        return Swal.fire('Incomplete Form', 'Please fill in all required fields.', 'warning');
+      }
+
+      // ✅ Extra alphabet-only validation
+      if (!isAlphabeticInput(progressDescription)) return Swal.fire('Invalid Input', 'Progress Description should only contain letters and punctuation.', 'warning');
+      if (!isAlphabeticInput(trainerFeedback)) return Swal.fire('Invalid Input', 'Trainer Feedback should only contain letters and punctuation.', 'warning');
+      if (!isAlphabeticInput(employeeFeedback)) return Swal.fire('Invalid Input', 'Employee Feedback should only contain letters and punctuation.', 'warning');
+      if (!isAlphabeticInput(trainingContentFeedback)) return Swal.fire('Invalid Input', 'Training Content Feedback should only contain letters and punctuation.', 'warning');
+
+      // ✅ Prepare AJAX
+      const formData = new FormData(document.getElementById('enrollmentForm'));
+      const url = id ? '/enrollmentupdate' : '/enrollment/save';
+      const successMessage = id ? 'Enrollment updated successfully!' : 'Enrollment saved successfully!';
+
+      $.ajax({
+        url: url,
+        type: 'POST',
+        data: formData,
+        processData: false,
+        contentType: false,
+        success: function () {
+          Swal.fire('Success', successMessage, 'success').then(() => {
+            resetForm();
+            window.location.href = '/hrms/TrainingGrid';
+          });
+        },
+        error: function () {
+          Swal.fire('Error', 'Error saving enrollment. Please try again.', 'error');
+        }
+      });
+    }
+
+    function resetForm() {
+      $('#enrollmentForm')[0].reset();
+      $('#id').val('');
+      $('#form-title').text('New Enrollment');
+      $('#submitBtn').text('Submit');
+    }
+
+    function goback() {
+      window.location.href = '/hrms/TrainingGrid';
+    }
+  </script>
+</body>
+</html>

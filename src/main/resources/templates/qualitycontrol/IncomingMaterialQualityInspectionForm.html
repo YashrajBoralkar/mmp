@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Incoming Material Quality Inspection Form</title>
+ <link rel="stylesheet" href="/css/empinfo.css">
+  <link rel="stylesheet" href="/css/hrms.css"> 
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+<div th:replace="~{QUALITYCONTROL.html :: sidebarFragment}"></div> <!-- // for side bar code  -->
+
+                                                                        
+    
+   <form id="inspectionform"  class="form-container">
+    <!-- Personal Information Section -->
+    <input type="hidden" id="id" name="id" th:value="${imq?.id}">
+    <h2>Incoming Material Quality Inspection Form</h2>   
+<br>     
+
+      <!-- First Row -->
+    
+      <div class="form-row" >
+        <div class="form-group">
+          <label for="suppliername">Supplier Name:</label>
+            <input type="text" id="suppliername" name="suppliername" th:value="${imq?.suppliername}" required>
+        </div>
+      
+      <div class="form-group">
+        <label for="ponumber">Purchase Order Number:</label>
+        <input type="text" id="ponumber" name="ponumber" th:value="${imq?.ponumber}" required>
+    </div>
+
+    <div class="form-group">
+      <label>Delivery Date:</label>
+      <input type="date" id="deliverydate" name="deliverydate" th:value="${imq?.deliverydate}" required>
+    </div>
+    
+  
+      </div>
+
+      <!-- Second Row -->
+      <div class="form-row">
+        <div class="form-group">   
+          <label for="batchuid">Batch ID:</label>
+					<select id="batchuid" name="batchuid" onchange="fetchBatchDetails(this.value)" th:if="${imq == null or imq.id == null}" required>
+					    <option value="">Select Batch UID</option>
+					    <option th:each="uid : ${batchuid}" th:value="${uid}" th:text="${uid}"></option>
+					</select>
+	 <input type="text" id="batchuid" name="batchuid" th:value="${imq?.batchuid}" onchange="fetchBatchDetails(this.value)" readonly th:if="${imq?.id != null}">       
+					
+      </div>
+    
+       <div class="form-group">
+        <label for="productuid">Product ID:</label>
+        <input type="text" id="productuid" name="productuid" readonly>
+    </div>
+    
+       
+        <div class="form-group">
+          <label for="productname">Product Name: </label>
+          <input type="text" id="productname" name="productname" readonly>
+      </div>
+    
+      </div>
+      <!-- Third Row -->
+      <div class="form-row">
+        <div class="form-group">
+          <label for="quantity">Quantity Received: </label>
+          <input type="number" id="quantity" name="quantity" readonly>
+      </div>
+      
+        <div class="form-group">
+          <label for="inspectiondate">Inspection Date: </label>
+            <input type="date" id="inspectiondate" name="inspectiondate" th:value="${imq?.inspectiondate}" required>
+      </div>
+      <div class="form-group">
+          <label for="inspectorname">Inspector Name: </label>
+          <input type="text" id="inspectorname" name="inspectorname" th:value="${imq?.inspectorname}" required>
+          
+        </div>
+          
+      </div>
+
+      <!-- four Row -->
+      <div class="form-row">
+        
+        <div class="form-group">
+          <label for="inspectioncriteria">Inspection Criteria: </label>
+          <select id="inspectioncriteria" name="inspectioncriteria" th:value="${imq?.inspectioncriteria}" required>
+                 <option value="">Select Inspection Criteria</option>
+               <option value="Color" th:selected="${imq?.inspectioncriteria == 'Color'}">Color</option>
+               <option value="Weight" th:selected="${imq?.inspectioncriteria == 'Weight'}">Weight</option>
+               <option value="Size" th:selected="${imq?.inspectioncriteria == 'Size'}">Size</option>
+              <option value="Texture" th:selected="${imq?.inspectioncriteria == 'Texture'}">Texture</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="samplingmethod">Sampling Method: </label>
+          <select id="samplingmethod" name="samplingmethod" th:value="${imq?.samplingmethod}" required>
+      <option value="">Select Sampling Method </option>
+              <option value="RS" th:selected="${imq?.samplingmethod == 'RS'}">Random Sampling</option>
+              <option value="FI" th:selected="${imq?.samplingmethod == 'FI'}">Full Inspection</option>
+              <option value="AQL" th:selected="${imq?.samplingmethod == 'AQL'}">AQL (Acceptance Quality Limit)</option>
+          </select>
+        </div>
+        <div class="form-group">
+            <label for="totalinspecteditems">Total Inspected Items: </label>
+            <input type="number" id="totalinspecteditems" name="totalinspecteditems" th:value="${imq?.totalinspecteditems}" required>
+          </div>
+
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="defectiveitems">Defective Items: </label>
+            <input type="number" id="defectiveitems" name="defectiveitems" required oninput="calculateDefectRate()" th:value="${imq?.defectiveitems}">
+        </div>
+        <div class="form-group">
+          <label for="defectrate">Defect Rate (%)</label>
+          <input type="number" id="defectrate" name="defectrate" th:value="${imq?.defectrate}" readonly>
+          
+        </div>
+        <div class="form-group">
+          <label for="inspectionstatus">Inspection Status: </label>
+          <select id="inspectionstatus" name="inspectionstatus" th:value="${imq?.inspectionstatus}" required>
+      <option value="">Select Inspection Status</option>
+              <option value="Pass" th:selected="${imq?.inspectionstatus == 'Pass'}">Pass</option>
+              <option value="Fail" th:selected="${imq?.inspectionstatus == 'Fail'}">Fail</option>
+              <option value="CA" th:selected="${imq?.inspectionstatus == 'CA'}">Conditional Acceptance</option>
+          </select> 
+        </div>
+        
+
+      </div>
+      <div class="form-row">
+        
+        <div class="form-group">
+            
+          <label for="actiontaken">Action Taken: </label>
+          <select id="actiontaken" name="actiontaken" th:value="${imq?.actiontaken}" required>
+      <option value="">Select Action Taken </option>
+              <option value="Approve" th:selected="${imq?.actiontaken == 'Approve'}">Approve</option>
+              <option value="Reject" th:selected="${imq?.actiontaken == 'Reject'}">Reject</option>
+              <option value="Rework" th:selected="${imq?.actiontaken == 'Rework'}">Rework</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="remarks">Remarks:</label>
+          <input type="text" id="remarks" name="remarks" th:value="${imq?.remarks}">  
+        </div>
+      </div>
+   
+    </div>
+
+   <!-- Five Row  -->
+    <div class="form-actions">
+      <button type="button" id="submitBtn" onclick="submitForm()">Submit</button>		
+	      <button type="button" class="back-button" onclick="goBack();">Back</button> 
+			<div th:if="${successMessage}" class="success-message" th:text="${successMessage}"></div> 
+     
+    </div>
+   </form>
+   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+   <script>
+   
+   function goBack() {
+		window.location.href = '/qualitycontrol/incomingmaterialqualityinspectiongrid';
+	  }
+
+    function calculateDefectRate() {
+        let total = document.getElementById("totalinspecteditems").value;
+        let defective = document.getElementById("defectiveitems").value;
+        
+        if (total > 0) {
+            let defectRate = (defective / total) * 100;
+            document.getElementById("defectrate").value = defectRate.toFixed(2);
+        } else {
+            document.getElementById("defectrate").value = "";
+        }
+    }
+    document.getElementById("inspectionform").addEventListener("submit", function(event) {
+        event.preventDefault();
+        alert("Form submitted successfully!");
+    });
+  //Data fetching while form updating
+    $(document).ready(function() {
+      // Auto-fill Return details when updating
+      var existingItemUid = $('#productuid').val();
+      if (existingItemUid) {
+        fetchMeterialsDetails(existingItemUid);
+      }
+  });
+</script>
+<script>
+$(document).ready(function() {
+    // Auto-fill Item details when updating
+    var existingBatchuid = $('#batchuid').val();
+    if (existingBatchuid) {
+      fetchBatchDetails(existingBatchuid);
+    }
+});
+
+function fetchBatchDetails(batchuid) {
+      if (!batchuid) return;
+
+      $.ajax({
+          url: '/incomingmaterialqualityinspection/imqbatchdetails',
+          method: 'GET',
+          data: { batchuid: batchuid },
+          success: function(response) {
+      if(response && response.length > 0) {
+        let data = response[0];
+        $('#productuid').val(data.productuid || '');
+        $('#productname').val(data.productname || '');
+    } else {
+      alert('No data found for the seleected product.')
+    }
+    
+              },
+          error: function() {
+              alert('Error fetching Batch details. Please try again.');
+          }
+      });
+  }
+</script>
+
+<script>
+
+function submitForm() {
+    
+
+  const formData = new FormData(document.getElementById('inspectionform'));
+  const id = $('#id').val();
+
+  let url, successMessage;
+
+  if (!id) {
+      url = '/incomingmaterialqualityinspection/save';
+      successMessage = 'RMA Inspection Form Details saved successfully!';
+  } else {
+      url = '/incomingmaterialqualityinspection/update';
+      successMessage = 'Inspection Form Details updated successfully!';
+  }
+
+  $.ajax({
+      url: url,
+      type: 'POST',
+      data: formData,
+      processData: false,
+      contentType: false,
+      success: function(response) {
+          $('#message').text(successMessage); // Display success message
+          resetForm();
+          window.location.href = '/qualitycontrol/incomingmaterialqualityinspectiongrid';
+      },
+      error: function() {
+          alert('Error saving Inspection Form. Please fill out the data.');
+      }
+  });
+}
+// Reset the form
+function resetForm() {
+      $('#inspectionform')[0].reset();
+    $('#id').val('');
+      $('#message').text(''); // Clear the message
+      $('#submitBtn').text('Submit');
+}
+  
+function prefillForm(data) {
+          $('#id').val(data.id);		      
+          $('#inspectionuid').val(data.inspectionuid);
+          $('#suppliername').val(data.suppliername);
+          $('#ponumber').val(data.ponumber);
+          $('#deliverydate').val(data.deliverydate);
+          $('#batchuid').val(data.batchuid);
+          $('#inspectiondate').val(data.inspectiondate);
+          $('#inspectorname').val(data.inspectorname);
+          $('#inspectioncriteria').val(data.inspectioncriteria);
+          $('#samplingmethod').val(data.samplingmethod);
+          $('#totalinspecteditems').val(data.totalinspecteditems);
+          $('#defectiveitems').val(data.defectiveitems);
+          $('#defectrate').val(data.defectrate);
+          $('#inspectionstatus').val(data.inspectionstatus);
+          $('#actiontaken').val(data.actiontaken);
+          $('#remarks').val(data.remarks);
+         
+      $('#form-title').text('Updated IMQ Inspection Form');
+      $('#submitBtn').text('Update');
+      
+}
+
+</script>
+ 
+
+
+
+
+
+  
+
+
+</body>
+</html>

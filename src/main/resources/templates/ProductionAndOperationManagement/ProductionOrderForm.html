@@ -1,0 +1,465 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Production Order Form</title>
+  <link rel="stylesheet" href="/css/empinfo.css">
+  <link rel="stylesheet" href="/css/hrms.css"> <!-- // for side bar code  -->
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+</head>
+  <style>
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background-color: #f0f0f0;
+      padding: 10px 20px;
+    }
+
+    .search-box {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .search-box button,
+    .back-button {
+      padding: 6px 12px;
+      font-size: 14px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .search-box button:hover,
+    .back-button:hover {
+      background-color: #0056b3;
+    }
+  </style>
+  
+<body>
+
+  <div th:replace="~{PRODUCTIONANDOPERATION.html :: sidebarFragment}"></div> <!-- // for side bar code  -->                                                                        
+    
+   <form id="productionForm" class="form-container">
+	
+    <!-- Personal Information Section -->
+    <h2>Production Order Form</h2>   
+    <br>
+    <br>
+
+     <input type="hidden" name="id" id="id" th:value="${po?.id}" />     
+      <!-- First Row -->
+    
+      <div class="form-row" >
+        <div class="form-group">
+        <!-- Product UID Dropdown -->
+		<label for="productuid">Product ID: </label>
+		<select id="productuid" name="productuid" th:if="${po == null or po.id == null}" required>
+			<option value="">-- Select Product ID --</option>
+			<option th:each="puid : ${productuid}" th:value="${puid}" th:text="${puid}"></option>
+		</select>
+		<input type="text"  id="productuid" name="productuid"  th:value="${po.productuid}" th:if="${po?.id != null}" readonly />
+       </div>
+      
+      <div class="form-group">
+          <!-- Product Name -->
+		<label for="productname">Product Name: </label>
+		<input type="text" id="productname" name="productname" th:value="${po?.productname}" readonly required />
+      </div>
+      
+    <div class="form-group">
+      	<!-- Planning UID Dropdown -->
+	<label for="productionplanninguid">Production Planning ID:</label>
+	<select id="productionplanninguid" name="productionplanninguid" th:if="${po == null or po.id == null}" required>
+		<option value="">-- Select Planning ID --</option>
+	</select>
+	   <input type="text"  id="productionplanninguid" name="productionplanninguid"  th:value="${po.productionplanninguid}" th:if="${po?.id != null}" readonly />
+	
+    </div>
+    
+      </div>
+
+      <!-- Second Row -->
+      <div class="form-row">
+        <div class="form-group">
+           <!-- Work Order UID Dropdown -->
+			<label for="workorderuid">Work Order ID: </label>
+			<select id="workorderuid" name="workorderuid" th:if="${po == null or po.id == null}"  required>
+			<option value="">-- Select Work Order ID --</option>
+			</select>
+			 <input type="text"  id="workorderuid" name="workorderuid"  th:value="${po.workorderuid}" th:if="${po?.id != null}" readonly />
+			
+     </div>
+     
+        <div class="form-group">           
+	       <!-- Work Order Quantity -->
+			<label for="workorderquantity">Work Order Quantity: </label>
+			<input type="text" id="workorderquantity" name="workorderquantity"  th:value="${po?.workorderquantity}"readonly required />
+	    </div>
+      
+    <div class="form-group">
+       <!-- Product Order Quantity -->
+		<label for="productionorderquantity">Product Order Quantity:</label>
+		<input type="number" id="productionorderquantity" name="productionorderquantity"  th:value="${po?.productionorderquantity}" required />
+
+     </div>        
+    </div>
+
+ 		<!-- Third Row -->
+		<div class="form-row">
+			<div class="form-group">
+		      <!-- Planned Start Date -->
+			<label for="plannedstartdate">Planned Start Date: </label>
+			<br>
+			<input type="text" name="plannedstartdate" id="plannedstartdate" th:value="${po?.plannedstartdate}"  readonly required />
+		</div>
+   
+      <div class="form-group">
+         <!-- Planned End Date -->
+		<label for="plannedenddate">Planned End Date: </label>
+		<br>
+		<input type="text" id="plannedenddate" name="plannedenddate" th:value="${po?.plannedenddate}" readonly required />
+      </div>
+      
+      <div class="form-group">
+         <label for="productionorderstartdate">Production Order Start Date: </label>
+		<input type="date" id="productionorderstartdate" name="productionorderstartdate" th:value="${po?.productionorderstartdate}" required />
+      </div>
+      </div>
+      
+    <!-- Fourth Row --> 
+    <div class="form-row"> 
+      <div class="form-group">
+  		 <label for="productionorderenddate">Production Order End Date: </label>
+		 <input type="date" id="productionorderenddate" name="productionorderenddate" th:value="${po?.productionorderenddate}"  required />
+      </div>
+      
+      <div class="form-group">
+       <!-- Priority Level -->
+	<label for="prioritylevel">Priority Level: </label>
+	<br>
+	<select name="prioritylevel" id="prioritylevel" class="form-control" th:value="${po?.prioritylevel}" required>
+		<option value="">--Priority Level--</option>
+		<option value="High" th:selected="${po?.prioritylevel == 'High'}">High</option>
+		<option value="Medium" th:selected="${po?.prioritylevel == 'Medium'}">Medium</option>
+		<option value="Low" th:selected="${po?.prioritylevel == 'Low'}">Low</option>
+	</select>	
+   </div>
+        
+    <div class="form-group">
+      <!-- Supervisor -->
+	<label for="supervisorname">Supervisor Name:</label>
+	<br>
+	<select name="supervisorname" id="supervisorname" th:if="${po == null or po.id == null}" required>
+	    <option value="">-- Select Supervisor --</option>
+	    <option th:each="entry : ${supervisornameMap}" th:value="${entry.key + ' - ' + entry.value}" th:text="${entry.key + ' - ' + entry.value}"></option>
+	</select>
+	  <input type="text" id="supervisorname" name="supervisorname" th:value="${po?.supervisorname}" th:if="${po?.id != null}" readonly />
+      
+      </div>
+     </div> 
+      
+      <!-- Fifth Row --> 
+    <div class="form-row"> 
+      <div class="form-group">
+  		<!-- Production Status -->
+	<label for="productionstatus">Production Status:</label>
+	<select name="productionstatus" id="productionstatus" class="form-control" required>
+		<option value="">--Status--</option>
+		<option value="Pending" th:selected="${po?.productionstatus == 'Pending'}">Pending</option>
+		<option value="In Progress" th:selected="${po?.productionstatus == 'In Progress'}">In Progress</option>
+		<option value="Completed" th:selected="${po?.productionstatus == 'Completed'}">Completed</option>
+	</select>      
+    </div>
+    
+    <div class="form-group">
+       <label for="productionremarks">Remarks:</label>
+	   <input type="text" id="productionremarks" name="productionremarks"  th:value="${po?.productionremarks}"  required>
+    
+    </div> 
+   </div> 
+    
+    <div class="form-actions">
+  <button type="button" id="submitBtn" onclick="submitform()"> Submit </button>
+    <button type="button" class="back-button" onclick="goback();"style="padding: 10px 18px;">Back</button>
+    	  <div th:if="${successMessage}" class="success-message" th:text="${successMessage}"></div> 	
+    </div>
+   </form>
+
+   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+   <script>
+   function goback() {
+	    window.location.href = '/productionandoperationmanagement/productionordergrid';
+	}
+   
+   function goBack() {
+		window.location.href = '/dashboard';
+	  }
+   </script>
+<script>
+	
+	
+	
+	function validateForm() {
+
+	    // Helper to show error
+	    function showError(message, fieldId) {
+	        alert("⚠️ " + message);
+	        $("#" + fieldId).focus();
+	        return false;
+	    }
+
+	    // Required Dropdowns
+	    const requiredDropdowns = [
+	        "productuid",
+	        "productionplanninguid",
+	        "workorderuid",
+	        "prioritylevel",
+	        "supervisorname",
+	        "productionstatus"
+	    ];
+
+	    for (let id of requiredDropdowns) {
+	        let val = $("#" + id).val();
+	        if (!val || val.trim() === "") {
+	            return showError("Please select " + id.replace(/([A-Z])/g, ' $1'), id);
+	        }
+	    }
+
+	    // Required Inputs
+	    const requiredInputs = [
+	        "productname",
+	        "workorderquantity",
+	        "productionorderquantity",
+	        "plannedstartdate",
+	        "plannedenddate",
+	        "productionorderstartdate",
+	        "productionorderenddate",
+	        "productionremarks"
+	    ];
+
+	    for (let id of requiredInputs) {
+	        let val = $("#" + id).val();
+	        if (!val || val.trim() === "") {
+	            return showError("Please enter " + id.replace(/([A-Z])/g, ' $1'), id);
+	        }
+	    }
+
+	    // Numeric validation
+	    let poQty = $("#productionorderquantity").val();
+	    if (isNaN(poQty) || poQty <= 0) {
+	        return showError("Production Order Quantity must be a positive number", "productionorderquantity");
+	    }
+
+	    let woQty = $("#workorderquantity").val();
+	    if (isNaN(woQty) || woQty <= 0) {
+	        return showError("Work Order Quantity must be numeric", "workorderquantity");
+	    }
+
+	    // Date validations
+	    const plannedStart = new Date($("#plannedstartdate").val());
+	    const plannedEnd = new Date($("#plannedenddate").val());
+	    const orderStart = new Date($("#productionorderstartdate").val());
+	    const orderEnd = new Date($("#productionorderenddate").val());
+
+	    if (orderStart < plannedStart || orderStart > plannedEnd) {
+	        return showError("Production Order Start Date must be within Planned Start & End Date", "productionorderstartdate");
+	    }
+
+	    if (orderEnd < plannedStart || orderEnd > plannedEnd) {
+	        return showError("Production Order End Date must be within Planned Start & End Date", "productionorderenddate");
+	    }
+
+	    if (orderEnd < orderStart) {
+	        return showError("End Date cannot be earlier than Start Date", "productionorderenddate");
+	    }
+
+	    return true;
+	}
+
+
+// ✅ Convert dd-MM-yyyy → yyyy-MM-dd
+function convertToInputDate(dateStr) {
+    if (!dateStr) return "";
+    const parts = dateStr.split("-");
+    if (parts.length === 3 && parts[0].length <= 2) {
+        const [day, month, year] = parts;
+        return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
+    }
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+        return dateStr;
+    }
+    return "";
+}
+
+// ✅ Apply min/max restriction on Production Order Dates
+function setDateRange(start, end) {
+    if (start && end) {
+        $('#productionorderstartdate').attr('min', start).attr('max', end);
+        $('#productionorderenddate').attr('min', start).attr('max', end);
+    }
+}
+
+// ✅ Validate Production Order Dates
+function validateDates() {
+    const plannedStart = new Date($("#plannedstartdate").val());
+    const plannedEnd = new Date($("#plannedenddate").val());
+    const orderStart = new Date($("#productionorderstartdate").val());
+    const orderEnd = new Date($("#productionorderenddate").val());
+
+    if (orderStart < plannedStart || orderStart > plannedEnd) {
+        alert("⚠️ Production Order Start Date must be within Planned Start and End Date.");
+        return false;
+    }
+    if (orderEnd < plannedStart || orderEnd > plannedEnd) {
+        alert("⚠️ Production Order End Date must be within Planned Start and End Date.");
+        return false;
+    }
+    if (orderEnd < orderStart) {
+        alert("⚠️ End Date cannot be before Start Date!");
+        return false;
+    }
+    return true;
+}
+$(document).ready(function () {
+	 // Auto-fill Item details when updating
+    var existingproductuid = $('#productuid').val();
+    if (existingproductuid) {
+    	fetchclientDetails(existingproductuid);
+    }
+    // On Product Change → Fetch Planning UIDs + Product Name
+    $("#productuid").change(function () {
+        var productuid = $(this).val();
+        $("#productionplanninguid").empty().append('<option value="">--Select Planning ID--</option>');
+        $("#workorderuid").empty().append('<option value="">--Select Work Order ID--</option>');
+        $("#workorderquantity").val("");
+
+        if (productuid) {
+            // 1️⃣ Get Planning UIDs
+            $.get("/getPlanningUIDs/" + productuid, function (data) {
+                $.each(data, function (i, val) {
+                    $("#productionplanninguid").append('<option value="' + val + '">' + val + '</option>');
+                });
+            });
+
+            // 2️⃣ Get Product Name only
+            $.get("/productionplanning/getproductdata", { productuid: productuid }, function (response) {
+                if (response && response.length > 0) {
+                    const data = response[0];
+                    $("#productname").val(data.productname || '');
+                }
+            });
+        }
+    });
+
+    // On Planning UID Change → Fetch Work Orders + Planned Dates
+    $("#productionplanninguid").change(function () {
+        var planninguid = $(this).val();
+        $("#workorderuid").empty().append('<option value="">--Select Work Order ID--</option>');
+        $("#workorderquantity").val("");
+
+        if (planninguid) {
+            // 1️⃣ Fetch Work Orders
+            $.get("/getWorkOrders/" + planninguid, function (data) {
+                $.each(data, function (i, val) {
+                    $("#workorderuid").append('<option value="' + val + '">' + val + '</option>');
+                });
+            });
+
+            // 2️⃣ Fetch Planned Start & End Dates for this Planning UID
+            $.get("/getPlannedDates/" + planninguid, function (data) {
+                if (data) {
+                    const plannedStart = convertToInputDate(data.productionstartdate);
+                    const plannedEnd = convertToInputDate(data.productionenddate);
+
+                    $("#plannedstartdate").val(plannedStart || '');
+                    $("#plannedenddate").val(plannedEnd || '');
+
+                    // ✅ Set min/max on Production Order dates
+                    setDateRange(plannedStart, plannedEnd);
+                }
+            });
+        }
+    });
+
+    // On Work Order Change → Fetch Planned Quantity
+    $("#workorderuid").change(function () {
+        var workorderuid = $(this).val();
+        if (workorderuid) {
+            $.get("/getPlannedQuantity/" + workorderuid, function (data) {
+                $("#workorderquantity").val(data);
+            });
+        }
+    });
+
+});
+
+
+
+
+function submitform(){
+	
+	if (!validateForm()) {
+	        return; // ❌ Validation failed → stop submit
+	    }
+	
+	 const formData = new FormData(document.getElementById('productionForm'));
+	    const id = $('#id').val();
+	    let url,successMessage;
+	    
+	    if (!id) {
+			url = '/saveproductionorderform';
+			successMessage = 'Production Order Saved Successfully!';
+		} else {
+			url = '/productionorderupdate';
+			successMessage = 'Production Order Updated Successfully!';
+		}
+	    
+	    $.ajax({
+	        url: url,
+	        type: 'POST',
+	        data: formData,
+	        processData: false,
+	        contentType: false,
+	        success: function () {
+	            alert(successMessage)
+	            resetForm();
+	            window.location.href = '/productionandoperationmanagement/productionordergrid';
+	        },
+	        error: function () { 
+				alert('Error saving form'); 
+			}
+	    });
+	}
+	
+function resetForm() {
+    $('#productionForm')[0].reset();
+    $('#id').val('');
+    $('#form-title').text('Production Order Form');
+    $('#submitBtn').text('Submit');
+  }
+
+
+// ✅ Validate + Submit
+function validateAndSubmit() {
+    let valid = true;
+    $('#productionForm [required]').each(function () {
+        if (!$(this).val().trim()) {
+            alert("Please fill out: " + ($(this).attr('name') || $(this).attr('id')));
+            $(this).focus();
+            valid = false;
+            return false;
+        }
+    });
+    if (!valid || !validateDates()) return;
+
+}
+</script>
+</body>
+</html>
+

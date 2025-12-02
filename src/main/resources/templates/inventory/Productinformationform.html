@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Product Information Form</title>
+  <link rel="stylesheet" href="/css/empinfo.css">
+     <link rel="stylesheet" href="/css/hrms.css"> <!-- // for side bar code  -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <!-- <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet" /> -->
+  <!-- <style>
+    .raw-material-display-box {
+      min-height: 60px;
+      background-color: #f9f9f9;
+      border: 1px dashed #ccc;
+      border-radius: 6px;
+      padding: 10px;
+      font-size: 14px;
+      color: #333;
+      white-space: pre-line;
+      line-height: 1.5;
+    }
+  </style> -->
+</head>
+<body>
+   <div th:replace="~{INVENTORY.html :: sidebarFragment}"></div>
+         
+ <form  id="ProductInfoForm" class="form-container" autocomplete="off">
+	<input type="hidden" id="id" name="id" th:value="${product?.id}" />
+
+    <h2>Product Information Form</h2>
+    <br>
+  <!-- Row 1 -->
+<div class="form-row">
+	<div class="form-group">
+	  <label for="productname">Product Name:</label>
+	  <input type="text" id="productname" name="productname" class="form-control"
+	         th:value="${product?.productname}" required />
+	</div>
+
+
+  <div class="form-group">
+    <label for="productcategory">Product Category:</label>
+    <select id="productcategory" name="productcategory" class="form-control"
+            th:data-selected="${product != null} ? ${product.productcategory} : ''">
+      <option value="">-- Select Category --</option>
+    </select>
+  </div>
+
+  <div class="form-group">
+    <label for="subcategory">Product Subcategory:</label>
+    <select id="subcategory" name="productsubcategory" class="form-control"
+            th:data-selected="${product != null} ? ${product.productsubcategory} : ''">
+      <option value="">-- Select Subcategory --</option>
+    </select>
+  </div>
+</div>
+
+<!-- Row 2 -->
+<div class="form-row">
+  <div class="form-group">
+    <label for="specifications">Specifications:</label>
+    <input type="text" id="specifications" name="specifications" class="form-control" th:value="${product?.specifications}" required />
+  </div>
+
+  <!-- Raw Material UID(s) -->
+  <div class="form-group">
+    <label for="rawmaterialuid">Raw Material UID(s):</label>
+
+	<!-- Create Mode (select multiple UIDs) -->
+	<select id="rawmaterialuid" name="rawmaterialuid" multiple class="form-control"
+	        th:if="${product == null or product.id == null}"
+	        th:attr="data-selected=${product?.rawmaterialuid}" required>
+	  <option th:each="uid : ${rawmaterialuid}" 
+	          th:value="${uid}" 
+	          th:text="${uid}" 
+	          th:selected="${product?.rawmaterialuid != null and #strings.contains(product.rawmaterialuid, uid)}">
+	  </option>
+	</select>
+
+	<!-- Update Mode (show readonly input/textarea with frozen UIDs) -->
+	<textarea id="rawmaterialuidDisplay" class="form-control" rows="2" readonly
+	          th:if="${product?.id != null}"
+	          th:text="${product?.rawmaterialuid}">
+	</textarea>
+
+	<!-- Hidden field for backend submission -->
+	<input type="hidden" id="rawmaterialuidListHidden" name="rawmaterialuid"
+	       th:value="${product?.rawmaterialuid}" />
+
+  </div>
+
+
+  <div class="form-group">
+    <label for="rawmaterialname">Raw Material Name(s):</label>
+    <input type="text" id="rawmaterialname" name="rawmaterialname" class="form-control"
+           th:value="${product?.rawmaterialname}" readonly />
+  </div>
+
+</div>
+
+<!-- Row 3 -->
+<div class="form-row">
+  <div class="form-group">
+    <label for="hsnsaccode">HSN/SAC Code:</label>
+    <input type="text" id="hsnsaccode" name="hsnsaccode" class="form-control"
+           th:value="${product?.hsnsaccode}" required pattern="[0-9]+" inputmode="numeric"
+           title="Please enter only numeric values" />
+  </div>
+
+  <div class="form-group">
+    <label for="unitofmeasure">Unit of Measure:</label>
+    <input type="text" id="unitofmeasure" name="unitofmeasure" class="form-control" th:value="${product?.unitofmeasure}" required />
+  </div>
+
+  <div class="form-group">
+    <label for="leadtime">Lead Time (Days):</label>
+    <input type="number" id="leadtime" name="leadtime" class="form-control" th:value="${product?.leadtime}" required />
+  </div>
+</div>
+
+<!-- Row 4 -->
+<div class="form-row">
+  <div class="form-group">
+    <label for="minorderquantity">Minimum Order Quantity:</label>
+    <input type="number" id="minorderquantity" name="minorderquantity" class="form-control" th:value="${product?.minorderquantity}" required />
+  </div>
+
+  <div class="form-group">
+    <label for="sellingprice">Selling Price (MRP):</label>
+    <input type="number" step="0.01" id="sellingprice" name="sellingprice" class="form-control" th:value="${product?.sellingprice}" required />
+  </div>
+
+  <div class="form-group">
+    <label for="taxrate">Tax Rate (%):</label>
+    <input type="number" step="0.01" id="taxrate" name="taxrate" class="form-control" th:value="${product?.taxrate}" required />
+  </div>
+</div>
+
+<!-- Row 5 -->
+<div class="form-row">
+  <div class="form-group">
+    <label for="reorderlevel">Reorder Level:</label>
+    <input type="number" id="reorderlevel" name="reorderlevel" class="form-control" th:value="${product?.reorderlevel}" required />
+  </div>
+
+  <div class="form-group">
+    <label for="safetystocklevel">Safety Stock Level:</label>
+    <input type="number" id="safetystocklevel" name="safetystocklevel" class="form-control" th:value="${product?.safetystocklevel}" required />
+  </div>
+
+  <div class="form-group">
+    <label for="itemstatus">Item Status:</label>
+    <select id="itemstatus" name="itemstatus" class="form-control" required>
+      <option value="">-- Select Status --</option>
+      <option value="Active" th:selected="${product?.itemstatus == 'Active'}">Active</option>
+      <option value="Inactive" th:selected="${product?.itemstatus == 'Inactive'}">Inactive</option>
+    </select>
+  </div>
+</div>
+
+<!-- Submit Row -->
+  <div class="form-actions">
+    <button type="button" id="submitBtn" class="btn btn-primary">Submit</button>
+     <button type="button" onclick="goBack()" class="btn btn-secondary">Back</button>
+
+    <div id="message" class="success-message" th:text="${successMessage}"></div>
+  </div>
+</form>
+<script>
+  function goBack() {
+	window.location.href = '/inventory/batchlotgrid';
+  }
+</script>
+
+<script>
+  $(document).ready(function () {
+
+    // ✅ Load all categories
+    $.ajax({
+      url: '/inventory/getAllProductCategories',
+      type: 'GET',
+      success: function (data) {
+        const $category = $('#productcategory');
+        $category.empty().append('<option value="">-- Select Category --</option>');
+
+        data.forEach(function (item) {
+          $category.append(`<option value="${item}">${item}</option>`);
+        });
+
+        // ✅ Prefill category (edit mode)
+        const selectedCat = $category.attr('data-selected');
+        if (selectedCat) {
+          $category.val(selectedCat);
+          fetchSubcategories(selectedCat, $('#subcategory').attr('data-selected'));
+        }
+      },
+      error: function () {
+        alert('❌ Failed to load product categories');
+      }
+    });
+
+    // ✅ Fetch Subcategories
+    function fetchSubcategories(categoryName, selectedSubcategory) {
+      let subSelect = $('#subcategory');
+      subSelect.empty().append('<option value="">-- Select Subcategory --</option>');
+      if (!categoryName) return;
+
+      $.ajax({
+        url: '/inventory/getSubcategoriesByCategory',
+        type: 'GET',
+        data: { category: categoryName },
+        success: function(response) {
+          response.forEach(function(sub) {
+            let option = $('<option>').val(sub).text(sub);
+            if (sub === selectedSubcategory) {
+              option.prop('selected', true);
+            }
+            subSelect.append(option);
+          });
+        },
+        error: function() {
+          alert('❌ Failed to load subcategories');
+        }
+      });
+    }
+
+    // ✅ Reload subcategories when category changes
+    $('#productcategory').change(function () {
+      fetchSubcategories($(this).val(), null);
+    });
+
+    // ✅ Fetch raw material names
+	// ✅ Fetch raw material names
+	function fetchRawMaterialNames(uidList) {
+	  const uids = Array.isArray(uidList)
+	    ? uidList.filter(Boolean)
+	    : (typeof uidList === 'string' && uidList.trim() ? [uidList.trim()] : []);
+
+	  if (!uids.length) {
+	    $('#rawmaterialnameDisplayBox').text('No Raw Material Names Found');
+	    $('#rawmaterialname').val('');
+	    return;
+	  }
+
+	  $.ajax({
+	    url: '/getRawMaterialNamesByUIDs',
+	    type: 'POST',
+	    contentType: 'application/json',
+	    data: JSON.stringify(uids),
+	    success: function (data) {
+	      if (Array.isArray(data) && data.length > 0) {
+	        // ✅ Use commas instead of new lines
+	        const namesText = data.join(', ');
+	        $('#rawmaterialnameDisplayBox').text(namesText);
+	        $('#rawmaterialname').val(namesText);
+	      } else {
+	        $('#rawmaterialnameDisplayBox').text('No Raw Material Names Found');
+	        $('#rawmaterialname').val('');
+	      }
+	    },
+	    error: function () {
+	      $('#rawmaterialnameDisplayBox').text('Error fetching names');
+	      $('#rawmaterialname').val('');
+	    }
+	  });
+	}
+
+
+    // ✅ Edit mode initialization
+    const hiddenUIDString = $('#rawmaterialuidListHidden').val();
+    if (hiddenUIDString) {
+      const selectedUIDs = hiddenUIDString.split(',').map(uid => uid.trim()).filter(Boolean);
+      fetchRawMaterialNames(selectedUIDs);
+    }
+
+    // ✅ On UID select
+    $('#rawmaterialuid').on('change', function () {
+      const selectedUIDs = $(this).val();
+      fetchRawMaterialNames(selectedUIDs);
+    });
+
+    // ✅ Validation regex patterns
+    const regexPatterns = {
+      productname: /^[a-zA-Z0-9\s\-_,.()]{2,100}$/,
+      specifications: /^.{3,255}$/,
+      hsnsaccode: /^[0-9]{4,8}$/,
+      unitofmeasure: /^[a-zA-Z\s]{1,20}$/,
+      leadtime: /^[0-9]{1,3}$/,
+      minorderquantity: /^[0-9]{1,7}$/,
+      sellingprice: /^\d+(\.\d{1,2})?$/,
+      taxrate: /^\d{1,2}(\.\d{1,2})?$/,
+      reorderlevel: /^[0-9]{1,6}$/,
+      safetystocklevel: /^[0-9]{1,6}$/
+    };
+
+    function validateField(id, regex, errorMsg) {
+      const value = $(`#${id}`).val().trim();
+      if (!regex.test(value)) {
+        alert(`❌ Invalid ${id.replace(/([A-Z])/g, ' $1')}: ${errorMsg}`);
+        $(`#${id}`).focus();
+        return false;
+      }
+      return true;
+    }
+
+    // ✅ Form Submit
+    $('#submitBtn').on('click', function () {
+      const id = $('#id').val();
+
+      if (!validateField('productname', regexPatterns.productname, "Only letters, numbers, spaces and (- , . () _) allowed. Min 2 characters.")) return;
+      if (!$('#productcategory').val()) { alert("❌ Please select Product Category."); return; }
+      if (!$('#subcategory').val()) { alert("❌ Please select Product Subcategory."); return; }
+      if (!validateField('specifications', regexPatterns.specifications, "At least 3 characters required.")) return;
+
+	  const selectedUIDs = $('#rawmaterialuid').val();
+	  const hiddenUIDs = $('#rawmaterialuidListHidden').val();
+
+	  if ((!selectedUIDs || selectedUIDs.length === 0) && !hiddenUIDs) {
+	    alert("❌ Please select at least one Raw Material UID.");
+	    $('#rawmaterialuid').focus();
+	    return;
+	  }
+
+
+      if (!validateField('hsnsaccode', regexPatterns.hsnsaccode, "Only numbers allowed (4–8 digits).")) return;
+      if (!validateField('unitofmeasure', regexPatterns.unitofmeasure, "Only alphabets allowed.")) return;
+      if (!validateField('leadtime', regexPatterns.leadtime, "Enter valid days (1–999).")) return;
+      if (!validateField('minorderquantity', regexPatterns.minorderquantity, "Enter a valid number.")) return;
+      if (!validateField('sellingprice', regexPatterns.sellingprice, "Enter a valid price (e.g. 100 or 100.50).")) return;
+      if (!validateField('taxrate', regexPatterns.taxrate, "Enter valid tax (0–99.99).")) return;
+      if (!validateField('reorderlevel', regexPatterns.reorderlevel, "Enter valid number.")) return;
+      if (!validateField('safetystocklevel', regexPatterns.safetystocklevel, "Enter valid number.")) return;
+
+      if (!$('#itemstatus').val()) { alert("❌ Please select Item Status."); return; }
+
+      const form = document.getElementById('ProductInfoForm');
+      const formData = new FormData(form);
+      const url = id ? '/updateproductinfo' : '/saveproductinfo';
+
+      $.ajax({
+        url: url,
+        type: 'POST',
+        data: formData,
+        processData: false,
+        contentType: false,
+        success: function () {
+          alert(id ? '✅ Product updated successfully!' : '✅ Product saved successfully!');
+          window.location.href = '/inventory/batchlotgrid';
+        },
+        error: function (xhr) {
+          alert('❌ Error saving product:\n' + xhr.responseText);
+        }
+      });
+    });
+  });
+</script>
+
+
+</body>
+</html>

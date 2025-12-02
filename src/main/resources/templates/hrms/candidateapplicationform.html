@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Candidate Application Form</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/css/candidate.css">
+    <link rel="stylesheet" href="/css/hrms.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+
+    <style>
+        .remove-education,
+        .remove-experience {
+            background-color: #ff4d4d;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            font-size: 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 5px;
+            height: 28px;
+        }
+
+        .remove-education:hover,
+        .remove-experience:hover {
+            background-color: #e60000;
+        }
+
+        .education-entry,
+        .experience-entry {
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            padding: 10px;
+            border-radius: 6px;
+            background-color: #fafafa;
+        }
+
+        
+        
+    </style>
+</head>
+<body>
+
+<div th:replace="~{HRMS.html :: sidebarFragment}"></div>
+
+<form th:action="${candidate.id != null} ? @{/candidate/update} : @{/candidateapplication}"
+      th:object="${candidate}" method="post" enctype="multipart/form-data"
+      id="candidateApplicationForm" onsubmit="return validateForm()">
+
+    <input type="hidden" th:if="${candidate.id != null}" th:field="*{id}"/>
+
+    <div class="form-container">
+        <h2 th:text="${candidate.id != null} ? 'Update Candidate' : 'New Candidate Application'"></h2><br>
+
+        <!-- Candidate Details -->
+     
+            <h3>Candidate Details</h3><br>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Name:</label>
+                    <input type="text" th:field="*{name}" placeholder="Enter full name">
+                </div>
+                <div class="form-group">
+                    <label>Contact:</label>
+                    <input type="tel" th:field="*{contact}" placeholder="10-digit mobile number">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Email:</label>
+                    <input type="email" th:field="*{email}" placeholder="example@email.com">
+                </div>
+                <div class="form-group">
+                    <label>Current Address:</label>
+                    <textarea th:field="*{currentAddress}" placeholder="Enter current address"></textarea>
+                </div>
+            </div>
+      
+
+        <!-- Education Details -->
+       
+            <h3>Education Details</h3><br>
+            <div id="education-section">
+                <div class="form-row education-entry">
+                    <div class="form-group">
+                        <label>Qualification:</label>
+                        <select th:field="*{highestQualification}">
+                            <option value="">Select</option>
+                            <option value="Bachelors">Bachelors</option>
+                            <option value="Masters">Masters</option>
+                            <option value="Ph.D.">Ph.D.</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Institution:</label>
+                        <input type="text" th:field="*{institution}" placeholder="Enter institution name">
+                    </div>
+                    <div class="form-group">
+                        <label>Year:</label>
+                        <input type="number" th:field="*{yearOfGraduation}" placeholder="YYYY">
+                    </div>
+                    <button type="button" class="remove-education">Remove</button>
+                </div>
+            </div>
+			<div class="form-actions" style="margin-right:520px;">
+            <button type="button" onclick="addEducation()">➕ Add More Education</button>
+			</div><br>
+     
+
+        <!-- Work Experience -->
+ 
+            <h3>Work Experience</h3><br>
+            <div class="form-group">
+                <label>Total Experience:</label>
+                <select th:field="*{totalExperience}">
+                    <option value="">Select</option>
+                    <option value="Fresher">Fresher</option>
+                    <option value="1-2 years">1-2 years</option>
+                    <option value="3-5 years">3-5 years</option>
+                    <option value="5+ years">5+ years</option>
+                </select>
+            </div>
+            <div id="experience-section">
+                <div class="form-row experience-entry">
+                    <div class="form-group">
+                        <label>Employer:</label>
+                        <input type="text" th:field="*{previousEmployer}" placeholder="Enter company name">
+                    </div>
+                    <div class="form-group">
+                        <label>Role:</label>
+                        <input type="text" th:field="*{role}" placeholder="Enter role/designation">
+                    </div>
+                    <div class="form-group">
+                        <label>Duration:</label>
+                        <input type="text" th:field="*{durationOfEmployment}" placeholder="e.g. 2 years">
+                    </div>
+                    <button type="button" class="remove-experience">Remove</button>
+                </div>
+            </div>
+			<div class="form-actions" style="margin-right:520px;">
+            <button type="button" onclick="addExperience()">➕ Add More Experience</button>
+			</div><br>
+       
+
+        <!-- Application Details -->
+        
+            <h3>Application Details</h3><br>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Job UID:</label>
+                    <select name="jobuid" th:if="${candidate?.id == null}">
+                        <option value="">Select Job</option>
+                        <option th:each="j : ${jobuid}" th:value="${j}" th:text="${j}"></option>
+                    </select>
+                    <input type="text" id="jobuid" name="jobuid"
+                           th:if="${candidate?.id != null}"
+                           th:value="${candidate.jobuid}" readonly>
+                </div>
+                <div class="form-group">
+                    <label>Resume Upload:</label>
+                    <input type="file" id="resume" name="file" accept=".pdf,.doc,.docx">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Status:</label>
+                <select th:field="*{status}">
+                    <option value="">Select</option>
+                    <option value="Applied">Applied</option>
+                    <option value="Shortlisted">Shortlisted</option>
+                    <option value="Rejected">Rejected</option>
+                    <option value="Selected">Selected</option>
+                </select>
+            </div>
+    
+
+        <!-- Additional Info -->
+      
+            <h3>Additional Information</h3><br>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>References:</label>
+                    <textarea th:field="*{referencedetails}" placeholder="Enter reference details"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Cover Letter:</label>
+                    <textarea th:field="*{coverLetter}" placeholder="Write your cover letter"></textarea>
+                </div>
+            </div>
+      
+
+        <!-- Buttons -->
+        <div class="form-actions">
+            <button type="submit" class="action-btn"
+                th:text="${candidate.id != null} ? 'Update' : 'Submit'"></button>
+            <button type="button" class="action-btn" onclick="window.location.href='/hrms/JobGrid'">
+                Back 
+            </button>
+        </div>
+    </div>
+</form>
+
+<!-- JavaScript -->
+
+<script> 
+function goBack() {
+	window.location.href = '/dashboard';
+	}
+</script>
+<script>
+    function addEducation() {
+        const html = `
+        <div class="form-row education-entry">
+            <div class="form-group">
+                <label>Qualification:</label>
+                <select name="highestQualification">
+                    <option value="">Select</option>
+                    <option value="Bachelors">Bachelors</option>
+                    <option value="Masters">Masters</option>
+                    <option value="Ph.D.">Ph.D.</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Institution:</label>
+                <input type="text" name="institution">
+            </div>
+            <div class="form-group">
+                <label>Year:</label>
+                <input type="number" name="yearOfGraduation">
+            </div>
+            <button type="button" class="remove-education">Remove</button>
+        </div>`;
+        $('#education-section').append(html);
+    }
+
+    function addExperience() {
+        const html = `
+        <div class="form-row experience-entry">
+            <div class="form-group">
+                <label>Employer:</label>
+                <input type="text" name="previousEmployer">
+            </div>
+            <div class="form-group">
+                <label>Role:</label>
+                <input type="text" name="role">
+            </div>
+            <div class="form-group">
+                <label>Duration:</label>
+                <input type="text" name="durationOfEmployment">
+            </div>
+            <button type="button" class="remove-experience">Remove</button>
+        </div>`;
+        $('#experience-section').append(html);
+    }
+
+    $(document).on('click', '.remove-education', function () {
+        $(this).closest('.education-entry').remove();
+    });
+
+    $(document).on('click', '.remove-experience', function () {
+        $(this).closest('.experience-entry').remove();
+    });
+
+    function showAlert(message) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Validation Error',
+            text: message,
+            confirmButtonColor: '#3085d6',
+            confirmButtonText: 'OK'
+        });
+    }
+
+    function validateForm() {
+        const name = $('input[name="name"]').val().trim();
+        const contact = $('input[name="contact"]').val().trim();
+        const email = $('input[name="email"]').val().trim();
+        const address = $('textarea[name="currentAddress"]').val().trim();
+        const totalExp = $('select[name="totalExperience"]').val();
+        const status = $('select[name="status"]').val();
+        const ref = $('textarea[name="referencedetails"]').val().trim();
+        const cover = $('textarea[name="coverLetter"]').val().trim();
+        const resume = $('#resume').val().trim();
+
+        const nameRegex = /^[A-Za-z\s]+$/;
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+        if (!name) return showAlert("Please enter your Name."), false;
+        if (!nameRegex.test(name)) return showAlert("Name should contain only letters."), false;
+        if (!contact) return showAlert("Please enter your Contact Number."), false;
+        if (!/^[0-9]{10}$/.test(contact)) return showAlert("Contact Number must be a valid 10-digit number."), false;
+        if (!email) return showAlert("Please enter your Email Address."), false;
+        if (!emailRegex.test(email)) return showAlert("Please enter a valid Email Address."), false;
+        if (!address) return showAlert("Please enter your Current Address."), false;
+
+        // Education Validation
+        let validEdu = true;
+        $('#education-section .education-entry').each(function () {
+            const q = $(this).find('select[name="highestQualification"]').val();
+            const i = $(this).find('input[name="institution"]').val().trim();
+            const y = $(this).find('input[name="yearOfGraduation"]').val().trim();
+            if (!q || !i || !y) {
+                showAlert("Please fill all Education Details properly.");
+                validEdu = false;
+                return false;
+            }
+        });
+        if (!validEdu) return false;
+
+        // Experience Validation
+        let validExp = true;
+        $('#experience-section .experience-entry').each(function () {
+            const e = $(this).find('input[name="previousEmployer"]').val().trim();
+            const r = $(this).find('input[name="role"]').val().trim();
+            const d = $(this).find('input[name="durationOfEmployment"]').val().trim();
+            if (!e || !r || !d) {
+                showAlert("Please fill all Experience Details properly.");
+                validExp = false;
+                return false;
+            }
+        });
+        if (!validExp) return false;
+
+        if (!totalExp) return showAlert("Please select your Total Experience."), false;
+        if (!resume) return showAlert("Please upload your Resume."), false;
+        if (!status) return showAlert("Please select Application Status."), false;
+        if (!ref) return showAlert("Please enter Reference Details."), false;
+        if (!cover) return showAlert("Please enter your Cover Letter."), false;
+
+        Swal.fire({
+            icon: 'success',
+            title: 'Validation Passed!',
+            text: 'All fields look good. Submitting your form...',
+            showConfirmButton: false,
+            timer: 1500
+        });
+        return true;
+    }
+</script>
+
+</body>
+</html>

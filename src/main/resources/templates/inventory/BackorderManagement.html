@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Backorder Management</title>
+  <link rel="stylesheet" href="/css/empinfo.css">
+  <link rel="stylesheet" href="/css/hrms.css"> <!-- // for side bar code  -->
+   <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<style>
+h5{
+  margin: 10px;
+}
+label{
+  font-size: 12px;
+}
+</style>
+<body>
+  <div th:replace="~{INVENTORY.html :: sidebarFragment}"></div> <!-- // for side bar code  -->
+
+
+   <form id="backorderForm" enctype="/form-data" class="form-container"  >
+    <!-- Personal Information Section -->
+    <input type="hidden" id="id" name="id" required th:value="${backorder?.id}">
+ 
+      <h2>Backorder Management</h2>
+
+      <!-- First Row -->
+    
+      <div class="form-row">
+        
+        <div class="form-group">        
+          <label for="salesorderuid">Sales Order UID:</label>
+		       <select id="salesorderuid" name="salesorderuid" onchange="fetchSalesOrderDetails(this.value)" th:if="${backorder == null or backorder.id == null}">
+		           <option value="">Select Sales Order UID</option>
+		           <option th:each="uid : ${salesorderuid}" th:value="${uid}" th:text="${uid}"></option>
+		       </select>
+		    <input type="text" id="salesorderuid" name="salesorderuid" th:value="${backorder?.salesorderuid}" onchange="fetchSalesOrderDetails(this.value)" readonly th:if="${backorder?.id != null}">
+		       
+        </div>
+
+        <div class="form-group">
+          <label for="orderdate">Order Date:</label>
+          <input type="text" id="orderdate" name="orderdate" readonly>
+        </div>
+
+        <div class="form-group">
+          <label for="customername">Customer Name:</label>
+          <input type="text" id="customername" name="customername" readonly >   
+        </div>
+
+        <div class="form-group">
+         <label for="lotuid">Lot UID:</label>
+            <select id="lotuid" name="lotuid" onchange="fetchLotDetails(this.value)">
+                <option value="">Select Lot UID</option>
+                <option th:each="uid : ${lotuid}" th:value="${uid}" th:text="${uid}"></option>
+            </select>
+            </div>
+        </div>
+
+      <!-- Second Row -->
+      <div class="form-row">
+        <div class="form-group">
+          <label for="itemname">Item Name:</label>
+		        <input type="text" id="itemname" name="itemname" readonly>
+	      </div>
+   
+        <div class="form-group">
+          <label for="originalorderedquantity" >Original Ordered Quantity:</label>
+          <input type="text" id="originalorderedquantity" name="originalorderedquantity" readonly>
+        </div>
+
+        <div class="form-group">
+          <label for="pendingquantity">Pending Quantity:</label>
+		        <input type="text" id="pendingquantity" name="pendingquantity" readonly>
+        </div>
+
+        <div class="form-group" >         
+          <label for="unitprice">Unit Price:</label>
+          <input type="text" id="unitprice" name="unitprice" readonly>
+
+        </div>
+      </div>
+      <!-- Third Row -->
+      <div class="form-row">
+      
+          <div class="form-group">            
+            <label for="totalpendingvalue">Total Pending Value:</label>
+		        <input type="text" id="totalpendingvalue" name="totalpendingvalue" readonly>
+          </div>
+
+          <div class="form-group">
+            <label for="warehouseuid">Warehouse UID:</label>
+            <select id="warehouseuid" name="warehouseuid" onchange="fetchWarehouseDetails(this.value)">
+                <option value="">Select Warehouse UID</option>
+                <option th:each="uid : ${warehouseuid}" th:value="${uid}" th:text="${uid}"></option>
+            </select>
+        </div>
+        <div class="form-group">
+          <label for="currentstock">Current Stock:</label>
+          <input type="text" id="currentstock" name="currentstock" readonly>
+        </div>
+        <div class="form-group">
+         
+          <label for="warehouselocation">Warehouse Location:</label>
+          <input type="text" id="warehouselocation" name="warehouselocation" readonly>     
+        </div>
+        
+      </div>
+
+      <!-- four Row -->
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="accepteddeliverydate">Accepted Delivery Date:</label>
+				<input type="date" id="accepteddeliverydate" name="accepteddeliverydate"th:value="${backorder?.accepteddeliverydate}" >
+
+        </div>
+        <div class="form-group">
+         	
+				<label for="fulfillmentstatus">Fulfillment Status:</label>
+				<select id="fulfillmentstatus" name="fulfillmentstatus" required th:value="${backorder?.fulfillmentstatus}">
+				            <option >Progress</option>
+				            <option >In Progress</option>
+				        </select>
+        </div> 
+        <div class="form-group">
+          <label for="stockavailability">Stock Availability:</label>
+          <input type="text" id="stockavailability" name="stockavailability"th:value="${backorder?.stockavailability}" >
+        </div>     
+        <div class="form-group">          
+          <label for="expectedfulfillmentdate">Expected Fulfillment Date</label>
+        <input type="date" id="expectedfulfillmentdate" name="expectedfulfillmentdate" required th:value="${backorder?.expectedfulfillmentdate}">
+
+        </div>
+      
+        
+    </div>
+
+   <!-- Five Row  -->
+   <div class="form-row">
+
+    <div class="form-group">
+      <label for="trackbackorder">Track Backorder</label>
+      <select id="trackbackorder" name="trackbackorder" required th:value="${backorder?.trackbackorder}">
+          <option >Yes</option>
+          <option >No</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label for="customerdate">Customer Date</label>
+      <input type="date" id="customerdate" name="customerdate" required th:value="${backorder?.customerdate}">
+      </div>
+
+      <div class="form-group">
+        <label for="createddate">Created Date</label>
+        <input type="date" id="createddate" name="createddate" required th:value="${backorder?.createddate}">
+      </div>
+
+      <div class="form-group">
+        <label for="lastmodifiedby">Last Modified By</label>
+        <input type="text" id="lastmodifiedby" name="lastmodifiedby" placeholder="Enter Last Modifier's Name" required th:value="${backorder?.lastmodifiedby}">
+      </div>
+
+   </div>  
+
+ 
+
+
+    <div class="form-actions">
+      <button type="button" onclick="submitBackorderForm()">Save Backorder</button>
+      <div th:if="${successMessage}" class="success-message" th:text="${successMessage}"></div>                   
+    </div>
+  </form>
+ <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+   <script>
+   $(document).ready(function() {
+	    // Auto-fill Item details when updating
+	    var existingsalesorderuid = $('#salesorderuid').val();
+	    if (existingsalesorderuid) {
+	    	fetchSalesOrderDetails(existingsalesorderuid);
+	    }
+	});
+  
+  $(document).ready(function() {
+	    // Auto-fill Item details when updating
+	    var existinglotuid = $('#lotuid').val();
+	    if (existinglotuid) {
+	    	fetchLotDetails(existinglotuid);
+	    }
+	});
+  
+  $(document).ready(function() {
+	    // Auto-fill Item details when updating
+	    var existingwarehouseuid = $('#warehouseuid').val();
+	    if (existingwarehouseuid) {
+	    	fetchWarehouseDetails(existingwarehouseuid);
+	    }
+	});
+  
+		function fetchSalesOrderDetails(salesorderuid) {
+									    if (!salesorderuid) return;
+
+									    $.ajax({
+											url: '/salesorder/getSalesOrderDetails',
+									        method: 'GET',
+									        data: { salesorderuid: salesorderuid },
+									        success: function(response) {
+									            if (response) {
+									                $('#orderdate').val(response.orderDate);
+													$('#customername').val(response.customerName);
+									            }
+									        },
+									        error: function() {
+									            alert('Error fetching employee details. Please try again.');
+									        }
+									    });
+									}
+									
+									
+		function fetchLotDetails(lotuid) {
+									    if (!lotuid) {
+									        alert('Lot UID is required');
+									        return;
+									    }
+
+									    $.ajax({
+									        url: '/lotdetails/getLotDetails', // Ensure this endpoint exists in your Spring Boot controller
+									        method: 'GET',             
+									        data: { lotuid: lotuid },  
+									        success: function(response) {
+									            if (response) {
+									                // Corrected property names
+									                $('#itemname').val(response.itemname); 
+									                $('#originalorderedquantity').val(response.originalorderedquantity);
+									                $('#pendingquantity').val(response.pendingquantity);
+									                $('#unitprice').val(response.unitprice); // Fixed selector
+								
+									            } else {
+									                alert('No details found for the provided Lot UID.');
+									            }
+									        },
+									        error: function(xhr, status, error) {
+									            console.error('Error fetching lot details:', error);
+									            alert('Error fetching lot details. Please try again.');
+									        }
+									    });
+									}
+									
+									
+		function fetchWarehouseDetails(warehouseuid) {
+																		    if (!warehouseuid) {
+																		        alert('Warehouse UID is required');
+																		        return;
+																		    }
+
+																		    $.ajax({
+																		        url: '/warehousedetails/getWarehouseDetails', // Ensure this endpoint exists in your Spring Boot controller
+																		        method: 'GET',             
+																		        data: { warehouseuid: warehouseuid },  
+																		        success: function(response) {
+																		            if (response) {
+																		                // Corrected property names
+																		                $('#currentstock').val(response.currentstock); 
+																		                $('#warehouselocation').val(response.warehouselocation);
+																		                
+																		            } else {
+																		                alert('No details found for the provided Lot UID.');
+																		            }
+																		        },
+																		        error: function(xhr, status, error) {
+																		            //console.error('Error fetching  details:', error);
+																		            alert('Error fetching Warehouse details. Please try again.');
+																		        }
+																		    });
+																		}
+																		
+																		
+																		
+																		
+																		
+																		
+																		    function submitBackorderForm() {
+																		        const formData = new FormData(document.getElementById('backorderForm'));
+																		        const id = $('#id').val();
+
+																		        let url, successMessage;
+
+																		        if (!id) {
+																		            url = '/save'; // Change to your actual submit URL
+																		            successMessage = 'Backorder saved successfully!';
+																		        } else {
+																		            url = `/backorder/update`;
+																		            successMessage = 'Backorder updated successfully!';
+																		        }
+
+																		        $.ajax({
+																		            url: url,
+																		            type: 'POST',
+																		            data: formData,
+																		            processData: false,
+																		            contentType: false,
+																		            success: function(response) {
+																		                $('#message').text(successMessage);
+																		                resetBackorderForm();
+																		                window.location.href = '/backorder/list'; // Redirect after success
+																		            },
+																		            error: function() {
+																		                alert('Error saving backorder. Please try again.');
+																		            }
+																		        });
+																		    }
+
+																		    function resetBackorderForm() {
+																		        $('#backorderForm')[0].reset();
+																		        $('#id').val('');
+																		        $('#message').text('');
+																		        $('#form-title').text('Backorder Management');
+																		        $('#submitBtn').text('Submit');
+																		    }
+
+																		    function prefillBackorderForm(data) {
+																		        $('#id').val(data.id);
+																				
+																				$('#salesorderUid').val(data.salesorderUid);
+																				
+																				$('#lotUid').val(data.lotUid);
+																		        $('#accepteddeliveryDate').val(data.accepteddeliveryDate);
+																		        $('#fulfillmentStatus').val(data.fulfillmentStatus);
+																		        $('#stockAvailability').val(data.stockAvailability);
+																				$('#warehouseUid').val(data.warehouseUid);
+																		        $('#expectedfulfillmentDate').val(data.expectedfulfillmentDate);
+																		        $('#trackBackorder').val(data.trackBackorder);
+																				$('#customerDate').val(data.customerDate);
+																				$('#createdDate').val(data.createdDate);
+																				$('#lastmodifiedBy').val(data.lastmodifiedBy);
+																				
+   																		        $('#form-title').text('Update Backorder');
+																		        $('#submitBtn').text('Update');
+																		    }
+																			
+																			
+																			
+									
+																			
+																			
+																			    document.addEventListener("DOMContentLoaded", function() {
+																			        // Set min date to today for all date fields
+																			        let today = new Date().toISOString().split("T")[0];
+																			        document.getElementById("accepteddeliverydate").setAttribute("min", today);
+																			        document.getElementById("expectedfulfillmentdate").setAttribute("min", today);
+																			        document.getElementById("customerdate").setAttribute("min", today);
+																			        document.getElementById("createddate").setAttribute("min", today);
+																			    });
+
+																			    function validateDates() {
+																			        let acceptedDeliveryDate = document.getElementById("accepteddeliverydate").value;
+																			        let expectedFulfillmentDate = document.getElementById("expectedfulfillmentdate").value;
+																			        let customerDate = document.getElementById("customerdate").value;
+																			        let createdDate = document.getElementById("createddate").value;
+
+																			        let today = new Date().toISOString().split("T")[0];
+
+																			        if (acceptedDeliveryDate && acceptedDeliveryDate < today) {
+																			            alert("Accepted Delivery Date cannot be a past date.");
+																			            return false;
+																			        }
+
+																			        if (expectedFulfillmentDate && expectedFulfillmentDate < today) {
+																			            alert("Expected Fulfillment Date cannot be a past date.");
+																			            return false;
+																			        }
+
+																			        if (customerDate && customerDate < today) {
+																			            alert("Customer Date cannot be a past date.");
+																			            return false;
+																			        }
+
+																			        if (createdDate && createdDate < today) {
+																			            alert("Created Date cannot be a past date.");
+																			            return false;
+																			        }
+
+																			        return true;
+																			    }
+
+																			    function submitBackorderForm() {
+																			        if (!validateDates()) {
+																			            return;  // Prevent form submission if validation fails
+																			        }
+
+																			        const formData = new FormData(document.getElementById('backorderForm'));
+																			        const id = $('#id').val();
+
+																			        let url, successMessage;
+
+																			        if (!id) {
+																			            url = '/save'; // Change to your actual submit URL
+																			            successMessage = 'Backorder saved successfully!';
+																			        } else {
+																			            url = `/backorder/update`;
+																			            successMessage = 'Backorder updated successfully!';
+																			        }
+
+																			        $.ajax({
+																			            url: url,
+																			            type: 'POST',
+																			            data: formData,
+																			            processData: false,
+																			            contentType: false,
+																			            success: function(response) {
+																			                alert(successMessage);
+																			                resetBackorderForm();
+																			                window.location.href = '/backorder/list'; // Redirect after success
+																			            },
+																			            error: function() {
+																			                alert('Error saving backorder. Please try again.');
+																			            }
+																			        });
+																			    }
+																			
+
+																		
+							
+</script>
+  
+
+
+
+
+
+  
+
+
+</body>
+</html>

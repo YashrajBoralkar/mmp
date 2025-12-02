@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Interview Scheduling Form</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/css/interview.css">
+    <link rel="stylesheet" href="/css/hrms.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body>
+<div th:replace="~{HRMS.html :: sidebarFragment}"></div>
+
+<div class="container mt-5">
+    <form id="InterViewSchedulingForm" novalidate class="row g-3" enctype="multipart/form-data">
+        <div class="form-container">
+            <h2 class="mb-4">Interview Scheduling Form</h2>
+            <input type="hidden" id="id" name="id" th:value="${interviewSchedule?.id}">
+
+            <!-- Candidate Information -->
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="candidateuidSelect" class="form-label">Candidate ID:</label>
+                    <select id="candidateuidSelect" name="candidateuid" onchange="fetchCandidateDetails(this.value)" 
+                        th:if="${interviewSchedule == null or interviewSchedule.id == null}">
+                        <option value="">Select Candidate UID</option>
+                        <option th:each="uid : ${candidateuid}" th:value="${uid}" th:text="${uid}"></option>
+                    </select>
+                    <input type="text" id="candidateuidInput" name="candidateuid"
+                        th:value="${interviewSchedule?.candidateuid}"
+                        th:if="${interviewSchedule != null and interviewSchedule.id != null}"
+                        readonly>
+                </div>
+
+                <div class="form-group">
+                    <label for="candidateName" class="form-label">Candidate Name:</label>
+                    <input type="text" id="candidateName" name="candidateName" class="form-control" readonly>
+                </div>
+            </div>
+
+            <!-- Job Details -->
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="jobuidSelect" class="form-label">Job ID:</label>
+                    <select id="jobuidSelect" name="jobuid" onchange="fetchPostedJobDetails(this.value)" 
+                        th:if="${interviewSchedule == null or interviewSchedule.id == null}">
+                        <option value="">Select Job UID</option>
+                        <option th:each="uid : ${jobuid}" th:value="${uid}" th:text="${uid}"></option>
+                    </select>
+                    <input type="text" id="jobuidInput" name="jobuid"
+                        th:value="${interviewSchedule?.jobuid}"
+                        th:if="${interviewSchedule != null and interviewSchedule.id != null}"
+                        readonly>
+                </div>
+
+                <div class="form-group">
+                    <label>Job Title:</label>
+                    <input type="text" id="title" name="title" readonly>
+                </div>
+            </div>
+
+            <!-- Interview Info -->
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="interviewDate" class="form-label">Interview Date:</label>
+                    <input type="date" id="interviewDate" name="interviewDate" 
+                        class="form-control" th:value="${interviewSchedule?.interviewDate}" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="interviewTime" class="form-label">Interview Time:</label>
+                    <input type="time" id="interviewTime" name="interviewTime" 
+                        class="form-control" th:value="${interviewSchedule?.interviewTime}" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="modeOfInterview" class="form-label">Mode of Interview:</label>
+                    <select id="modeOfInterview" name="modeOfInterview" class="form-select" th:value="${interviewSchedule?.modeOfInterview}" required>
+                        <option value="">Select Mode</option>
+                        <option value="In-Person" th:selected="${interviewSchedule?.modeOfInterview == 'In-Person'}">In-Person</option>
+                        <option value="Virtual" th:selected="${interviewSchedule?.modeOfInterview == 'Virtual'}">Virtual</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Conditional Fields -->
+            <div class="form-row">
+                <div class="form-group" id="virtualFields" style="display:none;">
+                    <label for="meetingLink" class="form-label">Meeting Link:</label>
+                    <input type="url" id="meetingLink" name="meetingLink"
+                           class="form-control"
+                           pattern="https?://.+" placeholder="https://example.com"
+                           th:value="${interviewSchedule?.meetingLink}">
+                </div>
+                <div class="form-group" id="inPersonFields" style="display:none;">
+                    <label for="venueAddress" class="form-label">Venue Address:</label>
+                    <input id="venueAddress" name="venueAddress" class="form-control" minlength="10"
+                           th:value="${interviewSchedule?.venueAddress}">
+                </div>
+            </div>
+
+            <!-- Panel Members -->
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="panelMembers" class="form-label">Panel Member Names:</label>
+                    <textarea id="panelMembers" name="panelMembers" class="form-control" th:text="${interviewSchedule?.panelMembers}" required minlength="5"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="roles" class="form-label">Roles:</label>
+                    <textarea id="roles" name="roles" class="form-control" th:text="${interviewSchedule?.roles}" minlength="3"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="feedbackSummary" class="form-label">Feedback Summary:</label>
+                    <textarea id="feedbackSummary" name="feedbackSummary" class="form-control" th:text="${interviewSchedule?.feedbackSummary}" required minlength="10"></textarea>
+                </div>
+            </div>
+
+            <!-- Ratings and Outcome -->
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="overallRating" class="form-label">Overall Rating:</label>
+                    <select id="overallRating" name="overallRating" class="form-select" th:value="${interviewSchedule?.overallRating}" required>
+                        <option value="">Select Rating</option>
+                        <option value="Excellent" th:selected="${interviewSchedule?.overallRating == 'Excellent'}">Excellent</option>
+                        <option value="Good" th:selected="${interviewSchedule?.overallRating == 'Good'}">Good</option>
+                        <option value="Average" th:selected="${interviewSchedule?.overallRating == 'Average'}">Average</option>
+                        <option value="Poor" th:selected="${interviewSchedule?.overallRating == 'Poor'}">Poor</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="outcome">Outcome:</label>
+                    <select id="outcome" name="outcome" th:value="${interviewSchedule?.outcome}" required>
+                        <option value="">Select Outcome</option>
+                        <option value="Passed" th:selected="${interviewSchedule?.outcome == 'Passed'}">Passed</option>
+                        <option value="Failed" th:selected="${interviewSchedule?.outcome == 'Failed'}">Failed</option>
+                        <option value="On Hold" th:selected="${interviewSchedule?.outcome == 'On Hold'}">On Hold</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Next Interview Info -->
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="nextInterviewScheduled" class="form-label">Next Interview Scheduled:</label>
+                    <select id="nextInterviewScheduled" class="form-select" name="nextInterviewScheduled"
+                        th:value="${interviewSchedule?.nextInterviewScheduled}">
+                        <option value="false" th:selected="${interviewSchedule?.nextInterviewScheduled == false}">No</option>
+                        <option value="true" th:selected="${interviewSchedule?.nextInterviewScheduled == true}">Yes</option>
+                    </select>
+                </div>
+
+                <div class="form-group" id="nextInterviewFields" style="display:none;">
+                    <label for="nextInterviewDate">Next Interview Date:</label>
+                    <input type="date" id="nextInterviewDate" name="nextInterviewDate" th:value="${interviewSchedule?.nextInterviewDate}">
+                    <label for="nextInterviewTime">Next Interview Time:</label>
+                    <input type="time" id="nextInterviewTime" name="nextInterviewTime" th:value="${interviewSchedule?.nextInterviewTime}">
+                    <label for="nextPanelDetails">Next Panel Details:</label>
+                    <input id="nextPanelDetails" name="nextPanelDetails" th:value="${interviewSchedule?.nextPanelDetails}">
+                </div>
+            </div>
+
+            <!-- Final Decision -->
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="finalDecision">Final Decision:</label>
+                    <select id="finalDecision" name="finalDecision" th:value="${interviewSchedule?.finalDecision}" required>
+                        <option value="">Select Decision</option>
+                        <option value="Shortlisted" th:selected="${interviewSchedule?.finalDecision == 'Shortlisted'}">Shortlisted</option>
+                        <option value="Rejected" th:selected="${interviewSchedule?.finalDecision == 'Rejected'}">Rejected</option>
+                        <option value="Selected" th:selected="${interviewSchedule?.finalDecision == 'Selected'}">Selected</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="rescheduledDetails">Rescheduled Interview Details:</label>
+                    <input id="rescheduledDetails" name="rescheduledDetails" th:value="${interviewSchedule?.rescheduledDetails}">
+                </div>
+            </div>
+
+            <!-- Buttons -->
+            <div class="form-group button-container">
+                <button type="button" id="submitBtn" class="btn btn-primary" onclick="submitForm(event)">Submit</button>
+                <button type="button" class="btn btn-secondary" onclick="window.location.href='/hrms/JobGrid'">Back</button>
+                <div th:if="${successMessage}" class="success-message" th:text="${successMessage}"></div>
+            </div>
+        </div>
+    </form>
+</div>
+<script> 
+function goBack() {
+	window.location.href = '/dashboard';
+	}
+</script>
+<script>
+$(document).ready(function () {
+    const existingJobUID = $('#jobuidInput').val() || $('#jobuidSelect').val();
+    if (existingJobUID) fetchPostedJobDetails(existingJobUID);
+
+    const existingCandidateUID = $('#candidateuidInput').val() || $('#candidateuidSelect').val();
+    if (existingCandidateUID) fetchCandidateDetails(existingCandidateUID);
+
+    const currentMode = $('#modeOfInterview').val();
+    toggleModeFields(currentMode);
+    $('#modeOfInterview').change(function () { toggleModeFields(this.value); });
+
+    $('#nextInterviewScheduled').change(function () {
+        $('#nextInterviewFields').toggle(this.value === 'true');
+    });
+
+    $('#panelMembers, #roles, #feedbackSummary').on('keypress paste', function (e) {
+        const data = e.type === 'paste' ? e.originalEvent.clipboardData.getData('text') : String.fromCharCode(e.which);
+        if (!/^[a-zA-Z\s.,-]*$/.test(data)) e.preventDefault();
+    });
+});
+
+function toggleModeFields(mode) {
+    $('#virtualFields').toggle(mode === 'Virtual');
+    $('#inPersonFields').toggle(mode === 'In-Person');
+}
+
+function fetchPostedJobDetails(jobuid) {
+    if (!jobuid) return;
+    $.ajax({
+        url: '/interview/jobdetails',
+        method: 'GET',
+        data: { jobuid },
+        success: res => $('#title').val(res.title),
+        error: (xhr) => Swal.fire({ icon: 'error', title: 'Error', text: xhr.responseText || 'Error fetching job details.' })
+    });
+}
+
+function fetchCandidateDetails(candidateuid) {
+    if (!candidateuid) return;
+    $.ajax({
+        url: '/interview/candidatedetails',
+        method: 'GET',
+        data: { candidateuid },
+        success: res => $('#candidateName').val(res.name),
+        error: (xhr) => Swal.fire({ icon: 'error', title: 'Error', text: xhr.responseText || 'Error fetching candidate details.' })
+    });
+}
+
+function validateInterviewForm() {
+    function showError(msg) { Swal.fire({ icon: 'error', title: 'Validation Error', text: msg }); return false; }
+
+    const candidateUID = $('#candidateuidSelect').val() || $('#candidateuidInput').val();
+    const jobUID = $('#jobuidSelect').val() || $('#jobuidInput').val();
+
+    if (!candidateUID) return showError('Please select Candidate ID.');
+    if (!jobUID) return showError('Please select Job ID.');
+    if (!$('#interviewDate').val()) return showError('Please select Interview Date.');
+    if (!$('#interviewTime').val()) return showError('Please select Interview Time.');
+    if (!$('#modeOfInterview').val()) return showError('Please select Mode of Interview.');
+    if ($('#modeOfInterview').val() === 'Virtual' && !$('#meetingLink').val()) return showError('Provide Meeting Link.');
+    if ($('#modeOfInterview').val() === 'In-Person' && !$('#venueAddress').val()) return showError('Provide Venue Address.');
+    if (!$('#panelMembers').val().trim()) return showError('Panel Members required.');
+    if (!$('#roles').val().trim()) return showError('Roles field required.');
+    if (!$('#feedbackSummary').val().trim()) return showError('Feedback Summary required.');
+    if (!$('#overallRating').val()) return showError('Overall Rating required.');
+    if (!$('#outcome').val()) return showError('Outcome required.');
+    if (!$('#finalDecision').val()) return showError('Final Decision required.');
+    if ($('#nextInterviewScheduled').val() === 'true') {
+        if (!$('#nextInterviewDate').val()) return showError('Provide Next Interview Date.');
+        if (!$('#nextInterviewTime').val()) return showError('Provide Next Interview Time.');
+        if (!$('#nextPanelDetails').val()) return showError('Provide Next Panel Details.');
+    }
+    return true;
+}
+
+function submitForm(e) {
+    e.preventDefault();
+    $('#panelMembers, #roles, #feedbackSummary, #venueAddress, #meetingLink, #rescheduledDetails')
+        .val(function (_, v) { return $.trim(v); });
+
+    if (!validateInterviewForm()) return;
+
+    const formData = new FormData($('#InterViewSchedulingForm')[0]);
+    const id = $('#id').val();
+    const url = id ? '/interview/update' : '/save-interview-schedule';
+    const successMsg = id ? 'Interview updated successfully!' : 'Interview scheduled successfully!';
+
+    $('#submitBtn').prop('disabled', true);
+    $.ajax({
+        url, type: 'POST', data: formData, processData: false, contentType: false,
+        success: () => Swal.fire({ icon: 'success', title: 'Success', text: successMsg })
+            .then(() => window.location.href = '/hrms/JobGrid'),
+        error: (xhr) => Swal.fire({ icon: 'error', title: 'Error', text: xhr.responseText || 'Error saving interview schedule.' }),
+        complete: () => $('#submitBtn').prop('disabled', false)
+    });
+}
+</script>
+</body>
+</html>

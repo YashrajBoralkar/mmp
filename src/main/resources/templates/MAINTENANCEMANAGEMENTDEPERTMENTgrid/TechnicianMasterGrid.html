@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Technician Master Form</title>
+    
+    <link rel="stylesheet" href="/css/hrms.css"> <!-- // for side bar code  -->
+    <link rel="stylesheet" href="/css/grid.css">
+    <link rel="stylesheet" href="/css/emplist.css">
+
+    <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+<div th:replace="~{MAINTENANCEMANAGEMENTDEPERTMENT.html :: sidebarFragment}"></div> <!-- // for side bar code  -->
+
+<div class="button-container">
+    
+</div>
+
+<div class="button-grid">
+    <button onclick="loadsparepartusagelogTable()"style="width:112%">Technician Master Form</button>
+</div>
+
+<div id="sparepartusagelog-table-container">
+   
+</div> <!-- Table will be dynamically loaded here -->
+
+<script src="/js/grid.js"></script>
+
+<script>
+    function loadsparepartusagelogTable() {
+        // Create the button and table container structure immediately
+        const container = document.getElementById("sparepartusagelog-table-container");
+        container.innerHTML =`
+            <div class="table-header">
+				<div class="button-container" style="margin-left: 1045px;">
+				                <button class="styled-button" onclick="window.location.href='/maintenancemanagementdepartment/technicianmastergrid'" style="flex-grow: 1;">
+				                    <i class="fas fa-arrow-left"></i> Back
+				                </button>
+				                <button id="open-register-btn" class="styled-button" style="flex-grow: 1; margin-left: 20px;">
+				                Technician Master
+				                </button>
+				            </div>
+				</div>
+            <table>
+                <thead>
+                    <tr>
+                    <th>ID</th>
+                    <th>Technician Master UID</th>
+                    <th> Technician Name</th>
+                    <th>Contact Number</th>
+                    <th>Department</th>
+                    <th>Skill Set/Expertise</th>
+                    <th>Availability Status</th>
+                    <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="sparepartusagelogmanagement-table-body">
+                    <tr><td colspan="9">Loading data...</td></tr>
+                </tbody>
+            </table>
+        `;
+
+        // Add event listener to the "Technician Master Form" button
+        document.getElementById("open-register-btn").addEventListener("click", () => {
+            // Redirect to the Technician Master form
+            window.location.href = '/technicianmasterform';
+        });
+
+        // Fetch and populate table data
+        fetch('/viewtechnicianmaster')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            
+            .then(data => {
+                const headers = data.headers; // Extract headers dynamically
+                const rows = data.data;      // Extract Technician Master Form data
+                const tbody = document.getElementById("sparepartusagelogmanagement-table-body");
+
+                // Check if there are rows to display
+                if (rows.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="9">No data available.</td></tr>`;
+                    return;
+                }
+
+                // Generate rows from data
+                tbody.innerHTML = rows.map(row => `
+                    <tr>
+                        <td>${row['ID']}</td>
+                        <td>${row['Technician Master UID']}</td>
+                        <td>${row['Technician Name']}</td>
+                        <td>${row['Contact Number']}</td>
+                        <td>${row['Department']}</td>
+                        <td>${row['Skill Set']}</td>
+                        <td>${row['Availability Status']}</td>
+                        
+                        <td>
+                            <div class="action-buttons">
+                                <a href="#" class="btn btn-delete" data-id="${row['ID']}" onclick="confirmDeletesparepartusagelog(this)">Delete</a>
+                                <a href="/updatetechnicianmaster/${row['ID']}" class="btn btn-update">Update</a>
+                            </div>
+                        </td>
+                    </tr>
+                `).join('');
+            })
+            .catch(error => {
+                console.error('Error fetching Spare Parts Usage Log data:', error);
+                document.getElementById("sparepartusagelogmanagement-table-body").innerHTML = `<tr><td colspan="9">Error loading data.</td></tr>`;
+            });
+    }
+
+    // Example function to handle delete action
+    	function confirmDeletesparepartusagelog(element) {
+	    const id = element.getAttribute('data-id'); // Retrieve the Technician Master Form  ID
+	    if (confirm(`Are you sure you want to delete Technician Master with ID: ${id}?`)) {
+	        // Perform the fetch request with the Technician Master ID as a query parameter
+	        fetch(`/technicianmasterdeleteinfo?id=${id}`, { method: 'GET' })
+	            .then(response => {
+	                if (response.redirected) {
+	                    // Redirect to the new location if the server redirects
+	                    loadsparepartusagelogTable();
+	                    window.location.href = response.url;
+	                } else {
+	                    console.log('Technician Master Form data deleted:', id);
+	                }
+	            })
+	            .catch(error => {
+	                console.error('Error deleting Technician Master Form data:', error);
+	            });
+	    }
+	}
+	
+	
+</script>
+
+
+
+
+</body>
+</html>

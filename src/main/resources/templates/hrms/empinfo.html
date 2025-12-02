@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en"  xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Employment Form</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/css/empinfo.css">
+    <link rel="stylesheet" href="/css/hrms.css"> <!-- // for side bar code  -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+<div th:replace="~{HRMS.html :: sidebarFragment}"></div> <!-- // for side bar code  -->
+
+
+		<form id="employmentForm"  enctype="multipart/form-data" >
+	<div class="form-container">
+
+        <!-- Hidden ID Field -->
+        <input type="hidden" id="id" name="id" th:value="${employmentInfo?.id}" >
+  
+
+    <!-- Personal Information Section -->
+    <div class="form-section active" id="section1" >
+
+
+      <h2>Employement Information </h2>
+      <br>
+	  <!-- First Row -->
+	  <div class="form-row">
+	    <div class="form-group">
+	      <label for="employeeuid">Employee ID:</label>
+
+	      <!-- Create mode -->
+	      <select id="employeeuid" name="employeeuid"
+	              onchange="fetchEmployeeDetails(this.value)"
+	              th:if="${employmentInfo == null or employmentInfo.id == null}">
+	        <option value="">-- Select Employee ID --</option>
+	        <option th:each="uid : ${employeeuid}"
+	                th:value="${uid}"
+	                th:text="${uid}">
+	        </option>
+	      </select>
+
+	      <!-- Update mode -->
+	      <input type="text" id="employeeuid" name="employeeuid"
+	             th:value="${employmentInfo?.employeeuid}"
+	             th:if="${employmentInfo != null and employmentInfo.id != null}"
+	             readonly>
+	    </div>
+
+	    <div class="form-group">
+	      <label>First Name:</label>
+	      <input type="text" id="first_name" name="first_name" readonly>
+	    </div>
+
+	    <div class="form-group">
+	      <label>Last Name:</label>
+	      <input type="text" id="last_name" name="last_name" readonly>
+	    </div>
+      </div>
+
+      <div class="form-row">
+      
+       <div class="form-group">
+	      <label>Department:</label>
+	      <input type="text" id="departmentname" name="departmentname" readonly>
+	    </div>
+	  
+                      <div class="form-group">
+          <label>Designation/Job Title:</label>
+        <input type="text" name="designation" th:value="${employmentInfo?.designation}" required>
+            </div>
+        <div class="form-group">
+          <label>Reporting Manager:</label>
+                           <input type="text" name="reportingManager" th:value="${employmentInfo?.reportingManager}" required>
+                        </div>        
+      </div>
+
+      <div class="form-row">
+      
+       <div class="form-group">
+          <label>Employment Type:</label>
+                          <select name="employmentType" required>
+                              <option value="Not Selected" th:selected="${employmentInfo?.employmentType == 'Not Selected'}">Not Selected</option>
+                              <option value="Permanent" th:selected="${employmentInfo?.employmentType == 'Permanent'}">Permanent</option>
+                              <option value="Contract" th:selected="${employmentInfo?.employmentType == 'Contract'}">Contract</option>
+                              <option value="Intern" th:selected="${employmentInfo?.employmentType == 'Intern'}">Intern</option>
+                              <option value="Freelancer" th:selected="${employmentInfo?.employmentType == 'Freelancer'}">Freelancer</option>
+                          </select>
+                        </div>
+        <div class="form-group">
+          <label>Work Location:</label>
+                          <input type="text" name="workLocation" th:value="${employmentInfo?.workLocation}" required>
+                        </div>
+         <div class="form-group">
+          <label>Office Address:</label>
+          <input type="text" name="officeAddress" th:value="${employmentInfo?.officeAddress}" required>
+        </div> 
+        
+      </div>
+      <div class="form-row">
+       <div class="form-group">
+          <label>Remote Location:</label>
+            <input type="text" name="remoteLocation" th:value="${employmentInfo?.remoteLocation}">
+                        </div>
+		<div class="form-group">
+		        <label>Date of Joining:</label>
+		        <input type="date" id="dateOfJoining" name="dateOfJoining" th:value="${employmentInfo?.dateOfJoining}" required>
+		    </div>
+		    <div class="form-group">
+		        <label>Probation Period End Date:</label>
+		        <input type="date" id="probationEndDate" name="probationEndDate" th:value="${employmentInfo?.probationEndDate}">
+		    </div>
+        
+        
+      </div>
+                    
+      <div class="form-row">
+        <div class="form-group">
+          <label>Shift Details:</label>
+                     <select name="shiftDetails" required>
+                      <option value="Not Selected" th:selected="${employmentInfo?.shiftDetails == 'Not Selected'}">Not Selected</option>
+                        <option value="General" th:selected="${employmentInfo?.shiftDetails == 'General'}">General</option>
+                        <option value="US Shift" th:selected="${employmentInfo?.shiftDetails == 'US Shift'}">US Shift</option>
+                        <option value="EMEA Shift" th:selected="${employmentInfo?.shiftDetails == 'EMEA Shift'}">EMEA Shift</option>
+                     </select>
+                        </div>
+         <div class="form-group">
+          <label>Work Hours:</label>
+           <input type="text" name="workHours" th:value="${employmentInfo?.workHours}" required>
+                        </div>
+                <div class="form-group">
+          <label>Status:</label>
+                         <select name="status" required>
+                         <option value="Not Selected" th:selected="${employmentInfo?.status == 'Not Selected'}">Not Selected</option>
+                         <option value="Active" th:selected="${employmentInfo?.status == 'Active'}">Active</option>
+                       <option value="Inactive" th:selected="${employmentInfo?.status == 'Inactive'}">Inactive</option>
+                  </select>          
+                        </div>         
+         
+    </div>
+    <div class="form-actions">
+      <button type="button" id="submitBtn" onclick="submitForm()">Submit</button>
+		<div th:if="${successMessage}" class="success-message" th:text="${successMessage}"></div>
+		<button type="button" class="back-button" onclick="goback();">Back</button> 
+					<div th:if="${successMessage}" class="success-message" th:text="${successMessage}"></div>                   
+		    </div>
+	    
+    </div>
+    
+    </div>
+    </div>
+    </form>
+	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script> 
+function goBack() {
+	window.location.href = '/dashboard';
+	}
+</script>
+    <script>
+		// 🔹 Auto-call fetch when editing an existing record
+			$(document).ready(function () {
+			        const existingUID = $('#employeeuid').val();
+			        if (existingUID) {
+			            fetchEmployeeDetails(existingUID);
+			        }
+			    });
+    function fetchEmployeeDetails(employeeuid) {
+        if (!employeeuid)  return;
+        
+        
+        $.ajax({
+            url: '/employment/edetails',
+            method: 'GET',
+            data: { employeeuid: employeeuid },
+            success: function(response) {
+                  $('#first_name').val(response.firstName);
+                  $('#last_name').val(response.lastName);
+                  $('#departmentname').val(response.departmentname);
+
+               
+            },
+            error: function() {
+                alert('Error fetching purchased details. Please try again.');
+            }
+        });
+    }
+	function goBack() {
+				window.location.href = '/hrms/EmpGrid';
+			  }
+	function validateEmploymentForm() {
+	    // ✅ Helper functions
+	    function isAlphabetOnly(value) {
+	        return /^[A-Za-z\s]+$/.test(value);
+	    }
+	    function isNumberOnly(value) {
+	        return /^[0-9]+$/.test(value);
+	    }
+
+	    // ✅ All required fields with validation rules
+	    const requiredFields = [
+	        { id: 'employeeuid', name: 'Employee UID' },
+	        { id: 'designation', name: 'Designation', alpha: true },
+	        { id: 'reportingManager', name: 'Reporting Manager', alpha: true },
+	        { id: 'employmentType', name: 'Employment Type' },
+	        { id: 'workLocation', name: 'Work Location', alpha: true },
+	       
+			{ id: 'officeAddress', name: 'office addreass',alpha: true },
+			{ id: 'remoteLocation', name: 'Remote Location',alpha: true },	
+			{ id: 'dateOfJoining', name: 'Date of Joining' },
+			{ id: 'probationEndDate', name: 'probation EndDate'},								
+	    
+	        { id: 'status', name: 'Status' },
+	        { id: 'shiftDetails', name: 'Shift Details' },
+	        { id: 'workHours', name: 'Work Hours', numeric: true }
+	    ];
+
+	    // ✅ Loop through each field for validation
+	    for (let field of requiredFields) {
+	        let value = $('[name="' + field.id + '"]').val()?.trim();
+
+	        // Required check
+	        if (!value || value === "Not Selected") {
+	            Swal.fire({
+	                icon: 'warning',
+	                title: 'Validation Error',
+	                text: field.name + ' is required.'
+	            });
+	            return false;
+	        }
+			// ✅ Start Date must be before End Date
+								 const dateOfJoining = new Date($('#dateOfJoining').val());
+										const probationEndDate = new Date($('#probationEndDate').val());
+					       if (dateOfJoining.getTime() > probationEndDate.getTime()) {
+												              Swal.fire({ icon: 'error', title: 'Invalid Dates', text: 'dateOfJoining must be before probationEndDate.' });
+												              return false;
+												          }
+
+	        // Alphabet only check
+	        if (field.alpha && !isAlphabetOnly(value)) {
+	            Swal.fire({
+	                icon: 'error',
+	                title: 'Invalid Input',
+	                text: field.name + ' must contain only charater.'
+	            });
+	            return false;
+	        }
+
+	        // Number only check
+	        if (field.numeric && !isNumberOnly(value)) {
+	            Swal.fire({
+	                icon: 'error',
+	                title: 'Invalid Input',
+	                text: field.name + ' must contain only numbers.'
+	            });
+	            return false;
+	        }
+	    }
+		
+									          return true; // ✅ All validations passed
+									      }
+	// ✅ Form submission
+	function submitForm() {
+	    if (!validateEmploymentForm()) return;
+
+	    const formData = new FormData(document.getElementById('employmentForm'));
+	    const id = $('#id').val();
+
+	    let url = id ? '/update' : '/saveemployementForm';
+	    let successMessage = id ? 'Employment updated successfully!' : 'Employment saved successfully!';
+
+	    $.ajax({
+	        url: url,
+	        type: 'POST',
+	        data: formData,
+	        processData: false,
+	        contentType: false,
+	        success: function(response) {
+	            Swal.fire({
+	                icon: 'success',
+	                title: 'Success',
+	                text: successMessage
+	            }).then(() => {
+	                resetForm();
+	                window.location.href = '/hrms/EmpGrid';
+	            });
+	        },
+	        error: function() {
+	            Swal.fire({
+	                icon: 'error',
+	                title: 'Error',
+	                text: 'Error saving employment. Please try again.'
+	            });
+	        }
+	    });
+	}
+
+	// ✅ Reset form after submission
+	function resetForm() {
+	    $('#employmentForm')[0].reset();
+	    $('#id').val('');
+	    $('#form-title').text('New Employment');
+	    $('#submitBtn').text('Submit');
+	}
+</script>
+</body>
+</html>

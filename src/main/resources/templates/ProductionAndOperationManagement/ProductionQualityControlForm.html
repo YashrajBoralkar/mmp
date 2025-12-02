@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Production Quality Control</title>
+  <link rel="stylesheet" href="/css/empinfo.css">
+  <link rel="stylesheet" href="/css/hrms.css"> <!-- // for side bar code  -->
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+
+  <div th:replace="~{PRODUCTIONANDOPERATION.html :: sidebarFragment}"></div> <!-- // for side bar code  -->                                                                        
+    
+   <form  id="pqcForm"  class="form-container">
+    <!-- Personal Information Section -->
+    <h2>Production Quality Control</h2>   
+    <br>
+    <br>
+
+	<input type="hidden" id="id" name="id" th:value="${updatepqc?.id}" />
+     
+      <!-- First Row -->
+    
+      <div class="form-row" >
+        <div class="form-group">
+        <label>Work Order ID :</label>
+		<select id="workorderuid" name="workorderuid" onchange="fetchworkorderDetails(this.value)" th:if="${updatepqc == null or updatepqc.id == null}">
+		<option value="">Select work order ID</option>
+		<option th:each="uid : ${workorderuid}" th:value="${uid}" th:text="${uid}"></option>
+		</select>
+    <input type="text" id="workorderuid" name="workorderuid" th:value="${updatepqc?.workorderuid}" readonly th:if="${updatepqc != null and updatepqc.id != null}">
+
+        </div>
+      
+      <div class="form-group">
+          <label for="productuid">Product ID :</label>
+		<input type="text" id="productuid" name="productuid" readonly />
+
+    </div>
+    <div class="form-group">
+      	<label for="productname">Product Name :</label>
+        <input type="text" id="productname" name="productname" readonly />
+
+    </div>
+      </div>
+
+      <!-- Second Row -->
+      <div class="form-row">
+        <div class="form-group">
+           <label for="inspectorname">Inspector Name :</label>
+        <input type="text" id="inspectorname" name="inspectorname" th:value="${updatepqc?.inspectorname}" required />
+      
+    </div>
+        <div class="form-group">           
+               <label for="testperformed">Tests Performed :</label>
+        <select id="testperformed" name="testperformed" th:value="${updatepqc?.testperformed}" >
+          <option value="">Select Tests Performed</option>
+          <option value="Load Test"  th:selected="${updatepqc?.testperformed=='Load Test'}">Load Test</option>
+          <option value="Visual Inspection"  th:selected="${updatepqc?.testperformed=='Visual Inspection'}">Visual Inspection</option>
+          <option value="Other Test"  th:selected="${updatepqc?.testperformed=='Other Test'}">Other Test</option>
+        </select>
+      </div>
+    <div class="form-group">
+        <label for="measurementstandard">Measurement Standard :</label>
+        <input type="text" id="measurementstandard" name="measurementstandard" th:value="${updatepqc?.measurementstandard}" required />
+
+    </div>        
+    </div>
+
+		<div class="form-row">
+			<div class="form-group">
+       <label for="defectclassification">Defect Classification :</label>
+        <select id="defectclassification" name="defectclassification" th:value="${updatepqc?.defectclassification}" >
+          <option value="">Select classification</option>
+          <option value="Critical" th:selected="${updatepqc?.defectclassification=='Critical'}">Critical</option>
+          <option value="Major" th:selected="${updatepqc?.defectclassification=='Major'}">Major</option>
+          <option value="Minor" th:selected="${updatepqc?.defectclassification=='Minor'}">Minor</option>
+          <option value="None" th:selected="${updatepqc?.defectclassification=='None'}">None</option>
+        </select>
+			</div>
+		</div>
+
+    <div class="form-row">
+      <div class="form-group">
+         <label for="inspectionstatus">Inspection Status :</label>
+         <br>
+        <select id="inspectionstatus" name="inspectionstatus" th:value="${updatepqc?.inspectionstatus}">
+          <option value="">Select status</option>
+          <option value="Approved" th:selected="${updatepqc?.inspectionstatus=='Approved'}">Approved</option>
+          <option value="Failed" th:selected="${updatepqc?.inspectionstatus=='Failed'}">Failed</option>
+          <option value="Pending" th:selected="${updatepqc?.inspectionstatus=='Pending'}">Pending</option>
+        </select>
+      </div>
+      <div class="form-group">
+         <label for="reworkrequire">Rework Required :</label>
+         <br>
+               <select id="reworkrequire" name="reworkrequire" th:value="${updatepqc?.reworkrequire}" >
+		           <option value="">Select status</option>
+		           <option value="Approved" th:selected="${updatepqc?.reworkrequire=='Approved'}">Approved</option>
+		           <option value="Rejected" th:selected="${updatepqc?.reworkrequire=='Rejected'}">Rejected</option>
+	     </select>
+      </div>
+      <div class="form-group">
+   <label for="rootcauseanalysisreport">Root Cause Analysis Report :</label>
+		<input type="text" id="rootcauseanalysisreport" name="rootcauseanalysisreport" th:value="${updatepqc?.rootcauseanalysisreport}" required />
+
+      </div>
+    </div>
+    <div class="form-actions">
+  <button type="button" id="submitBtn" onclick="SubmitForm()"> Submit </button>
+    <button type="button" class="back-button" onclick="goback();">Back</button>
+    	  <div th:if="${successMessage}" class="success-message" th:text="${successMessage}"></div> 	
+    </div>
+   </form>
+
+   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+   	<script>
+		function goback() {
+		window.location.href = '/productionandoperationmanagement/productionqualitycontrolgrid';
+	  }
+	
+	</script>
+
+ <script>
+	$(document).ready(function() {
+	    const workorderElement = document.querySelector('#workorderuid');
+	    if (workorderElement && workorderElement.value) {
+	    	fetchworkorderDetails(workorderElement.value);
+	    }
+	});
+		function fetchworkorderDetails(workorderuid) {
+		    if (!workorderuid) return;
+
+
+			$.ajax({
+				url : '/getworkorderdetailsbyid',
+				method : 'GET',
+				data : {
+					workorderuid : workorderuid
+				},
+				success : function(response) {
+					$('#productuid').val(response.productuid);
+					$('#productname').val(response.productname);
+				},
+				error : function() {
+					alert('Error fetching Work order Details. Please try again.');
+				}
+			});
+		}
+  </script>
+  <script>
+    function SubmitForm() {
+    //  if (!validateForm()) return;
+
+      const formData = new FormData(document.getElementById('pqcForm'));
+      const id = $('#id').val();
+	  let url, successMessage;
+
+	  		if (!id) {
+	  				 url = '/saveproductionqualitycontrol';
+	  			    successMessage = 'Production Quality Control saved successfully!';
+	  				} else {
+	  			     url = '/updateproductionqualitycontrol';
+	  				successMessage = 'Production Quality Control updated successfully!';
+	  			     }
+
+		  
+      $.ajax({
+        url: url,
+        type: 'POST',
+        data: formData,
+        processData: false,
+        contentType: false,
+        success: function () {
+          $('#message').text(successMessage);
+          resetForm();
+          window.location.href = '/productionandoperationmanagement/productionqualitycontrolgrid';
+        },
+        error: function () {
+          alert('Error saving product. Please fill out all required fields.');
+        }
+      });
+    }
+
+    function resetForm() {
+      $('#pqcForm')[0].reset();
+      $('#id').val('');
+      $('#message').text('');
+	  $('#form-title').text('Product');
+
+      $('#submitBtn').text('Submit');
+    }
+	
+	function prefillForm(data){
+		$('#id').val(data.id);
+		$('#testperformed').val(data.testperformed);
+		$('#measurementstandard').val(data.measurementstandard);
+		$('#defectclassification').val(data.defectclassification);
+		$('#inspectionstatus').val(data.inspectionstatus);
+		$('#reworkrequire').val(data.reworkrequire);
+		$('#rootcauseanalysisreport').val(data.reworkrequire);
+
+		$('#form-title').text('Update Information');
+		$('#submitBtn').text('id');
+	}
+	
+	
+
+  </script>   
+</body>
+</html>

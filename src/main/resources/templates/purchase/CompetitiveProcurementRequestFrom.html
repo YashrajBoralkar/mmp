@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<title>Competitive Procurement Request</title>
+	<link rel="stylesheet" href="/css/empinfo.css">
+	<link rel="stylesheet" href="/css/hrms.css"> <!-- // for side bar code  -->
+	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+	  <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+	
+</head>
+
+<style>
+	/* Label styling */
+	#materialQuantityLabel label {
+		display: block;
+		font-size: 18px;
+		font-weight: 100;
+		margin-bottom: 10px;
+		color: #333;
+	}
+
+	/* Table wrapper styling */
+	#materialQuantityTable {
+		margin-top: 10px;
+		border: 1px solid #ddd;
+		padding: 10px;
+		background-color: #f9f9f9;
+		border-radius: 5px;
+	}
+
+	/* Table styling */
+	#materialQuantityTable table {
+		width: 100%;
+		border-collapse: collapse;
+	}
+
+	#materialQuantityTable th,
+	#materialQuantityTable td {
+		padding: 10px;
+		border: 1px solid #ccc;
+		text-align: left;
+	}
+
+	#materialQuantityTable th {
+		background-color: #f0f0f0;
+		font-weight: 100;
+	}
+
+	/* Input field style */
+	#materialQuantityTable input[type="text"],
+	#materialQuantityTable input[type="number"],
+	#materialQuantityTable input[type="date"] {
+		width: 100%;
+		border: none;
+		background-color: transparent;
+		font-size: 14px;
+		color: #333;
+	}
+
+	#dataTable.readonly input {
+		background-color: #f3f3f3;
+	}
+</style>
+
+
+<body>
+	  <div th:replace="~{PURCHASE.html :: sidebarFragment}"></div> 
+	<div class="form-container">
+		<div class="form-section active" id="section1" style="margin-left: 20px; margin-right: 20px;">
+			<h2>Competitive Procurement Request Form</h2>
+			<br><br>
+			      <input type="hidden" id="id" name="id" th:value="${request?.id}" />
+			
+			<!-- Row 1 -->
+			<div class="form-row">
+				<div class="form-group" style="flex: 1; margin-right: 10px;">
+					<label for="raw">Raw Material Name:</label>
+					<select id="raw" class="form-control">
+						<option value="">--Select Raw Material--</option>
+					</select>
+					
+				</div>
+				<div class="form-group" style="flex: 1;">
+					<label for="rfq">Request for Quotation ID:</label>
+					<select id="rfq" class="form-control">
+						<option value="">--Select RFQ ID--</option>
+					</select>
+					<input type="text" id="rfqDisplay" readonly style="display:none;">
+				</div>
+			</div>
+
+			<!-- Row 2 -->
+			<div class="form-row" style="margin-top: 20px;">
+				<div class="form-group" style="width: 100%;">
+					<!-- Sort Controls -->
+					<div class="form-row" id="tableControls" style="margin-top: 10px; display: none;">
+						<div class="form-group" style="flex: 1; margin-right: 0px;">
+							<label for="sortColumn" style="margin-left: 0px;">Sort By</label>
+							<select id="sortColumn" class="form-control" style="width: 128px;margin-left: 0px;">
+								<option value="1">Supplier Name</option>
+								<option value="2">Quoted Price</option>
+								<option value="3">Warranty / Guarantee</option>
+								<option value="4">Delivery Date</option>
+							</select>
+						</div>
+						<div class="form-group" style="flex: 1; margin-right: 10px;margin-left: -145px;">
+							<label for="sortOrder">Order</label>
+							<select id="sortOrder" class="form-control" style="width: 128px;margin-right: 138px;">
+								<option value="asc">Ascending</option>
+								<option value="desc">Descending</option>
+							</select>
+						</div>
+						<div class="form-group" style="align-self: flex-end;">
+							<button id="sortBtn" class="btn"
+								style="margin-left: 71px;margin-left: -134px;margin-top: 20px;">Sort</button>
+							<button id="resetBtn" class="btn cancel-btn">Remove Filters</button>
+						</div>
+					</div>
+					<div id="materialQuantityTable" style="display: none;">
+						<div id="materialQuantityLabel">
+						</div>
+						<table id="dataTable">
+							<thead>
+								<tr>
+									<th>Select</th>
+									<th>Supplier Name</th>
+									<th>Quoted Price</th>
+									<th>Warranty / Guarantee</th>
+									<th>Delivery Date</th>
+								</tr>
+							</thead>
+							<tbody></tbody>
+						</table>
+					</div>
+				</div>
+			</div>
+
+
+			<!-- Row 3 -->
+			<div class="form-row">
+				<div class="form-group" style="width: 100%;">
+					<form id="cprForm">
+<!-- 						<input type="hidden" id="id" value=""><br><br> -->
+
+						<div class="form-row">
+							<div class="form-group" style="flex: 1; margin-right: 10px;">
+								<label for="requestDate">Request Date:</label>
+								<input type="date" id="requestDate" class="form-control" required>
+							</div>
+
+							<div class="form-group" style="flex: 1;">
+								<label for="approvedby">Approved By:</label>
+								 <!-- CREATE MODE -->
+							<select id="approvedbySelect" name="approvedby" th:if="${request == null or request.id == null}" required>
+							    <option value="">-- Select approved by --</option>
+							    <option th:each="entry : ${approvedbyMap}"
+							            th:value="${entry.key + ' - ' + entry.value}"
+							            th:text="${entry.key + ' - ' + entry.value}">
+							    </option>
+							</select>
+							
+							<!-- EDIT MODE -->
+							<input type="text" id="approvedbyInput" name="approvedby" th:value="${request.approvedby}" th:if="${request?.id != null}" readonly />
+							</div>
+						</div>
+
+						<div class="form-row">
+							<div class="form-group" style="width: 100%;">
+								<label for="remark">Remark:</label>
+								<input type="text" id="remark" class="form-control">
+							</div>
+						</div>
+
+						<input type="hidden" id="rawHidden" value="">
+						<input type="hidden" id="rfqHidden" value="">
+
+						<div class="form-actions">
+							<button type="button" id="submitBtn" class="btn" onclick="submitCpr()">Save </button>
+		           			 <button type="button" class="back-button" onclick="goback();">Back</button>
+						</div>
+						<div id="message"></div>
+					</form>
+				</div>
+			</div>
+		</div>
+	</div>	 
+	
+	<script>
+	
+	 function goBack() {
+			window.location.href = '/dashboard';
+			  }
+	 
+	function goback() {
+        window.location.href = '/purchase/competitiveprocurementrequestgrid';
+    }
+	
+		const API_BASE = window.location.origin + "/competitive-procurement";
+		let employeesData = [], rawLoaded = false, empLoaded = false, updateData = null;
+
+		// Load raw materials
+		$.get("/competitive-procurement/api/rawmaterials/list", data => {
+			const seen = new Set();
+			data.forEach(rm => {
+				if (!seen.has(rm.rawmaterialuid)) {
+					$("#raw").append(`<option value="${rm.rawmaterialuid}">${rm.rawmaterialname}</option>`);
+					seen.add(rm.rawmaterialuid);
+				}
+			});
+			rawLoaded = true;
+			applyUpdateData();
+		});
+
+// 		// Load employees
+// 		$.get(`${API_BASE}/employees`, data => {
+// 			employeesData = data;
+// 			data.forEach(emp => {
+// 				$("#employee").append(`<option value="${emp.employeeuid}">${emp.employeeuid} - ${emp.employeename}</option>`);
+// 			});
+// 			empLoaded = true;
+// 			applyUpdateData();
+// 		});
+
+		// Load RFQs based on raw material
+		$("#raw").change(function () {
+			const materialName = $("#raw option:selected").text();
+			$("#rfq").html('<option value="">--Select RFQ ID--</option>');
+			if (materialName && materialName !== "--Select Raw Material--") {
+				$.get(`${API_BASE}/rfqs-by-material`, {rawMaterialName: materialName}, data => {
+					const seenRfqs = new Set();
+					data.forEach(rfq => {
+						if (!seenRfqs.has(rfq.requestforquotationuid)) {
+							$("#rfq").append(`<option value="${rfq.requestforquotationuid}">${rfq.requestforquotationuid}</option>`);
+							seenRfqs.add(rfq.requestforquotationuid);
+						}
+					});
+				});
+			}
+			$("#dataTable").hide();
+			$("#tableControls").hide();
+		});
+
+		$("#rfq").change(function () {
+			const rfqUid = $(this).val();
+			const tbody = $("#dataTable tbody");
+			tbody.empty();
+			if (rfqUid) {
+				$.get(`${API_BASE}/suppliers-by-rfq`, {rfqUid: rfqUid}, data => {
+					if (data.length === 0) {
+						tbody.append(`<tr data-order="0"><td><input type="checkbox"></td>
+							<td>No Supplier</td>
+							<td><input type="number" placeholder="Enter Price"></td>
+							<td><input type="date"></td><td><input type="text" placeholder="Enter Warranty"></td>
+						</tr>`);
+					} else {
+						data.forEach((sup, idx) => {
+							tbody.append(`<tr data-order="${idx}"><td><input type="checkbox"></td><td>${sup.supplierName || "N/A"}</td>
+								<td><input type="number" placeholder="Enter Price"></td><td> <input type="text" placeholder="Enter Warranty"></td>
+								<td><input type="date"></td>
+							</tr>`);
+						});
+					}
+
+					$("#materialQuantityTable").show();
+					$("#dataTable").show().removeClass("readonly");
+					$("#tableControls").show();
+				});
+			} else {
+				$("#materialQuantityTable").hide();
+				$("#dataTable").hide();
+				$("#tableControls").hide();
+			}
+		});
+
+		// Sorting function
+		// Sorting function
+		function sortTable(tableId, colIndex, order) {
+		    const table = document.getElementById(tableId);
+		    const tbody = table.querySelector("tbody");
+		    const rows = Array.from(tbody.querySelectorAll("tr"));
+		    const ascending = order === "asc";
+
+		    rows.sort((a, b) => {
+		        let aCell = a.cells[colIndex];
+		        let bCell = b.cells[colIndex];
+		        let aVal = aCell.querySelector("input") ? aCell.querySelector("input").value.trim() : aCell.innerText.trim();
+		        let bVal = bCell.querySelector("input") ? bCell.querySelector("input").value.trim() : bCell.innerText.trim();
+
+		        // Push blank cells to the bottom
+		        if (!aVal) return 1;
+		        if (!bVal) return -1;
+
+		        if (colIndex === 3) { // warranty column
+		            const parseNumber = str => {
+		                const match = str.replace(",", ".").match(/[\d.]+/);
+		                return match ? parseFloat(match[0]) : 0;
+		            };
+		            return ascending ? parseNumber(aVal) - parseNumber(bVal) : parseNumber(bVal) - parseNumber(aVal);
+		        }
+
+		        if (colIndex === 4) { // date column
+		            return ascending ? new Date(aVal) - new Date(bVal) : new Date(bVal) - new Date(aVal);
+		        }
+
+		        if (!isNaN(parseFloat(aVal)) && !isNaN(parseFloat(bVal))) {
+		            return ascending ? parseFloat(aVal) - parseFloat(bVal) : parseFloat(bVal) - parseFloat(aVal);
+		        }
+
+		        return ascending ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+		    });
+
+		    rows.forEach(row => tbody.appendChild(row));
+		}
+
+		$("#sortBtn").click(function () {
+		    sortTable("dataTable", parseInt($("#sortColumn").val()), $("#sortOrder").val());
+		});
+
+		// Reset button
+		$("#resetBtn").click(function () {
+			const tbody = $("#dataTable tbody");
+			const rows = tbody.children().get();
+			rows.sort((a, b) => $(a).data("order") - $(b).data("order"));
+			tbody.append(rows);
+		});
+
+		// Cancel & reset
+		$("#cancelBtn").click(() => {
+			if (confirm("Cancel entry?")) {
+				resetForm();
+				$("#dataTable").hide();
+				window.location.href = "/purchase/competitiveprocurementrequestgrid";
+			}
+		});
+
+		function resetForm() {
+			$("#cprForm")[0].reset();
+			$("#id").val('');
+			$("#message").text('');
+			$("#form-title").text('Add Competitive Procurement Request');
+			$("#submitBtn").text('Save Request');
+			$("#rfqDisplay").hide().val('');
+			$("#rfq").show();
+			$("#dataTable tbody").empty();
+			$("#dataTable").hide().removeClass("readonly");
+			$("#tableControls").hide();
+
+			// Enable request date freely for new CPR
+			$("#requestDate").prop("disabled", false);
+			$("#requestDate").val('');
+		}
+
+		// Load existing request for update
+		const updateId = $("#id").val(); // Because it's passed as path variable
+   if (updateId) {
+    $.get(`/competitive-procurement/update-data/${updateId}`, data => {
+        updateData = data;
+        applyUpdateData();
+    });
+}
+
+
+		// Apply update data (for editing existing CPR)
+	function applyUpdateData() {
+    if (!updateData || !rawLoaded) return;
+
+    // Basic fields
+    $("#id").val(updateData.id);
+    $("#requestDate").val(updateData.requestdate);
+    $("#remark").val(updateData.remark);
+    $("#approvedby").val(updateData.approvedby);
+
+    // Raw material and RFQ freeze
+    $("#raw").val(updateData.rawmaterialuid).prop("disabled", true);
+    $("#rfq").hide();
+    $("#rfqDisplay").show().val(updateData.requestforquotationuid);
+
+    // --- Parse supplierdetails JSON safely ---
+    let supplierDetails = [];
+    try {
+        if (typeof updateData.supplierdetails === "string") {
+            supplierDetails = JSON.parse(updateData.supplierdetails);
+        } else if (Array.isArray(updateData.supplierdetails)) {
+            supplierDetails = updateData.supplierdetails;
+        }
+    } catch (e) {
+        console.error("Error parsing supplierdetails JSON:", e);
+        supplierDetails = [];
+    }
+
+    // --- Populate the table ---
+    const tbody = $("#dataTable tbody");
+    tbody.empty();
+
+    if (supplierDetails.length > 0) {
+        supplierDetails.forEach((sup, idx) => {
+            tbody.append(`
+                <tr data-order="${idx}">
+                    <td><input type="checkbox" checked disabled></td>
+                    <td>${sup.supplierName || "N/A"}</td>
+                    <td><input type="number" value="${sup.quotedPrice || ''}" readonly></td>
+                    <td><input type="text" value="${sup.warranty || ''}" readonly></td>
+                    <td><input type="text" value="${sup.deliveryDate || ''}" readonly></td>
+                </tr>
+            `);
+        });
+    } else {
+        tbody.append(`<tr><td colspan="5">No supplier details found.</td></tr>`);
+    }
+
+    $("#materialQuantityTable").show();
+    $("#dataTable").show().addClass("readonly");
+    $("#tableControls").hide();
+}
+
+
+
+
+		// Submit function using AJAX
+		function submitCpr() {
+			const id = $("#id").val();
+			let raw = $("#raw").val(); // always use select value
+			let rfq = $("#rfq").is(":visible") ? $("#rfq").val() : $("#rfqDisplay").val(); // use display field if edit mode
+			const requestDate = $("#requestDate").val();
+			const remark = $("#remark").val();
+			const tbody = $("#dataTable tbody tr");
+			let approvedby = "";
+			if ($("#approvedbySelect").length) {
+			    approvedby = $("#approvedbySelect").val();
+			} else if ($("#approvedbyInput").length) {
+			    approvedby = $("#approvedbyInput").val();
+			}
+
+			// Check for empty
+			if (!approvedby) {
+			    alert("❌ Please select or enter Approved By");
+			    return;
+			}
+
+
+			if (!raw || !rfq || !requestDate || !approvedby || !remark) {
+			    alert("❌ Please fill all required fields before submitting.");
+			    return;
+			}
+
+			const supplierDetails = [];
+			let atLeastOneChecked = false;
+			let tableError = false;
+
+			tbody.each(function () {
+				const row = $(this);
+				const checked = row.find("input[type=checkbox]").is(":checked");
+				if (checked) {
+					atLeastOneChecked = true;
+					const supplierName = row.find("td:eq(1)").text().trim();
+					const quotedPrice = row.find("td:eq(2) input").val();
+					const deliveryDate = row.find("td:eq(3) input").val();
+					const warranty = row.find("td:eq(4) input").val();
+
+					if (!quotedPrice || !deliveryDate || !warranty) {
+						tableError = true;
+						return false;
+					}
+
+					supplierDetails.push({supplierName, quotedPrice, deliveryDate, warranty});
+				}
+			});
+
+			if (!atLeastOneChecked) {alert("❌ Please select at least one supplier row."); return;}
+			if (tableError) {alert("❌ All fields for selected supplier rows are required."); return;}
+
+			const requestData = {
+				    id: id || null,
+				    requestdate: requestDate,
+				    approvedby: approvedby, // store directly
+				    remark: remark,
+				    rawmaterialuid: raw,
+				    requestforquotationuid: rfq,
+				    supplierdetails: supplierDetails
+				};
+			const url = id ? `${API_BASE}/update` : `${API_BASE}/save`;
+			$.ajax({
+				url: url,
+				type: "POST",
+				contentType: "application/json",
+				data: JSON.stringify(requestData),
+				success: function () {
+					alert(id ? "✅ Request updated successfully!" : "✅ Request saved successfully!");
+					resetForm();
+					window.location.href = `/purchase/competitiveprocurementrequestgrid`;
+				},
+				error: function () {alert("❌ Error saving request. Please check inputs and try again.");}
+			});
+		}
+	</script>
+</body>
+
+</html>

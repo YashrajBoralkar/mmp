@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LOT Information Form</title>
+ <link rel="stylesheet" href="/css/empinfo.css">
+    <link rel="stylesheet" href="/css/hrms.css"> <!-- // for side bar code  -->
+      <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<style>
+h2{
+  margin-top: -25px;
+}
+</style>
+<body>
+<div th:replace="~{INVENTORY.html :: sidebarFragment}"></div> <!-- // for side bar code  -->
+
+                                                                        
+    
+   <form id="LotInfoForm"  class="form-container"   >
+    <!-- Personal Information Section -->
+    <input type="hidden" id="id" name="id" th:value="${lotinfo?.id}">
+    <br>
+    <h2>LOT Information Form</h2>
+   <br><br>
+    <div class="form-section active" id="section1"  >
+     
+
+      <!-- First Row -->
+    
+      <div class="form-row" >
+        <div class="form-group">
+         
+          <label for="productuid">Product ID:</label>
+          <select type="text" id="productuid" name="productuid" onchange="fetchProductDetails()" required th:if="${lotinfo == null or lotinfo.id == null}" readonly>
+          <option value="">--Select Product ID--</option>
+          <option th:each="productId : ${ProductIds}"
+                  th:value="${productId}"
+                  th:text="${productId}"></option>
+         </select>
+          <input type="text" id="productuid" name="productuid" th:value="${lotinfo?.productuid}" onchange="fetchProductDetails()" readonly th:if="${lotinfo?.id != null}">
+         
+      </div>       
+      </div>
+
+      <!-- Second Row -->
+      <div class="form-row">
+      
+       <div class="form-group">
+      <label for="productname">Product Name:</label>
+      <input type="text" id="productname" name="productname" readonly>
+      </div>
+    
+        <div class="form-group">   
+          <label for="productcategory">Product Category:</label>
+          <input type="text" id="productcategory" name="productcategory" readonly>
+      </div>
+    
+        <div class="form-group">
+          <label for="productsubcategory">Product SubCategory:</label>
+          <input type="text" id="productsubcategory" name="productsubcategory" readonly>
+      </div>
+	 
+				  
+  </div>
+  <div class="form-row">
+    <div class="form-group">
+        <label for="manufacturingdate">Manufacturingdate:</label>
+        <input type="date" id="manufacturingdate" name="manufacturingdate" readonly>
+   </div>
+    <div class="form-group"> 
+        <label for="expirydate">Expirydate:</label>
+        <input type="date" id="expirydate" name="expirydate" readonly>
+    </div>
+    <div class="form-group">
+        <label for="sellingprice">Sellingprice:</label>
+        <input type="number" id="sellingprice" name="sellingprice" readonly>
+</div>  
+  </div>
+      <!-- Third Row -->
+      <div class="form-row">
+       <div class="form-group">
+        <label for="productquantity">Product Quantity:</label>
+        <input type="number" id="productquantity" name="productquantity" th:value = "${lotinfo?.productquantity}" required>
+    </div>
+	<div class="form-group">
+	    <label for="lotprice">Lot Price:</label>
+	    <input type="number" id="lotprice" name="lotprice" readonly>
+	</div>
+      </div>
+
+     </div>
+    <div class="form-actions">
+      <button type="button" id="submitBtn"  onclick="submitForm()">Submit </button>
+			<div th:if="${successMessage}" class="success-message" th:text="${successMessage}"></div>                       
+    </div>
+  </form>
+ <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+ <script>
+     function submitForm() {
+         const formData = new FormData(document.getElementById('LotInfoForm'));
+         const id = $('#id').val();
+
+         let url, successMessage;
+
+         if (!id) {
+             url = '/lotinfo';
+             successMessage = 'LotInfo saved successfully!';
+         } else {
+             url = '/updatelotinfo';
+             successMessage = 'LotInfo updated successfully!';
+         }
+
+         $.ajax({
+             url: url,
+             type: 'POST',
+             data: formData,
+             processData: false,
+             contentType: false,
+             success: function(response) {
+                 $('#message').text(successMessage);
+                 resetForm();
+                 window.location.href = '/inventory/batchlotgrid';
+             },
+             error: function() {
+                 alert('Error saving batch. Please fill out all required fields.');
+             }
+         });
+     }
+
+     function resetForm() {
+         $('#LotInfoForm')[0].reset();
+         $('#id').val('');
+         $('#message').text('');
+         $('#form-title').text('Lot Information Form');
+         $('#submitBtn').text('Submit');
+     }
+
+     function fetchProductDetails() {
+         const productuid = $('#productuid').val();
+
+         if (!productuid) {
+             alert("Please select a Product ID.");
+             return;
+         }
+
+         $.ajax({
+             url: '/getproductdetailsinlot',
+             method: 'GET',
+             data: { productuid: productuid },
+             success: function(response) {
+                 console.log("Response from server:", response);
+                 if (response && response.length > 0) {
+                     const ProductDetail = response[0];
+                     $('#productname').val(ProductDetail.productname || '');
+                     $('#productcategory').val(ProductDetail.productcategory || '');
+                     $('#productsubcategory').val(ProductDetail.productsubcategory || '');
+					 $('#manufacturingdate').val(ProductDetail.manufacturingdate || '');
+					 $('#expirydate').val(ProductDetail.expirydate || '');
+					 $('#sellingprice').val(ProductDetail.sellingprice || '');
+					 calculateLotPrice();
+					 
+					  
+                 } else {
+                     alert("No details found for the selected Product ID.");
+                 }
+             },
+             error: function(xhr, status, error) {
+                 console.error("Error fetching Product details:", error);
+                 alert("An error occurred while fetching the Product details.");
+             }
+         });
+     }
+
+    
+
+     $(document).ready(function() {
+         // Auto-fill Item details when updating
+         var existingproductuid = $('#productuid').val();
+         if (existingproductuid) {
+             fetchProductDetails(existingproductuid);
+         }
+
+        
+
+         // Restrict productquantity to max 100
+         $('#productquantity').on('input', function () {
+             const value = parseInt($(this).val(), 10);
+             if (value > 100) {
+                 alert("Product quantity cannot exceed 100.");
+                 $(this).val(100);
+             }
+			 calculateLotPrice();
+         });
+
+         // Set default quantity to 100 if empty
+         if (!$('#productquantity').val()) {
+             $('#productquantity').val(100);
+         }
+     });
+	 function calculateLotPrice() {
+	     const sellingPrice = parseFloat($('#sellingprice').val()) || 0;
+	     const quantity = parseInt($('#productquantity').val()) || 0;
+	     const lotPrice = sellingPrice * quantity;
+	     $('#lotprice').val(lotPrice.toFixed(2)); // Optional: 2 decimal places
+	 }
+ </script>
+
+</body>
+</html>
+Lotln From

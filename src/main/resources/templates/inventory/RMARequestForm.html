@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RMA Request Form</title>
+   <link rel="stylesheet" href="/css/empinfo.css">
+  <link rel="stylesheet" href="/css/hrms.css"> <!-- // for side bar code  -->
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<style>
+h5{
+  margin: 10px;
+}
+
+</style>
+<body >
+<div th:replace="~{INVENTORY.html :: sidebarFragment}"></div> <!-- // for side bar code -->
+
+	<form id="rmarequest">
+   <div class="form-container" style="max-width: 877px;" >
+    <!-- Personal Information Section -->
+    <input type="hidden" id="id" name="id" th:value="${rma?.id}">
+      <input type="hidden" name="id" th:value="${warehouse?.id}" />
+      <h2>Return Merchandise Authorization (RMA) Request Form</h2>
+
+      <!-- First Row -->
+        <div class="form-row">
+        
+        <div class="form-group">        
+          <label for="customeruid">Customer UID *</label>
+            <select id="customeruid" name="customeruid"  onchange="fetchCustDetails(this.value)" th:if="${rma == null or rma.id == null}" required >
+				<option value="">--Select Customer UId--</option>
+				<option th:each="custuid : ${customeruid}" th:value="${custuid}" th:text="${custuid}" ></option>					
+			</select>
+		<input type="text" id="customeruid" name="customeruid" th:value="${rma?.customeruid}" onchange="fetchCustDetails(this.value)"readonly th:if="${rma?.id != null}">
+			
+        </div>
+
+       
+        <div class="form-group">
+          <label for="customername">Customer Name</label>
+          <input type="text" id="customername" name="customername"  readonly>   
+        </div>
+
+        <div class="form-group" >
+          <label for="phonenumber" style="font-size: 13px;">Customer Phone Number</label>
+            <input type="text" id="phonenumber" name="phonenumber" readonly>
+        </div>
+        <div class="form-group">
+          <label for="email">Customer Email</label>
+            <input type="text" id="email" name="email" readonly>
+        </div>
+      </div>
+
+      <!-- Second Row -->
+          
+      <div class="form-row">
+        <div class="form-group">
+          <label for=ordernumber>Order Number</label>
+            <input type="text" id="ordernumber" name="ordernumber" readonly>
+	      </div>
+
+       
+   
+        <div class="form-group">
+              <label for="batchuid">Batch UID:</label>
+					<select id="batchuid" name="batchuid" onchange="fetchBatchDetails(this.value)" th:if="${rma == null or rma.id == null}" required>
+					    <option value="">Select Batch UID</option>
+					    <option th:each="uid : ${batchuid}" th:value="${uid}" th:text="${uid}"></option>
+					</select>
+					<input type="text" id="batchuid" name="batchuid" th:value="${rma?.batchuid}" onchange="fetchBatchDetails(this.value)" readonly th:if="${rma?.id != null}">
+        </div> 
+        <div class="form-group" >
+          <label for="productuid">Product ID:</label>
+	      <input type="text" id="productuid" name="productuid" readonly>
+	      </div>
+	      <div class="form-group" >
+            <label for="itemname">Product Name</label>
+            <input type="text" id="productname" name="productname" readonly>   
+      
+</div>     
+        
+        
+        
+      </div>
+      <!-- Third Row -->
+      
+      <div class="form-row">
+      
+          <div class="form-group">            
+            <label for="returnquantity">Return Quantity</label>
+            <input type="number" id="returnquantity" name="returnquantity" th:value="${rma?.returnquantity}">
+          </div>
+
+          <div class="form-group">
+            <label for="returnuid">Return UID *</label>
+            <select id="returnuid" name="returnuid"  onchange="fetchReturnDetails(this.value)" th:if="${rma == null or rma.id == null}" required>
+					<option value=""> Select Product Id:</option>
+					<option th:each="uid :${returnuid}" th:value="${uid}" th:text="${uid}" ></option>					
+			</select> 
+		<input type="text" id="returnuid" name="returnuid" th:value="${rma?.returnuid}" onchange="fetchReturnDetails(this.value)" readonly th:if="${rma?.id != null}">
+			  
+        </div>
+
+        <div class="form-group">
+          <label for="reasonforreturn">Reason for Return</label>
+          <input type="text" id="reasonforreturn" name="reasonforreturn" readonly></input>     
+        </div>
+        <div class="form-group">
+          <label for="dateofreturnrequest">Date of Return Request</label>
+          <!-- <input type="date" id="dateofreturnrequest" name="dateofreturnrequest" readonly />   -->
+          <input type="date" id="dateofreturnrequest" name="dateofreturnrequest"  required>
+        </div>
+      </div>
+
+      <!-- four Row -->
+
+    
+      <div class="form-row">
+        <div class="form-group">
+          <label for="supportingevidence">Supporting Evidence</label>
+          <input type="text" id="supportingevidence" name="supportingevidence" readonly>
+        </div> 
+        <div class="form-group">
+          <label for="approvalstatus">Approval Status *</label>
+          <select id="approvalstatus" name="approvalstatus" th:value="${rma?.approvalstatus}" required>
+              <option value="">Select status</option>
+              <option value="Accepted" th:selected="${rma?.approvalstatus == 'Accepted'}">Accepted</option>
+              <option value="Rejected" th:selected="${rma?.approvalstatus == 'Rejected'}">Rejected</option>
+          </select>
+        </div>     
+        <div class="form-group">
+          <label for="returninstructions">Return Instructions</label>
+          <input type="text" id="returninstructions" name="returninstructions" th:value="${rma?.returninstructions}">
+        </div>   
+        <div class="form-group">
+          <label for="restockingfee">Restocking Fee</label>
+          <input type="number" id="restockingfee" name="restockingfee" th:value="${rma?.restockingfee}">  
+        </div>
+      </div>
+
+   
+   <div class="form-row">
+     <div class="form-group">
+      <label for="processedby">Processed By *</label>
+      <input type="text" id="processedby" name="processedby" th:value="${rma?.processedby}" required>
+     </div>
+
+     <div class="form-group">
+      <label for="decisiondate">Decision Date</label>
+      <input type="date" id="decisiondate" name="decisiondate" th:value="${rma?.decisiondate}" required>
+     </div>  
+
+     <div class="form-group">
+      <label for="returntrakingnumber">Return Tracking Number</label>
+      <input type="text" id="returntrakingnumber" name="returntrakingnumber" th:value="${rma?.returntrakingnumber}" required>
+      
+     </div>
+   </div>  
+
+  
+
+
+      <div class="form-actions">
+        <button type="button" id="submitBtn" onclick="submitForm()">Submit</button>		
+		<div th:if="${successMessage}" class="success-message" th:text="${successMessage}"></div>                     
+      </div>
+    </div>
+
+
+
+
+</form>
+   
+   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>  
+	<script>
+	 //Data fetch from CustDetails Table to RMA Request Form
+		$(document).ready(function() {
+		    // Auto-fill customer details when updating
+		    var existingCustomerUid = $('#customeruid').val();
+		    if (existingCustomerUid) {
+		        fetchCustDetails(existingCustomerUid);
+		    }
+		});
+		
+		function fetchCustDetails(customeruid) {
+		    if (!customeruid) return;
+		
+		    $.ajax({
+		        url: '/returnmerchandiseauthorization/custdetails', // Endpoint to fetch data
+		        method: 'GET',
+		        data: { customeruid: customeruid },
+		        success: function(response) {
+		            // Populate response data into form fields
+		            $('#customername').val(response.customername);
+		            $('#email').val(response.emailaddress);
+		            $('#phonenumber').val(response.contactnumber);
+		            $('#ordernumber').val(response.ordernumber);
+		        },
+		        error: function() {
+		            alert('Error fetching customer details');
+		        }
+		    });
+		}
+</script>
+	
+    <script>
+   
+	 $(document).ready(function() {
+		    // Auto-fill Item details when updating
+		    var existingBatchid = $('#batchuid').val();
+		    if (existingBatchid) {
+		    	fetchBatchDetails(existingBatchid);
+		    }
+		});
+	 
+	 function fetchBatchDetails(batchuid) {
+	        if (!batchuid) return;
+
+	        $.ajax({
+	            url: '/returnmerchandiseauthorization/rmabatchdetails',
+	            method: 'GET',
+	            data: { batchuid: batchuid },
+	            success: function(response) {
+					if(response && response.length > 0) {
+						let data = response[0];
+						$('#productuid').val(data.productuid || '');
+						$('#productname').val(data.productname || '');
+// 						$('#quantity').val(data.quantity || '');
+				} else {
+					alert('No data found for the seleected product.')
+				}
+				
+	                },
+	            error: function() {
+	                alert('Error fetching Batch details. Please try again.');
+	            }
+	        });
+	    }
+	
+
+  
+	$(document).ready(function() {
+	    // Auto-fill Return details when updating
+	    var existingReturnUid = $('#returnuid').val();
+	    if (existingReturnUid) {
+	    	fetchReturnDetails(existingReturnUid);
+	    }
+	});
+  //Data fetch from Return Details Table to RMA Request Form
+	function fetchReturnDetails(returnuid) {
+	    if (!returnuid) return;
+
+	    $.ajax({
+	        url: '/returnmerchandiseauthorization/returndetails', // Endpoint to fetch data
+	        method: 'GET', // HTTP method
+	        data: { returnuid: returnuid }, // Query parameter to be sent to the server
+	        success: function(response) {
+	            // Populate response data into form fields
+	            $('#reasonforreturn').val(response.reasonforreturn);
+	            $('#dateofreturnrequest').val(response.dateofreturnrequest);
+	            $('#supportingevidence').val(response.supportingevidence);
+	            },
+			error:function(){
+				alert('Error occur');
+			}
+	    });
+	}
+    </script>
+    <script>
+
+	function submitForm() {
+		    let form = document.getElementById('rmarequest');
+		   const formData = new FormData(document.getElementById('rmarequest'));
+	       const id = $('#id').val();
+
+	    let url, successMessage;
+
+	    if (!id) {
+	        url = '/returnmerchandiseauthorization/save';
+	        successMessage = 'RMA Request Form Details saved successfully!';
+	    } else {
+	        url = '/returnmerchandiseauthorization/update';
+	        successMessage = 'RMA Request Form Details updated successfully!';
+	    }
+
+	    $.ajax({
+	        url: url,
+	        type: 'POST',
+	        data: formData,
+	        processData: false,
+	        contentType: false,
+	        success: function(response) {
+	            $('#message').text(successMessage); // Display success message
+	            resetForm();
+	            window.location.href = '/inventory/returnmerchandiseauthorizationgrid';
+	        },
+	        error: function() {
+	            alert('Error saving RMA Request Form. Please fill out the data.');
+	        }
+	    });
+	}
+	// Reset the form
+	function resetForm() {
+			    $('#rmarequest')[0].reset();
+				$('#id').val('');
+			    $('#message').text(''); // Clear the message
+			    $('#submitBtn').text('Submit');
+	}
+			
+	
+	
+</script>
+
+
+
+</body>
+</html>

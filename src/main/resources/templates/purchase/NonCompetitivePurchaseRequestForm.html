@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Non Competitive Purchase Request Form</title>
+<link rel="stylesheet" href="/css/empinfo.css">
+  <link rel="stylesheet" href="/css/hrms.css"> <!-- // for side bar code  -->
+  
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+
+  <div th:replace="~{PURCHASE.html :: sidebarFragment}"></div> <!-- // for side bar code  -->                                                                        
+    
+   <form  id="purchaseRequestForm"  class="form-container" style="max-width: 881px;margin-right: 210px">
+    <!-- Personal Information Section -->
+    <input type="hidden" id="id" name="id" th:value="${PurchaseRequest?.id}" >
+        
+    <h2>Non Competitive Purchase Request Form</h2>   
+     
+
+      <!-- First Row -->
+    
+      <div class="form-row" >
+        <div class="form-group">
+      <label for="requestdate">Request Date :</label>
+        <input type="date" id="requestdate" name="requestdate" th:value="${PurchaseRequest?.requestdate}" required />
+        <span id="requestdate-error" class="error-message"></span>
+        </div>
+      
+      <div class="form-group">
+      <label for="requestingdepartment">Requesting Department</label> 
+             <select name="requestingdepartment" id="requestingdepartment" th:value="${PurchaseRequest.requestingdepartment}" >
+                   <option value="">-- Select Department --</option>
+                   <option th:each="uid : ${dname}" th:value="${uid}" th:text="${uid}" th:selected="${PurchaseRequest != null and uid == PurchaseRequest.requestingdepartment}"></option>
+             </select>
+       <span id="requestingdepartment-error" class="error-message"></span>
+    </div>
+
+    <div class="form-group">
+     <label for="requestedby">Requested By :</label>
+        <input type="text" id="requestedby" name="requestedby" th:value="${PurchaseRequest?.requestedby}" required />
+        <span id="requestedby-error" class="error-message"></span>
+    </div>
+     <div class="form-group">           
+         <label for="supplieruid">Supplier ID :</label>
+        <select id="supplieruid" name="supplieruid" onchange="fetchSupplierdetails(this.value)" th:if="${PurchaseRequest == null or PurchaseRequest.id == null}" required>
+            <option value="">Select Supplier ID</option>
+            <option th:each="uid : ${supplieruid}" th:value="${uid}" th:text="${uid}"></option>
+        </select>
+        <input type="text" id="supplieruid" name="supplieruid" th:value="${PurchaseRequest?.supplieruid}" readonly th:if="${PurchaseRequest?.id != null}">
+        <span id="supplieruid-error" class="error-message"></span>
+      </div>
+    
+  
+      </div>
+
+      <!-- Second Row -->
+      <div class="form-row">
+       
+    
+        <div class="form-group">      
+       <label>Supplier Name :</label>
+        <input type="text" id="suppliername" name="suppliername" readonly />
+        <span id="suppliername-error" class="error-message"></span>
+      </div>
+
+      <div class="form-group">
+       <label>Supplier Contact Person</label>
+        <input type="text" id="suppliercontactperson" name="suppliercontactperson" readonly />
+        <span id="suppliercontactperson-error" class="error-message"></span>
+                       
+    </div>
+
+      <div class="form-group">
+        	  <label>Supplier Email :</label>
+        <input type="text" id="supplieremail" name="supplieremail" readonly />
+        <span id="supplieremail-error" class="error-message"></span>
+      </div>
+    
+
+        <div class="form-group">
+       <label>Supplier Phone Number</label>
+        <input type="text" id="supplierphonenumber" name="supplierphonenumber" readonly />
+        <span id="supplierphonenumber-error" class="error-message"></span>
+         
+      </div>
+    
+    
+       
+    
+      </div>
+      <!-- Third Row -->
+      <div class="form-row"> 
+      
+        <div class="form-group">
+        <label for="productuid">Product ID :</label>
+            <select id="productuid" name="productuid" onchange="fetchproductDetails(this.value)"  th:if="${PurchaseRequest == null or PurchaseRequest.id == null}" required>
+				<option value="">Select Product ID</option>
+				<option th:each="uid : ${productuid}" th:value="${uid}" th:text="${uid}"></option>
+			</select>
+    		<input type="text" id="productuid" name="productuid" th:value="${PurchaseRequest?.productuid}" onchange="fetchproductDetails(this.value)" readonly th:if="${PurchaseRequest?.id != null}">
+        <span id="productuid-error" class="error-message"></span>
+
+      </div>
+<div class="form-group">
+         
+          <label>Product Name :</label>
+        <input type="text" id="productname" name="productname" readonly />
+        <span id="productname-error" class="error-message"></span>
+        </div>
+       <div class="form-group">
+         <label>Product Description :</label>
+        <input type="text" id="productdescription" name="productdescription" readonly />
+        <span id="productdescription-error" class="error-message"></span>
+       </div>
+      <div class="form-group">
+           <label>Unit Price :</label>
+        <input type="text" id="unitprice" name="unitprice" readonly />
+        <span id="unitprice-error" class="error-message"></span>
+      </div>
+    </div>
+      <!-- four Row -->
+      <div class="form-row">
+        <div class="form-group">
+                   
+        <label for="quantity">Quantity :</label>
+        <input type="number" id="quantity" name="quantity" th:value="${PurchaseRequest?.quantity}" required/>
+        <span id="quantity-error" class="error-message"></span>
+        </div>
+        <div class="form-group">
+          <label for="totalcost">Total Cost :</label>
+        <input type="number" step="0.01" id="totalcost" name="totalcost" th:value="${PurchaseRequest?.totalcost}" readonly />
+        <span id="totalcost-error" class="error-message"></span>
+        </div>
+        
+         <div class="form-group">
+            <label for="expecteddeliverydate">Expected Delivery Date:</label>
+        <input type="date" id="expecteddeliverydate" name="expecteddeliverydate" th:value="${PurchaseRequest?.expecteddeliverydate}" required />
+        <span id="expecteddeliverydate-error" class="error-message"></span>
+          
+        </div>
+          <div class="form-group">
+           <label for="deliverylocation">Delivery Location  :</label>
+        <input type="text" id="deliverylocation" name="deliverylocation" th:value="${PurchaseRequest?.deliverylocation}" required/>
+        <span id="deliverylocation-error" class="error-message"></span>
+        </div>
+        
+      </div>
+      
+      <div class="form-row">
+        <div class="form-group">
+          <label for="reasonforsolesourcepurchase">Reason for Sole Source Purchase :</label>
+        <input type="text" step="0.01" id="reasonforsolesourcepurchase" name="reasonforsolesourcepurchase" th:value="${PurchaseRequest?.reasonforsolesourcepurchase}" required/>
+        <span id="reasonforsolesourcepurchase-error" class="error-message"></span>
+        </div>
+        <div class="form-group">
+           <label for="marketresearchconducted">Market Research Conducted :</label>
+           <br>
+        <input type="text" step="0.01" id="marketresearchconducted" name="marketresearchconducted" th:value="${PurchaseRequest?.marketresearchconducted}" required />
+        <span id="marketresearchconducted-error" class="error-message"></span>
+
+        </div>
+          <div class="form-group">
+           <label for="uniquefeatures">Unique Features :</label>
+        <br>
+        <input type="text" step="0.01" id="uniquefeatures" name="uniquefeatures" th:value="${PurchaseRequest?.uniquefeatures}" required/>
+        <span id="uniquefeatures-error" class="error-message"></span>
+
+        </div>
+        <div class="form-group">
+           <label for="riskofnotprocuring">Risk of Not Procuring :</label>
+        <br>
+        <input type="text" step="0.01" id="riskofnotprocuring" name="riskofnotprocuring" th:value="${PurchaseRequest?.riskofnotprocuring}" />
+        <span id="riskofnotprocuring-error" class="error-message"></span>
+        </div>
+        
+      </div>
+
+      <div class="form-row">
+        
+        <div class="form-group">
+           <label for="budgetcode">Budget Code :</label>
+        <input type="number" id="budgetcode" name="budgetcode" th:value="${PurchaseRequest?.budgetcode}" min="0"required />
+        <span id="budgetcode-error" class="error-message"></span>
+        </div>
+          <div class="form-group">
+         <label for="availablebudget">Available Budget :</label>
+        <input type="number" step="0.01" id="availablebudget" name="availablebudget" th:value="${PurchaseRequest?.availablebudget}"min="0" required/>
+        <span id="availablebudget-error" class="error-message"></span>
+      </div>
+      <div class="form-group">
+        <label for="fundingsource">Funding Source :</label>
+        <select id="fundingsource" name="fundingsource" th:value="${PurchaseRequest?.fundingsource}" required>
+            <option value="" disabled selected>Select Funding Source</option>
+            <option value="Internal" th:selected="${PurchaseRequest?.fundingsource == 'Internal'}">Internal</option>
+            <option value="Government Grant"th:selected="${PurchaseRequest?.fundingsource == 'Government Grant'}" >Government Grant</option>
+            <option value="External"th:selected="${PurchaseRequest?.fundingsource == 'External'}">External</option>
+            <option value="Other"th:selected="${PurchaseRequest?.fundingsource == 'Other'}">Other</option>
+        </select>
+        <span id="fundingsource-error" class="error-message"></span>
+      </div>
+      </div>
+     <div class="form-row">
+    
+      <div class="form-group">            
+        <label for="financeapprovalstatus">Finance Approval Status:</label>
+        <select id="financeapprovalstatus" name="financeapprovalstatus" th:value="${PurchaseRequest?.financeapprovalstatus}" required >
+            <option value="" disabled selected>Select Status</option>
+            <option value="Pending" th:selected="${PurchaseRequest?.financeapprovalstatus == 'Pending'}">Pending</option>
+            <option value="Approved" th:selected="${PurchaseRequest?.financeapprovalstatus == 'Approved'}">Approved</option>
+            <option value="Rejected" th:selected="${PurchaseRequest?.financeapprovalstatus == 'Rejected'}">Rejected</option>
+        </select>
+        <span id="financeapprovalstatus-error" class="error-message"></span>
+      </div>
+      <div class="form-group">
+        <label for="financeapprover">Finance Approver:</label>
+        <input type="text" id="financeapprover" name="financeapprover" th:value="${PurchaseRequest?.financeapprover}" required/>
+        <span id="financeapprover-error" class="error-message"></span>
+      </div>
+       <div class="form-group">
+        <label for="financeapprovaldate">Finance Approval Date:</label>
+        <input type="date" id="financeapprovaldate" name="financeapprovaldate" th:value="${PurchaseRequest?.financeapprovaldate}"required />
+        <span id="financeapprovaldate-error" class="error-message"></span>
+      </div>
+     </div>
+     <div class="form-row">
+     
+      <div class="form-group">
+           <label for="procurementapprovalstatus">Procurement Approval Status:</label>
+        <select id="procurementapprovalstatus" name="procurementapprovalstatus" th:value="${PurchaseRequest?.procurementapprovalstatus}" required>
+            <option value="" disabled selected>Select Status</option>
+            <option value="Pending" th:selected="${PurchaseRequest?.procurementapprovalstatus == 'Pending'}">Pending</option>
+            <option value="Approved" th:selected="${PurchaseRequest?.procurementapprovalstatus == 'Approved'}">Approved</option>
+            <option value="Rejected" th:selected="${PurchaseRequest?.procurementapprovalstatus == 'Rejected'}">Rejected</option>
+        </select>
+        <span id="procurementapprovalstatus-error" class="error-message"></span>
+      </div>
+      <div class="form-group">
+           
+        <label for="procurementapprovername">Procurement Approver Name:</label>
+        <input type="text" id="procurementapprovername" name="procurementapprovername" th:value="${PurchaseRequest?.procurementapprovername}" required />
+        <span id="procurementapprovername-error" class="error-message"></span>
+      </div>
+      <div class="form-group">
+         <label for="procurementapprovaldate">Procurement Approval Date:</label>
+        <input type="date" id="procurementapprovaldate" name="procurementapprovaldate" th:value="${PurchaseRequest?.procurementapprovaldate}" required/>
+        <span id="procurementapprovaldate-error" class="error-message"></span>
+
+      </div>
+      <div class="form-group">
+           <label for="comments">Comments:</label>
+        <input type="text" step="0.01" id="comments" name="comments" th:value="${PurchaseRequest?.comments}" required />
+        <span id="comments-error" class="error-message"></span>
+      </div>
+     </div>
+
+   <!-- Five Row  -->
+    <div class="form-actions">
+   <button type="button" id="submitBtn" onclick="validateForm()">Submit</button>
+   <button type="button" class="back-button" onclick="goBack();">Back</button>
+        <div id="message" th:if="${successMessage}" class="success-message" th:text="${successMessage}"></div>     
+    </div>
+  
+   </form>
+   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+   <script>
+    function goBack() {
+		window.location.href = '/purchase/noncompetitivepurchaserequestgrid';
+	  }
+ 
+  
+
+//         document.addEventListener("DOMContentLoaded", function () {
+//             let today = new Date().toISOString().split('T')[0]; // Get today's date in YYYY-MM-DD format
+            
+//             // Select all input fields of type date
+//             let dateInputs = document.querySelectorAll("input[type='date']");
+            
+//             dateInputs.forEach(function (dateInput) {
+//                 dateInput.value = today;  // Set today's date as default
+//                 dateInput.setAttribute("min", today); // Prevent past dates
+//                 dateInput.setAttribute("max", today); // Prevent future dates
+//             });
+//         });
+
+        function validateForm() {
+            // Reset all error messages
+            $('.error-message').text('');
+            
+            // Validate each field one by one
+            if (!$('#requestdate').val()) {
+                $('#requestdate-error').text('Request date is required');
+                alert('Please select a request date');
+                return;
+            }
+            
+            if (!$('#requestingdepartment').val()) {
+                $('#requestingdepartment-error').text('Requesting department is required');
+                alert('Please enter the requesting department');
+                return;
+            }
+            
+            if (!$('#requestedby').val()) {
+                $('#requestedby-error').text('Requested by is required');
+                alert('Please enter who is requesting');
+                return;
+            }
+            
+            if (!$('#supplieruid').val()) {
+                $('#supplieruid-error').text('Supplier UID is required');
+                alert('Please select a supplier UID');
+                return;
+            }
+            
+            if (!$('#suppliername').val()) {
+                $('#suppliername-error').text('Supplier name is required');
+                alert('Supplier name is required');
+                return;
+            }
+            
+            if (!$('#suppliercontactperson').val()) {
+                $('#suppliercontactperson-error').text('Supplier contact person is required');
+                alert('Supplier contact person is required');
+                return;
+            }
+            
+            if (!$('#supplieremail').val()) {
+                $('#supplieremail-error').text('Supplier email is required');
+                alert('Supplier email is required');
+                return;
+            } else if (!validateEmail($('#supplieremail').val())) {
+                $('#supplieremail-error').text('Invalid email format');
+                alert('Please enter a valid supplier email');
+                return;
+            }
+            
+            if (!$('#supplierphonenumber').val()) {
+                $('#supplierphonenumber-error').text('Supplier phone number is required');
+                alert('Supplier phone number is required');
+                return;
+            }
+            
+            if (!$('#productuid').val()) {
+                $('#productuid-error').text('Product UID is required');
+                alert('Please select a product UID');
+                return;
+            }
+            
+            if (!$('#productname').val()) {
+                $('#productname-error').text('Product name is required');
+                alert('Product name is required');
+                return;
+            }
+            
+//             if (!$('#productdescription').val()) {
+//                 $('#productdescription-error').text('Product description is required');
+//                 alert('Product description is required');
+//                 return;
+//             }
+            
+            if (!$('#unitprice').val() || isNaN($('#unitprice').val()) || $('#unitprice').val() <= 0) {
+                $('#unitprice-error').text('Valid unit price is required');
+                alert('Please enter a valid unit price (must be a positive number)');
+                return;
+            }
+            
+            if (!$('#quantity').val() || isNaN($('#quantity').val()) || $('#quantity').val() <= 0) {
+                $('#quantity-error').text('Valid quantity is required');
+                alert('Please enter a valid quantity (must be a positive number)');
+                return;
+            }
+            
+            if (!$('#totalcost').val() || isNaN($('#totalcost').val()) || $('#totalcost').val() <= 0) {
+                $('#totalcost-error').text('Valid total cost is required');
+                alert('Please enter a valid total cost (must be a positive number)');
+                return;
+            }
+            
+            
+            if (!$('#expecteddeliverydate').val()) {
+                $('#expecteddeliverydate-error').text('Expected delivery date is required');
+                alert('Expected delivery date is required');
+                return;
+            }
+            
+            if (!$('#deliverylocation').val()) {
+                $('#deliverylocation-error').text('Delivery Location is required');
+                alert('Delivery Location is required');
+                return;
+            }
+            
+            if (!$('#reasonforsolesourcepurchase').val()) {
+                $('#reasonforsolesourcepurchase-error').text('Reason for sole source purchase is required');
+                alert('Reason for sole source purchase is required');
+                return;
+            }
+            
+            if (!$('#marketresearchconducted').val()) {
+                $('#marketresearchconducted-error').text('Market research conducted is required');
+                alert('Market research conducted is required');
+                return;
+            }
+            
+            if (!$('#uniquefeatures').val()) {
+                $('#uniquefeatures-error').text('Unique features is required');
+                alert('Unique features is required');
+                return;
+            }
+            
+            if (!$('#budgetcode').val()) {
+                $('#budgetcode-error').text('Budget code is required');
+                alert('Budget code is required');
+                return;
+            }
+            
+            if (!$('#availablebudget').val() || isNaN($('#availablebudget').val()) || $('#availablebudget').val() <= 0) {
+                $('#availablebudget-error').text('Valid available budget is required');
+                alert('Please enter a valid available budget (must be a positive number)');
+                return;
+            }
+            
+            if (!$('#fundingsource').val()) {
+                $('#fundingsource-error').text('Funding source is required');
+                alert('Please select a funding source');
+                return;
+            }
+            
+            if (!$('#financeapprovalstatus').val()) {
+                $('#financeapprovalstatus-error').text('Finance approval status is required');
+                alert('Please select a finance approval status');
+                return;
+            }
+            
+            if (!$('#financeapprover').val()) {
+                $('#financeapprover-error').text('Finance approver is required');
+                alert('Finance approver is required');
+                return;
+            }
+            
+            if (!$('#financeapprovaldate').val()) {
+                $('#financeapprovaldate-error').text('Finance approval date is required');
+                alert('Please select a finance approval date');
+                return;
+            }
+            
+            if (!$('#procurementapprovalstatus').val()) {
+                $('#procurementapprovalstatus-error').text('Procurement approval status is required');
+                alert('Please select a procurement approval status');
+                return;
+            }
+            
+            if (!$('#procurementapprovername').val()) {
+                $('#procurementapprovername-error').text('Procurement approver name is required');
+                alert('Procurement approver name is required');
+                return;
+            }
+            
+            if (!$('#procurementapprovaldate').val()) {
+                $('#procurementapprovaldate-error').text('Procurement approval date is required');
+                alert('Please select a procurement approval date');
+                return;
+            }
+            
+            if (!$('#comments').val()) {
+                $('#comments-error').text('Comments are required');
+                alert('Comments are required');
+                return;
+            }
+            
+            // If all validations pass, submit the form
+            submitForm();
+        }
+        
+        function validateEmail(email) {
+            const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return re.test(email);
+        }
+        
+        function submitForm() {
+            const formData = new FormData(document.getElementById('purchaseRequestForm'));
+            const id = $('#id').val();
+
+            let url, successMessage;
+
+            if (!id) {
+                url = '/noncompetitivepurchaserequest/save';
+                successMessage = 'Quotation saved successfully!';
+            } else {
+                url = '/noncompetitivepurchaserequest/update';
+                successMessage = 'Quotation updated successfully!';
+            }
+
+            $.ajax({
+                url: url,
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(response) {
+                    $('#message').text(successMessage);
+                    resetForm();
+                    window.location.href = '/purchase/noncompetitivepurchaserequestgrid';
+                },
+                error: function() {
+                    alert('Error saving non competitive purchase request. Please fill out all required fields.');
+                }
+            });
+        }
+
+        function resetForm() {
+            $('#purchaseRequestForm')[0].reset();
+            $('#id').val('');
+            $('#message').text('');
+            $('#form-title').text('Add New Customer Quotation');
+            $('#submitBtn').text('Submit');
+        }
+        
+        $(document).ready(function() {
+		    // Auto-fill Item details when updating
+		    var existingsupplieruid = $('#supplieruid').val();
+		    if (existingsupplieruid) {
+		    	fetchSupplierdetails(existingsupplieruid);
+		    }
+		});
+				function fetchSupplierdetails() {
+				    const supplieruid = $('#supplieruid').val();
+
+				    if (!supplieruid) {
+				        return;
+				    }
+
+				    $.ajax({
+				        url: '/noncompetitivepurchasereuest/getsupplieruidinfo',
+				        method: 'GET',
+				        data: { supplieruid: supplieruid },
+				        success: function (response) {
+				            console.log("Response from server:", response);
+				            if (response && response.length > 0) {
+				                const Data = response[0];
+				                $('#suppliername').val(Data.suppliername || '');
+				                $('#suppliercontactperson').val(Data.contactperson || '');
+		                        $('#supplieremail').val(Data.email || '');
+		                        $('#supplierphonenumber').val(Data.contactnumber || '');
+		                   
+				            } else {
+				                alert("No details found for the selected Supplier UID.");
+				            }
+				        },
+				        error: function (xhr, status, error) {
+				            console.error("Error fetching Supplier details:", error);
+				            alert("An error occurred while fetching the Supplier details.");
+				        }
+				    });
+				}
+		
+               
+        
+        $(document).ready(function() {
+		    // Auto-fill Item details when updating
+		    var existingProductid = $('#productuid').val();
+		    if (existingProductid) {
+		    	fetchproductDetails(existingProductid);
+		    }
+		});
+	    function fetchproductDetails(productuid) {
+	        if (!productuid) return;
+
+	        $.ajax({
+	            url: '/noncompetitivepurchasereuest/getproductdetails',
+	            method: 'GET',
+	            data: { productuid: productuid },
+	            success: function(response) {
+	                if (response && response.length > 0) {
+	                    const data = response[0];
+	                    $('#productname').val(data.productname || '');
+	                    $('#unitprice').val(data.sellingprice || '');
+	                } else {
+	                    alert('No data found for the selected product.');
+	                }
+	            },
+	            error: function(xhr, status, error) {
+	                console.error('Error fetching product details:', error);
+	                alert('Error fetching product details. Please try again.');
+	            }
+	        });
+	    }
+        document.addEventListener("DOMContentLoaded", function () {
+            const quantityInput = document.getElementById("quantity");
+            const unitPriceInput = document.getElementById("unitprice");
+            const totalCostInput = document.getElementById("totalcost");
+
+            function calculateTotalCost() {
+                let quantity = parseFloat(quantityInput.value) || 0;
+                let unitPrice = parseFloat(unitPriceInput.value) || 0;
+                let totalCost = quantity * unitPrice;
+
+                // Ensure totalCost is never negative
+                if (totalCost < 0) {
+                    totalCost = 0;
+                }
+
+                totalCostInput.value = totalCost.toFixed(2); // Set total cost with 2 decimal places
+            }
+
+            // Attach event listeners
+            quantityInput.addEventListener("input", calculateTotalCost);
+            unitPriceInput.addEventListener("input", calculateTotalCost);
+        });
+    </script>
+
+
+ 
+   
+</body>
+</html>

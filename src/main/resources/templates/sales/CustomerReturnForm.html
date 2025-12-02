@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Customer Return Form</title>
+ <link rel="stylesheet" href="/css/empinfo.css">
+  <link rel="stylesheet" href="/css/hrms.css"> <!-- // for side bar code  -->
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+</head>
+
+<body > 
+<div th:replace="~{SALES.html :: sidebarFragment}"></div> <!-- // for side bar code  -->
+
+   <form id="returnForm" class="form-container"  >
+    <!-- Personal Information Section -->
+    <input type="hidden" id="id" name="id" th:value="${customerReturns?.id}">
+
+      <h2>Customer Return Form</h2>
+
+      <!-- First Row -->
+    
+      <div class="form-row">
+        
+        <div class="form-group">        
+          <label for="salesorderuid">Sales Order UID:</label>
+            <select id="salesorderuid" name="salesorderuid" onchange="fetchSalesOrderDetails(this.value)" th:if="${customerReturns == null or customerReturns.id == null}" required>
+                <option value="">Select Sales Order UID</option>
+                <option th:each="uid : ${salesorderuid}" 
+                        th:value="${uid}" 
+                        th:text="${uid}" 
+                        th:selected="${uid == customerReturns?.salesorderuid}"></option>
+            </select>
+			<input type="text" id="salesorderuid" name="salesorderuid" th:value="${customerReturns?.salesorderuid}" onchange="fetchSalesOrderDetails(this.value)" readonly th:if="${customerReturns?.id != null}">
+        </div>
+
+        <div class="form-group">
+          <label for="customeruid">Customer UID:</label>
+            <input type="text" id="customeruid" name="customeruid" readonly>
+        </div>
+
+        <div class="form-group">
+          <label for="customername">Customer Name:</label>
+          <input type="text" id="customername" name="customername" readonly />
+        </div>
+
+        
+
+      </div>
+
+      <!-- Second Row -->
+      <div class="form-row">
+        <div class="form-group">
+          <label for="returndate">Return Date:</label>
+          <input type="date" id="returndate" name="returndate" th:value="${customerReturns?.returndate}" required>
+      </div>
+        <div class="form-group">
+          <label for="productuid">Product UID:</label>
+          <select id="productuid" name="productuid" onchange="fetchProDetails(this.value)" th:if="${customerReturns == null or customerReturns.id == null}">
+              <option value="">Select Product UID</option>
+              <option th:each="uid : ${productuid}" 
+                      th:value="${uid}" 
+                      th:text="${uid}" 
+                     ></option>
+          </select>
+    <input type="text" id="productuid" name="productuid" th:value="${customerReturns?.productuid}" onchange="fetchProDetails(this.value)" readonly th:if="${customerReturns?.id != null}">
+	      </div>
+   
+        <div class="form-group">
+          <label for="productname">Product Name:</label>
+          <input type="text" id="productname" name="productname"  readonly/>
+        </div>
+
+       
+      </div>
+      <!-- Third Row -->
+      <div class="form-row">
+        <div class="form-group">
+          <label for="quantityreturned">Quantity Returned:</label>
+          <input type="number" id="quantityreturned" name="quantityreturned" th:value="${customerReturns?.quantityreturned}" min="1" required>
+        </div>
+
+        <div class="form-group" >         
+          <label for="reasonforreturn">Reason for Return:</label>
+            <select id="reasonforreturn" name="reasonforreturn" th:value="${customerReturns?.reasonforreturn}"  required>
+                <option value="">Select Reason</option>
+                <option value="Defective" th:selected="${customerReturns?.reasonforreturn == 'Defective'}">Defective</option>
+                <option value="Damaged" th:selected="${customerReturns?.reasonforreturn == 'Damaged'}">Damaged</option>
+                <option value="Incorrect Item" th:selected="${customerReturns?.reasonforreturn == 'Incorrect Item'}">Incorrect Item</option>
+            </select>
+        </div>
+      
+          <div class="form-group">            
+            <label for="returnstatus">Return Status:</label>
+            <select id="returnstatus" name="returnstatus" th:value="${customerReturns?.returnstatus}" required>
+                <option value="">Select Status</option>
+                <option value="Approved" th:selected="${customerReturns?.returnstatus == 'Approved'}">Approved</option>
+                <option value="Rejected" th:selected="${customerReturns?.returnstatus == 'Rejected'}">Rejected</option>
+                <option value="Pending" th:selected="${customerReturns?.returnstatus == 'Pending'}">Pending</option>
+            </select>
+          </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Refund or Replacement:</label>
+          <select id="refundorreplacement" name="refundorreplacement" th:value="${customerReturns?.refundorreplacement}"  required>
+              <option value="">Select Option</option>
+              <option value="RefundIssued" th:selected="${customerReturns?.refundorreplacement == 'RefundIssued'}">Refund Issued</option>
+              <option value="ProductReplaced" th:selected="${customerReturns?.refundorreplacement == 'ProductReplaced'}">Product Replaced</option>
+          </select>
+         </div>
+ </div>
+
+      <!-- four Row -->
+
+      <div class="form-row">
+       </div>
+    
+    <div class="form-actions">
+      <button  type="button" id="submitBtn" onclick="submitCustomerreturnForm()">Submit Return</button>
+			<div th:if="${successMessage}" class="success-message" th:value="${successMessage}"></div>               
+    </div>
+  </form>
+ <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>  
+   <script>
+		
+		$(document).ready(function() {
+				    // Auto-fill Item details when updating
+				    var existingsalesorderuid= $('#salesorderuid').val();
+				    if (existingsalesorderuid) {
+				    	fetchSalesOrderDetails(existingsalesorderuid);
+				    }
+				});
+        function fetchSalesOrderDetails(salesorderuid) {
+            if (!salesorderuid) return;
+
+            $.ajax({
+                url: '/sales/getsalesorderdetails',
+                method: 'GET',
+                data: { salesorderuid: salesorderuid },
+                success: function(response) {
+                    if(response && response.length > 0) {
+                        let data = response[0];
+						 $('#customeruid').val(data.customeruid || '');
+			-			    $('#customername').val(data.customername || '');
+						
+                    } else {
+                        alert('No data found for the selected sales order.');
+                    }
+                },
+                error: function() {
+                    alert('Error fetching sales order details. Please try again.');
+                }
+            });
+        }
+
+		
+		
+		
+		
+		
+		$(document).ready(function() {
+				    // Auto-fill Item details when updating
+				    var existingproductuid = $('#productuid').val();
+				    if (existingproductuid) {
+				    	fetchProDetails(existingproductuid);
+				    }
+				});
+		function fetchProDetails(productuid) {
+		    if (!productuid) {
+		        console.error("Product UID is missing");
+		        return;
+		    }
+
+		    console.log("Fetching details for product UID:", productuid);
+
+		    $.ajax({
+		        url:'/sales/getprodetails',
+		        method: 'GET',
+		        data: {productuid: productuid },
+		        success: function(response) {
+		            console.log("API Response:", response);
+		            if(response && response.length > 0) {
+		                let data = response[0];
+		                $('#productname').val(data.productname || '');
+		            } else {
+		                alert('No data found for the selected product.');
+		            }
+		        },
+		      
+		    });
+		}
+		
+		
+		
+		function validateCustomerReturnForm() {
+		    let isValid = true;
+		    let errorMessage = "";
+
+		    const customeruid = $('#customeruid').val().trim();
+		    const customername = $('#customername').val().trim();
+		    const quantityreturned = $('#quantityreturned').val().trim();
+
+		    // Validate that customeruid is not empty and is alphanumeric
+		    if (!customeruid) {
+		        errorMessage += "- Customer UID is required.\n";
+		        isValid = false;
+		    }
+
+		    // Validate customername: only alphabets and space
+		    if (!/^[A-Za-z ]+$/.test(customername)) {
+		        errorMessage += "- Customer Name should only contain letters.\n";
+		        isValid = false;
+		    }
+
+		    // Validate quantityreturned: only digits (no letters)
+		    if (!/^\d+$/.test(quantityreturned)) {
+		        errorMessage += "- Quantity Returned should only be numeric.\n";
+		        isValid = false;
+		    }
+
+		    // Check other required dropdowns
+		    const salesorderuid = $('#salesorderuid').val();
+		    const productuid = $('#productuid').val();
+		    const reasonforreturn = $('#reasonforreturn').val();
+		    const returnstatus = $('#returnstatus').val();
+		    const refundorreplacement = $('#refundorreplacement').val();
+
+		    if (!salesorderuid || !productuid || !reasonforreturn || !returnstatus || !refundorreplacement) {
+		        errorMessage += "- All fields are required.\n";
+		        isValid = false;
+		    }
+
+		    if (!isValid) {
+		        alert("Form validation failed:\n" + errorMessage);
+		    }
+
+		    return isValid;
+		}
+
+                   
+		function submitCustomerreturnForm() {
+		    const formData = new FormData(document.getElementById('returnForm'));
+		    const id = $('#id').val(); // Ensure correct ID field
+
+		    let url, successMessage;
+
+		    if (!id) {
+		        url = '/customerreturn/save';
+		        successMessage = 'CustomerReturn submitted successfully!';
+		    } else {
+		        url = '/customerreturn/update'; // Template literal for dynamic URL
+		        successMessage = 'CustomerReturn updated successfully!';
+		    }
+
+		    $.ajax({
+		        url: url,
+		        type: 'POST',
+		        data: formData,
+		        processData: false,
+		        contentType: false,
+		        success: function (response) {
+		            $('message').text(successMessage); // Ensure correct element
+		            resetreturnForm();
+		            window.location.href = '/sales/customerreturngrid'; // Redirect after success
+		        },
+		        error: function (xhr, status, error) {
+		            console.error("Error:", xhr.responseText);
+		            alert('Error saving CustomerReturn. Please try again.');
+		        }
+		    });
+		}
+
+		
+
+					
+		function resetreturnForm() {
+		    $('#returnForm')[0].reset();
+		    $('#id').val('');
+		    $('#submitBtn').text('Submit Return');
+		}
+          
+		function prefillCustomerReturnForm(data) {
+		    $('#id').val(data.id);
+		    $('#returnuid').val(data.returnuid);
+		    $('#salesorderuid').val(data.salesorderuid);
+		    $('#customeruid').val(data.customeruid);
+			$('#customername').val(data.customername);
+
+		    $('#returndate').val(data.returndate);
+		    $('#productuid').val(data.productuid);
+		   
+		    $('#quantityreturned').val(data.quantityreturned);
+		    $('#reasonforreturn').val(data.reasonforreturn);
+		    $('#returnstatus').val(data.returnstatus);
+		    $('#refundorreplacement').val(data.refundorreplacement);
+		    
+		    $('#form-title').text('Customer Return Form');
+		    $('#submitBtn').text('Update Return');
+		}
+         
+		
+	
+		
+		
+    </script>
+
+
+</body>
+</html>

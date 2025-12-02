@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Logistics Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <link rel="stylesheet" href="css/hrms.css">
+</head>
+ <!-- ✅ Internal CSS for Button Styling -->
+  <style>
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background-color: #f0f0f0;
+      padding: 10px 20px;
+    }
+
+    .search-box {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .search-box button,
+    .back-button {
+      padding: 6px 12px;
+      font-size: 14px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .search-box button:hover,
+    .back-button:hover {
+      background-color: #0056b3;
+    }
+  </style>
+
+<body>
+  <div class="maindashboard">
+    <!-- Sidebar Fragment -->
+    <div th:fragment="sidebarFragment">
+    <header class="header">
+      <div class="logo"></div>
+      <div class="search-box">
+        <input type="text" placeholder="Search..." id="search">
+        <button>Search</button>
+      </div>
+            <button type="button" class="back-button" onclick="goBack();">Back to Dashboard</button>
+      
+    </header>
+    
+    <div class="sidebar">
+         
+        <ul class="sidebar-menu">
+            <li><a th:href="@{/logistics/goodsreceiptnotegrid}">Goods Receipt Notes Management</a></li>
+            <li><a th:href="@{/logistics/deliveryordergrid}">Delivery Order Management</a></li>
+            <li><a th:href="@{/logistics/transportationrequestgrid}">Transportation Request Management</a></li>
+            <li><a th:href="@{/logistics/returnmaterialauthorizationgrid}">Return Material Authorization Management</a></li>
+            </ul>
+    </div>
+</div>
+
+
+    <!-- Main Content -->
+    <div class="content" id="content-area">
+      <h1>Logistics Management Section</h1>
+      <p>Select a sub-field from the sidebar to proceed.</p>
+
+      <!-- Back Button -->
+      <button class="back-btn" onclick="window.history.back();">
+        <i class="fas fa-arrow-left"></i> Back
+      </button>
+    </div>
+
+    <!-- Footer Fragment -->
+  
+    <footer th:fragment="footerFragment" >
+      <div class="footer">
+      <p>&copy; 2024 Your Company. All Rights Reserved.</p>
+    </div>
+    </footer>
+    
+  </div>
+
+  <script>
+    /**
+     * Function to load dynamic content into the content area.
+     * @param {string} path - The path to the content file.
+     * @param {string} title - The title to display in the content area.
+     */
+    function loadContent(path, title) {
+      const contentArea = document.getElementById('content-area');
+      contentArea.innerHTML = `<h1>${title}</h1>`; // Clear content and set title
+
+      fetch(path)
+        .then(response => {
+          if (!response.ok) throw new Error(`Failed to load ${path}: ${response.statusText}`);
+          return response.text();
+        })
+        .then(data => {
+          contentArea.innerHTML += data;
+        })
+        .catch(error => {
+          contentArea.innerHTML += '<p>Failed to load the content. Please try again later.</p>';
+          console.error(`Error loading content from ${path}:`, error);
+        });
+    }
+
+    /**
+     * Navigate back to the previous page in history.
+     */
+    function goBack() {
+      window.history.back();
+    }
+  </script>
+</body>
+
+</html>

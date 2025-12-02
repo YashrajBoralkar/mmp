@@ -1,0 +1,169 @@
+
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Raw Material Master Registration</title>
+  <link rel="stylesheet" href="/css/empinfo.css" />
+  <link rel="stylesheet" href="/css/hrms.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet" />
+</head>
+<body>
+
+<div th:replace="~{INVENTORY.html :: sidebarFragment}"></div>
+
+<div class="form-container">
+  <div class="form-section active" id="section1" style="margin-left: 20px; margin-right: 20px;">
+    <h2 class="mb-4" id="form-title">Raw Material Master Registration</h2>
+
+    <form id="rawMaterialForm">
+      <input type="hidden" id="id" name="id" th:value="${rawmaterialregistration?.id}" />
+
+      <!-- Row 1 -->
+      <div class="form-row">
+        <div class="form-group">
+          <label for="rawmaterialname">Raw Material Name</label>
+          <input type="text" id="rawmaterialname" name="rawmaterialname" th:value="${rawmaterialregistration?.rawmaterialname}" />
+        </div>
+        <div class="form-group">
+          <label for="materialdescription">Material Description</label>
+          <textarea id="materialdescription" name="materialdescription" th:text="${rawmaterialregistration?.materialdescription}" rows="1" style="height: 45px;width: 271px;"></textarea>
+        </div>
+      </div>
+
+      <!-- Row 2 -->
+      <div class="form-row">
+        <div class="form-group">
+          <label for="category">Category</label>
+          <select id="category" name="category">
+            <option value="">-- Select Category --</option>
+            <option value="Chemical" th:selected="${rawmaterialregistration?.category == 'Chemical'}">Chemical</option>
+            <option value="Metals" th:selected="${rawmaterialregistration?.category == 'Metals'}">Metals</option>
+            <option value="Packaging" th:selected="${rawmaterialregistration?.category == 'Packaging'}">Packaging</option>
+            <option value="Plastics" th:selected="${rawmaterialregistration?.category == 'Plastics'}">Plastics</option>
+            <option value="Textiles" th:selected="${rawmaterialregistration?.category == 'Textiles'}">Textiles</option>
+            <option value="Others" th:selected="${rawmaterialregistration?.category == 'Others'}">Others</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="unitofmeasure">Unit of Measure (UOM)</label>
+          <select id="unitofmeasure" name="unitofmeasure">
+            <option value="">-- Select Unit of Measure --</option>
+            <option value="Kg" th:selected="${rawmaterialregistration?.unitofmeasure == 'Kg'}">Kg</option>
+            <option value="Ltr" th:selected="${rawmaterialregistration?.unitofmeasure == 'Ltr'}">Ltr</option>
+            <option value="Pcs" th:selected="${rawmaterialregistration?.unitofmeasure == 'Pcs'}">Pcs</option>
+            <option value="Meter" th:selected="${rawmaterialregistration?.unitofmeasure == 'Meter'}">Meter</option>
+            <option value="Box" th:selected="${rawmaterialregistration?.unitofmeasure == 'Box'}">Box</option>
+            <option value="Set" th:selected="${rawmaterialregistration?.unitofmeasure == 'Set'}">Set</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="standardpurchaseprice">Standard Purchase Price</label>
+          <input type="number" id="standardpurchaseprice" name="standardpurchaseprice" step="0.01" min="0" th:value="${rawmaterialregistration?.standardpurchaseprice}" />
+        </div>
+      </div>
+
+      <!-- Row 3 -->
+      <div class="form-row">
+        <div class="form-group">
+          <label for="days">Lead Time (in days)</label>
+          <input type="number" id="days" name="leadtime" min="1" max="365" th:value="${rawmaterialregistration?.leadtime}" />
+        </div>
+        <div class="form-group">
+          <label for="minimumstocklevel">Minimum Stock Level</label>
+          <input type="number" id="minimumstocklevel" name="minimumstocklevel" min="0" th:value="${rawmaterialregistration?.minimumstocklevel}" />
+        </div>
+        <div class="form-group">
+          <label for="hsncode">HSN Code</label>
+          <input type="text" id="hsncode" name="hsncode" th:value="${rawmaterialregistration?.hsncode}" />
+        </div>
+      </div>
+
+      <!-- Row 4 -->
+      <div class="form-row">
+        <div class="form-group">
+          <label for="storageconditions">Storage Conditions</label>
+          <input type="text" id="storageconditions" name="storageconditions" th:value="${rawmaterialregistration?.storageconditions}" />
+        </div>
+        <div class="form-group">
+          <label for="activestatus">Active Status</label>
+          <select id="activestatus" name="activestatus">
+            <option value="">-- Select Status --</option>
+            <option value="Active" th:selected="${rawmaterialregistration?.activestatus == 'Active'}">Active</option>
+            <option value="Inactive" th:selected="${rawmaterialregistration?.activestatus == 'Inactive'}">Inactive</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button type="button" id="submitBtn" onclick="submitRawMaterialForm()">Submit</button>
+        <button type="button" class="back-button" onclick="goback()">Back</button>
+        <div th:if="${successMessage}" class="success-message" th:text="${successMessage}"></div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+function goback() {
+	window.location.href = '/inventory/batchlotgrid';
+}
+</script>
+<script>
+  function submitRawMaterialForm() {
+    const fields = [
+      'rawmaterialname', 'materialdescription', 'category', 'unitofmeasure',
+      'standardpurchaseprice', 'days', 'minimumstocklevel', 'hsncode',
+      'storageconditions', 'activestatus'
+    ];
+
+    for (let i = 0; i < fields.length; i++) {
+      const field = document.getElementById(fields[i]);
+      if (!field.value || field.value.trim() === '') {
+        alert('Please fill all fields before submitting.');
+        field.focus();
+        return;
+      }
+    }
+
+    // Proceed with form submission
+    const formData = new FormData(document.getElementById('rawMaterialForm'));
+    const id = $('#id').val();
+    let url, successMessage;
+    if (!id) {
+        url = '/rawmaterialregistration/save';
+        successMessage = 'Raw Material saved successfully!';
+    } else {
+        url = '/rawmaterialregistration/update';
+        successMessage = 'Raw Material updated successfully!';
+    }
+    
+    $.ajax({
+      url: url,
+      type: 'POST',
+      data: formData,
+      processData: false,
+      contentType: false,
+      success: function () {
+        alert(successMessage);
+        resetForm();
+        window.location.href = '/inventory/batchlotgrid';
+      },
+      error: function () {
+        alert('Error saving raw material.');
+      }
+    });
+  }
+
+  function resetForm() {
+    $('#rawMaterialForm')[0].reset();
+    $('#id').val('');
+    $('#form-title').text('Raw Material Master Registration');
+    $('#submitBtn').text('Submit');
+  }
+</script>
+
+</body>
+</html>

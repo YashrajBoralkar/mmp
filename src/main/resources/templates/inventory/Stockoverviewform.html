@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stock Information Form</title>
+  <link rel="stylesheet" href="/css/empinfo.css">
+  <link rel="stylesheet" href="/css/hrms.css"> <!-- // for side bar code  -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+     <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body onload="fetchProductDetails()">
+ <div th:replace="~{INVENTORY.html :: sidebarFragment}"></div> <!-- // for side bar code  -->
+ 
+
+   <form id="StockInfoForm" class="form-container"   >
+    <!-- Personal Information Section -->
+    <h2>Stock Information Form</h2>
+    <input type="hidden" id="id" name="id" th:value="${stockinfo?.id}">
+   
+   
+    <div class="form-section active" id="section1"  >
+     
+
+      <!-- First Row -->
+    
+      <div class="form-row" >
+        <div class="form-group">
+          <label for="stockuid">Stock UID</label>
+          <input type="text" id="stockuid" name="stockuid" th:value="${stockinfo?.stockuid}">
+      </div>
+      
+      <div class="form-group">
+        <label for="stockname">Stock Name</label>
+        <input type="text" id="stockname" name="stockname" th:value="${stockinfo?.stockname}" required>
+    </div>
+
+    <div class="form-group">
+      <label for="batchuid">Batch UIDs</label>
+      <select id="batchuid" name="batchuid" required th:if="${stockinfo == null or stockinfo.id == null}">
+          <option value="">--Select Batch ID--</option>
+          <option th:each="uid : ${batchuid}" th:value="${uid}" th:text="${uid}"></option>
+      </select>
+    <input type="text" id="batchuid6-readonly" name="batchuid" th:value="${stockinfo?.batchuid}" readonly th:if="${stockinfo?.id != null}">
+      
+         
+  </div>
+    
+  
+      </div>
+
+      <!-- Second Row -->
+      <div class="form-row">
+      <div class="form-group">
+        <label for="lotuids">Lot UIDs</label>
+        <input type="text" id="lotuids" name="lotuid" th:value="${stockinfo?.lotuid}" required>
+    </div>
+
+    <div class="form-group">
+      <label for="productuid">Product UID</label>
+
+      <!-- Show dropdown while saving -->
+      <select id="productuid" name="productuid" onchange="fetchProductDetails()" required th:if="${stockinfo == null or stockinfo.id == null}" >
+          <option value="">--Select Product ID--</option>
+          <option th:each="productId : ${ProductIds}" th:value="${productId}" th:text="${productId}"></option>
+      </select>
+     <input type="text" id="productuid" name="productuid" th:value="${stockinfo?.productuid}"  readonly th:if="${stockinfo?.id != null}">         
+      
+    </div>
+
+  </div>
+      <!-- Third Row -->
+      <div class="form-row">
+
+       <div class="form-group">
+        <label for="productname">Product Name</label>
+        <input type="text" id="productname" name="productname"  required>
+    </div>
+    <div class="form-group">
+      <label for="productcategory">Product Category</label>
+      <input type="text" id="productcategory" name="productcategory"  required>
+  </div>          
+      </div>
+
+      <!-- four Row -->
+
+   
+    </div>
+
+   <!-- Five Row  -->
+   <div class="form-row">
+    <div class="form-group">
+      <label for="lotquantity">Lot Quantity</label>
+      <input type="number" id="lotquantity" name="lotquantity" th:value="${stockinfo?.lotquantity}" required>
+  </div>
+  <div class="form-group">
+    <label for="warehouseuid">Warehouse UID</label>
+    <input type="text" id="warehouseuid" name="warehouseuid" th:value="${stockinfo?.warehouseuid}" required>
+</div>
+   </div>
+
+ 
+
+
+    <div class="form-actions">
+      <button type="button" id="submitBtn" onclick="submitForm()">Submit</button>
+                <div th:if="${successMessage}" class="success-message" th:text="${successMessage}"></div>                    
+    </div>
+  </form>
+ <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+   <script>
+    
+    function fetchProductDetails() {
+     const productuid = $('#productuid').val();
+
+     if (!productuid) {
+         return;
+     }
+
+     $.ajax({
+         url: '/getproductdetailsinstockoverview',
+         method: 'GET',
+         data: { productuid: productuid }, // Correct parameter name
+         success: function(response) {
+             console.log("Response from server:", response); // Log response for debugging
+             if (response && response.length > 0) {
+                 const productDetail = response[0]; 
+                 $('#productname').val(productDetail.productname || '');
+                 $('#productcategory').val(productDetail.productcategory || '');
+             } else {
+                 alert("No details found for the selected Product ID.");
+             }
+         },
+         error: function(xhr, status, error) {
+             console.error("Error fetching product details:", error);
+             alert("An error occurred while fetching the Product details.");
+         }
+     });
+ }
+
+  
+ 
+     function submitForm() {
+         const formData = new FormData(document.getElementById('StockInfoForm'));
+         const id = $('#id').val();
+
+         let url, successMessage;
+
+         if (!id) {
+             url = '/stockinfo';
+             successMessage = 'StockInfo saved successfully!';
+         } else {
+             url = '/updatestockoverviewinfo';
+             successMessage = 'StockInfo updated successfully!';
+         }
+
+         $.ajax({
+             url: url,
+             type: 'POST',
+             data: formData,
+             processData: false,
+             contentType: false,
+             success: function(response) {
+                 alert(successMessage);
+                 window.location.href = '/viewstockinfolist';
+             },
+             error: function() {
+                 alert('Error saving stock info. Please check the required fields.');
+             }
+         });
+     }
+
+     function prefillForm(data) {
+         $('#id').val(data.id);
+         $('#stockuid').val(data.stockuid);
+         $('#stockname').val(data.stockname);
+         $('#lotuid').val(data.lotuid);
+         $('#lotquantity').val(data.lotquantity);
+         $('#warehouseuid').val(data.warehouseuid);
+
+         if (data.id) {
+             // If updating, replace dropdown with readonly input
+             $('#productuid').replaceWith('<input type="text" id="productuid" name="productuid" value="' + data.productuid + '" readonly>');
+             $('#batchuid').replaceWith('<input type="text" id="batchuid" name="batchuid" value="' + data.batchuid + '" readonly>');
+
+         }
+
+         $('#form-title').text('Update Stock Information Form');
+         $('#submitBtn').text('Update');
+     }
+ </script>
+
+
+
+
+  
+
+
+</body>
+</html>

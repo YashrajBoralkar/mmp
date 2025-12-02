@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sales Commission Report Form</title>
+  <link rel="stylesheet" href="/css/empinfo.css">
+  <link rel="stylesheet" href="/css/hrms.css"> <!-- // for side bar code  -->
+ <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+  <div th:replace="~{SALES.html :: sidebarFragment}"></div> <!-- // for side bar code  -->
+
+   <form id="salescommission" class="form-container"  > 
+    <!-- Personal Information Section -->
+    <input type="hidden" id="id" name="id" th:value="${sales?.id}">
+   
+    <h2>Sales Commission Report Form</h2>
+
+      <!-- First Row -->
+    
+      <div class="form-row">
+        
+        <div class="form-group">        
+          <label class="form-label" for="salesrepid">Sales Representative ID:</label>
+					<input type="text" class="form-control" id="salesrepid" name="salesrepid"
+						th:value="${sales?.salesrepid}" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="salesrepname" style="font-size: 13.5px">Sales Representative Name:</label>
+					<input type="text" class="form-control" id="salesrepname" name="salesrepname"
+						th:value="${sales?.salesrepname}" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="commissionperiod">Commission Period:</label>
+          <br>
+					<select class="form-control" id="commissionperiod" name="commissionperiod" required>
+
+						<option value="">Select Period</option>
+						<option value="monthly" th:selected="${sales?.commissionperiod == 'monthly'}">Monthly</option>
+						<option value="quarterly" th:selected="${sales?.commissionperiod == 'quarterly'}">Quarterly
+						</option>
+						<option value="yearly" th:selected="${sales?.commissionperiod == 'yearly'}">Yearly</option>
+					</select>
+        </div>        
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <div class="form-group">
+              <label class="form-label" for="totalsales">Total sales Amount:</label>
+              <input type="text" class="form-control" id="totalsales" name="totalsales"
+                th:value="${sales?.totalsales}" required>
+                </div>
+          </div>
+        </div>
+
+      <!-- Second Row -->
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="commissionrate">Commission Rate (%):</label>
+					<input type="text" class="form-control" id="commissionrate" name="commissionrate"
+						th:value="${sales?.commissionrate}" required>
+	      </div>
+   
+        <div class="form-group">
+          <label class="form-label" for="commissionearned">Commission Earned:</label>
+					<input type="text" class="form-control" id="commissionearned" name="commissionearned"
+						th:value="${sales?.commissionearned}" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="approvalstatus">Approval Status:</label>
+
+
+					<select class="form-label" id="approvalstatus" name="approvalstatus" required>
+						<option value="">Select Status</option>
+						<option value="pending" th:selected="${sales?.approvalstatus == 'pending'}">Pending</option>
+						<option value="approved" th:selected="${sales?.approvalstatus == 'approved'}">Approved</option>
+						<option value="rejected" th:selected="${sales?.approvalstatus == 'rejected'}">Rejected</option>
+
+					</select>
+        </div>
+
+       
+      </div>
+     <div class="form-actions">
+        <button type="button" id="submitBtn" onclick="submitForm()">Submit</button>
+		<div th:if="${successMessage}" class="success-message" th:text="${successMessage}"></div>
+				      			
+	</div>
+  </form>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+ 	<script>
+    // Auto-calculate Commission Earned
+    $(document).ready(function () {
+      $('#totalsales, #commissionrate').on('input', function () {
+        const totalSales = parseFloat($('#totalsales').val()) || 0;
+        const commissionRate = parseFloat($('#commissionrate').val()) || 0;
+        const earned = (totalSales * commissionRate) / 100;
+        $('#commissionearned').val(earned.toFixed(2));
+      });
+    });
+
+    // Submit Form using AJAX
+    function submitForm() {
+      const formData = new FormData(document.getElementById('salescommission'));
+      
+      
+
+      // Basic validation
+      const salesRepId = $('#salesrepid').val().trim();
+      const salesRepName = $('#salesrepname').val().trim();
+      const commissionPeriod = $('#commissionperiod').val();
+      const totalSales = $('#totalsales').val().trim();
+      const commissionRate = $('#commissionrate').val().trim();
+      const approvalStatus = $('#approvalstatus').val();
+
+      // Validate SalesRep ID
+      if (salesRepId === '') {
+        alert('Sales Representative ID is required.');
+        return;
+      }
+
+      // Validate SalesRep Name
+      if (salesRepName === '' || !/^[a-zA-Z\s]+$/.test(salesRepName)) {
+        alert('Sales Representative Name must contain only letters.');
+        return;
+      }
+
+      // Validate Commission Period
+      if (commissionPeriod === '') {
+        alert('Please select a Commission Period.');
+        return;
+      }
+
+      // Validate Total Sales
+      if (totalSales === '' || isNaN(totalSales) || parseFloat(totalSales) < 0) {
+        alert('Please enter a valid Total Sales amount.');
+        return;
+      }
+
+      // Validate Commission Rate
+      if (commissionRate === '' || isNaN(commissionRate) || parseFloat(commissionRate) < 0) {
+        alert('Please enter a valid Commission Rate.');
+        return;
+      }
+
+      // Validate Approval Status
+      if (approvalStatus === '') {
+        alert('Please select an Approval Status.');
+        return;
+      }
+      
+
+      const id = $('#id').val();
+
+      let url, successMessage;
+
+      if (!id) {
+        url = '/savesalescommissionform';
+        successMessage = 'Sales saved successfully!';
+      } else {
+        url = '/salescommissionform/update';
+        successMessage = 'Sales updated successfully!';
+      }
+
+
+      $.ajax({ 
+        url: url,
+        type: 'POST',
+        data: formData,
+        processData: false,
+        contentType: false,
+        success: function () {
+          alert(successMessage);
+          window.location.href = '/sales/salescommissiongrid';
+        },
+        error: function () {
+          alert('Error saving sales. Please try again.');
+        }
+      });
+    }
+  </script>
+</body>
+</html>

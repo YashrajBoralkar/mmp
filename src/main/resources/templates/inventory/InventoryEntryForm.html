@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8" />
+  <title>Inventory Entry Form</title>
+  <link rel="stylesheet" href="/css/empinfo.css">
+     <link rel="stylesheet" href="/css/hrms.css"> <!-- // for side bar code  -->
+     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+     <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+
+<body>
+		<div th:replace="~{INVENTORY.html :: sidebarFragment}"></div>     
+		<div class="form-container">
+	  <div class="form-section active" id="section1" style="margin-left: 20px; margin-right: 20px;">
+	    <h2 id="form-title">Inventory Entry</h2><br>
+
+	    <form id="inventoryForm" autocomplete="off">
+	      <!-- Hidden fields -->
+	      <input type="hidden" th:value="${entry?.id}" id="id" />
+	      <input type="hidden" id="productname" name="productname" th:value="${entry?.productname}" />
+	      <input type="hidden" id="approvedquantity" name="approvedquantity" th:value="${entry?.approvedquantity}" />
+
+	      <!-- Row 1: Product Type (1 field) -->
+	      <div class="form-row">
+	        <div class="form-group">
+	          <label for="producttype">Product Type:</label>
+	          <select id="producttype" name="producttype" th:value="${entry?.producttype}"
+	                  th:disabled="${entry != null and entry.id != null}" required class="form-control">
+	            <option value="">-- Select --</option>
+	            <option value="GOODS">GOODS</option>
+	            <option value="RAW MATERIAL">RAW MATERIAL</option>
+	          </select>
+	        </div>
+	      </div>
+
+	      <!-- Row 2: Product UID + Reference UID -->
+	      <div class="form-row">
+	        <div class="form-group">
+	          <label id="productuidLabel" for="productuid">Product ID:</label>
+	          <select id="productuid" name="productuid" th:value="${entry?.productuid}"
+	                  th:disabled="${entry != null and entry.id != null}" required class="form-control">
+	            <option value="">-- Select Product --</option>
+	          </select>
+	        </div>
+
+	        <div class="form-group">
+	          <label id="referenceuidLabel" for="referenceuid">Reference ID:</label>
+			  <input type="text" id="referenceuid" name="referenceuid" th:value="${entry?.referenceuid}" />
+
+	         <!-- <select id="referenceuid" name="referenceuid" th:value="${entry?.referenceuid}"  th:disabled="${entry != null and entry.id != null}" required class="form-control">
+	            <option value="">-- Select --</option>
+	          </select>-->
+	        </div>
+	      </div>
+
+				<!-- Product Details (Textboxes) -->
+				<div class="form-row" id="productDetails" style="display:none;">
+				  <div class="form-group col-md-6">
+				    <label for="productnameTextBox">Product Name:</label>
+				    <input type="text" id="productnameTextBox" name="productnameTextBox" class="form-control" readonly />
+				  </div>
+				 <!-- <div class="form-group col-md-6">
+				    <label for="approvedQtyTextBox">Approved Quantity:</label>
+				    <input type="number" id="approvedQtyTextBox" name="approvedQtyTextBox" class="form-control" readonly />
+				  </div>-->
+				</div>
+
+	      <!-- Row 3: Actual Quantity + Warehouse UID -->
+	      <div class="form-row">
+	        <div class="form-group">
+	          <label for="actualquantity">Actual Quantity:</label>
+	          <input type="number" min="0" id="actualquantity" name="actualquantity" th:value="${entry?.actualquantity}"
+	                 required class="form-control"/>
+	        </div>
+
+	        <div class="form-group">
+	          <label for="warehouseuid">Warehouse ID:</label>
+	          <select id="warehouseuid" name="warehouseuid" th:value="${entry?.warehouseuid}" required class="form-control">
+	            <option value="">-- Select Warehouse --</option>
+	            <option th:each="w : ${warehouseList}"
+	                    th:value="${w.warehouseuid}"
+	                    th:selected="${w.warehouseuid == entry?.warehouseuid}"
+	                    th:text="${w.warehouseuid}"></option>
+	          </select>
+	        </div>
+	      </div>
+
+		  <!-- Warehouse Details -->
+		  <div class="form-row" id="warehouseDetails" style="display:none;">
+		    <div class="form-group col-md-12">
+		      <label for="warehouseNameText">Warehouse Name:</label>
+		      <input type="text" class="form-control" id="warehouseNameText" readonly>
+		    </div>
+		  </div>
+
+
+	      <!-- Row 4: Entry Date + Employee -->
+	      <div class="form-row">
+	        <div class="form-group">
+	          <label for="entrydate">Entry Date:</label>
+	          <input type="date" id="entrydate" name="entrydate" th:value="${entry?.entrydate}" required class="form-control"/>
+	        </div>
+
+	        <div class="form-group">
+	          <label for="employeeuid">Entered By:</label>
+
+	          <!-- CREATE MODE -->
+	          <select id="employeeuid" name="employeeuid"
+	                  th:if="${entry == null or entry.id == null}" required class="form-control">
+	            <option value="">-- Select Employee --</option>
+	            <option th:each="entry : ${empMap}"
+	                    th:value="${entry.key + ' - ' + entry.value}"
+	                    th:text="${entry.key + ' - ' + entry.value}"></option>
+	          </select>
+
+	          <!-- EDIT MODE -->
+	          <input type="text" id="employeeuid" name="employeeuid"
+	                 th:if="${entry?.id != null}"
+	                 th:value="${entry.employeeuid + (empMap[entry.employeeuid] != null ? ' - ' + empMap[entry.employeeuid] : '')}"
+	                 readonly class="form-control"/>
+	        </div>
+	      </div>
+
+	      <!-- Row 5: Submit Button -->
+	      <div class="form-actions">
+	          <button type="button" id="submitBtn" onclick="submitInventoryEntryForm()" class="btn btn-primary">Save</button>
+	           <button type="button" onclick="goback()" class="back-button">Back</button>
+	          <!-- <div id="successMessage" class="success-message" style="color:green;"></div>
+	          <a th:href="@{/inventoryentry/list}">Back</a> -->
+	           
+	       
+	      </div>
+
+	    </form>
+	  </div>
+	</div>
+
+
+<script th:inline="javascript">
+	
+  const initialType = /*[[${entry?.producttype}]]*/ '';
+  const initialProductUid = /*[[${entry?.productuid}]]*/ '';
+  const initialReferenceUid = /*[[${entry?.referenceuid}]]*/ '';
+  const initialWarehouseUid = /*[[${entry?.warehouseuid}]]*/ '';
+</script>
+<script>
+function goback() {
+	window.location.href = '/inventory/inventoryentrygrid';
+	}
+</script>
+<script>
+	
+	/* ---------------- Track Used Reference UIDs ---------------- */
+	let usedReferenceUids = { 
+	    GOODS: [], 
+	    "RAW MATERIAL": [] 
+	};
+
+	// Fetch used UIDs from backend dynamically
+	$.ajax({
+	    url: '/inventoryentry/usedReferenceUids', 
+	    type: 'GET',
+	    success: function(resp) {
+	        // Ensure backend returns same structure
+	        usedReferenceUids = resp || { GOODS: [], "RAW MATERIAL": [] };
+	        console.log('Used Reference UIDs loaded:', usedReferenceUids);
+	    },
+	    error: function() {
+	        console.warn('Could not load used reference UIDs. Defaulting to empty.');
+	    }
+	});
+
+	/* ---------------- Used Reference UIDs per type ---------------- */
+	let usedUids = { 
+	    GOODS: [], 
+	    "RAW MATERIAL": [] 
+	};
+
+/* ---------------- Validate Form ---------------- */
+function validateInventoryEntryForm() {
+    if (!$('#producttype').val()) { 
+        alert('Please select a Product Type.'); 
+        $('#producttype').focus(); 
+        return false; 
+    }
+    if (!$('#productuid').val()) { 
+        alert('Please select a Product ID.'); 
+        $('#productuid').focus(); 
+        return false; 
+    }
+
+    // Reference UID validation only if there are selectable options left
+   /* let referenceOptions = $('#referenceuid option').not('[value=""]'); 
+    if (referenceOptions.length > 0 && !$('#referenceuid').val()) {
+        alert('Please select a Reference UID.');
+        $('#referenceuid').focus();
+        return false;
+    }*/
+
+	const refUid = $('#referenceuid').val().trim();
+	if (!refUid) { 
+	    alert('Please insert a Reference UID.');
+	    $('#referenceuid').focus();
+	    return false;
+	}
+
+	// ✅ Flexible pattern: allows letters, numbers, and special symbols (no spaces)
+	const refPattern = /^[A-Za-z0-9!@#$%^&*()_\-+=\[\]{};:'",.<>/?|\\]+$/;
+
+	if (!refPattern.test(refUid)) {
+	    alert('Reference UID can only contain letters, numbers, and symbols (no spaces).');
+	    $('#referenceuid').focus();
+	    return false;
+	}
+
+    const actualQty = parseFloat($('#actualquantity').val());
+   // const approvedQty = parseFloat($('#approvedquantity').val());
+
+    if (!actualQty && actualQty !== 0) { 
+        alert('Please enter Actual Quantity.'); 
+        $('#actualquantity').focus(); 
+        return false; 
+    }
+
+    // ✅ New validation: Actual Qty cannot exceed Approved Qty
+   /* if (actualQty > approvedQty) {
+        alert('Actual Quantity cannot be greater than Approved Quantity (' + approvedQty + ').');
+        $('#actualquantity').focus();
+        return false;
+    }
+*/
+    if (!$('#warehouseuid').val()) { 
+        alert('Please select a Warehouse.'); 
+        $('#warehouseuid').focus(); 
+        return false; 
+    }
+    if (!$('#entrydate').val()) { 
+        alert('Please select an Entry Date.'); 
+        $('#entrydate').focus(); 
+        return false; 
+    }
+    if (!$('#employeeuid').val()) { 
+        alert('Please select the Employee who entered this.'); 
+        $('#employeeuid').focus(); 
+        return false; 
+    }
+
+    return true;
+}
+
+
+
+/* ---------------- Form Submit ---------------- */
+function submitInventoryEntryForm() {
+    if (!validateInventoryEntryForm()) return;
+
+    const formData = new FormData(document.getElementById('inventoryForm'));
+    const id = $('#id').val();
+    let url = id ? '/inventoryentry/updateEntry/' + id : '/inventoryentry/save';
+    let successMessage = id ? 'Inventory Entry updated successfully!' : 'Inventory Entry submitted successfully!';
+
+	$.ajax({
+	    url: url,
+	    type: 'POST',
+	    data: formData,
+	    processData: false,
+	    contentType: false,
+	    success: function() {
+	        alert(successMessage);
+
+	        const selectedUid = $('#referenceuid').val();
+	        if (selectedUid) usedReferenceUids[$('#producttype').val()].push(selectedUid);
+
+	        $('#referenceuid').replaceWith('<input type="text" id="referenceuid" readonly value="' + selectedUid + '" />');
+
+	        window.location.href = '/inventory/inventoryentrygrid';
+	    },
+	    error: function() {
+	        alert('Error submitting inventory entry. Please try again.');
+	    }
+	});
+
+}
+
+
+/* ---------------- Reset Form ---------------- */
+function resetInventoryEntryForm() {
+    $('#inventoryForm')[0].reset();
+    $('#id').val('');
+    $('#producttype, #productuid').prop('disabled', false);
+    $('#productDetails').hide();
+    $('#warehouseDetails').hide();
+    $('#submitBtn').text('Save');
+    $('#form-title').text('Add Inventory Entry');
+    $('#referenceuid').empty().append('<option value="">-- Select --</option>');
+    $('#productNameText, #approvedQtyText, #warehouseNameText').text('');
+    $('#employeeuid').val('');
+
+    // No need to reset usedReferenceUids; they persist for new entries
+}
+
+
+/* ---------------- Load Product UIDs ---------------- */
+function loadProductUids(type, selectedUid, callback) {
+    $('#productuid').empty().append('<option value="">-- Select --</option>');
+    $('#referenceuid').empty().append('<option value="">-- Select --</option>');
+    $('#productDetails').hide();
+    $('#productNameText').text('');
+    $('#approvedQtyText').text('');
+
+    if (!type) return;
+
+    $.ajax({
+        url: '/inventoryentry/fetchProductUids',
+        type: 'GET',
+        data: { type: type },
+        success: function(list) {
+            (list || []).forEach(item => { $('#productuid').append($('<option/>', { value: item.uid, text: item.uid })); });
+            if (selectedUid) { $('#productuid').val(selectedUid).trigger('change'); }
+            if (callback) callback();
+        }
+    });
+}
+
+/* ---------------- Load Reference UID ---------------- */
+function loadReferenceUid(selectedUid) {
+    const type = $('#producttype').val();
+    const productUid = $('#productuid').val();
+
+    $('#referenceuid').empty().append('<option value="">-- Select --</option>');
+    if (!type || !productUid) return;
+
+    let url = type === 'GOODS' ? '/inventoryentry/fetchFinishGoodsQcUid' : '/inventoryentry/fetchRawMaterialReceiptNoteUid';
+    let paramName = type === 'GOODS' ? 'productuid' : 'rawmaterialuid';
+
+    $.ajax({
+        url: url,
+        type: 'GET',
+        data: { [paramName]: productUid },
+        success: function(list) {
+            (list || []).forEach(item => {
+                // Only include UID if not already used OR it is the currently selected UID (edit mode)
+                if (!usedReferenceUids[type].includes(item.uid) || item.uid === selectedUid) {
+                    $('#referenceuid').append($('<option/>', { value: item.uid, text: item.uid }));
+                }
+            });
+
+            if (selectedUid) {
+                $('#referenceuid').val(selectedUid);
+                fetchApprovedQuantity();
+            }
+        }
+    });
+}
+
+
+/* ---------------- Load Product Details ---------------- */
+/*function loadProductDetails() {
+    const type = $('#producttype').val();
+    const productUid = $('#productuid').val();
+    const referenceUid = $('#referenceuid').val();
+
+    if (!type || !productUid || !referenceUid) { 
+        $('#productDetails').hide(); 
+        return; 
+    }
+
+    $.ajax({
+        url: '/inventoryentry/productDetails',
+        type: 'GET',
+        data: { type: type, productUid: productUid, referenceUid: referenceUid },
+        success: function(resp) {
+            if (!resp || !resp.productname || resp.approvedquantity == null) {
+                alert('Invalid Product Selection! Missing details.');
+                $('#productDetails').hide();
+                return;
+            }
+
+            let quantity = resp.approvedquantity;
+            $('#productNameText').text(resp.productname);
+            $('#approvedQtyText').text(quantity);
+            $('#productname').val(resp.productname);
+            $('#approvedquantity').val(quantity);
+            $('#productDetails').show();
+
+            // ✅ Remove these lines
+            // $('#referenceuid option[value="'+referenceUid+'"]').prop('disabled', true);
+            // usedUids[type].push(referenceUid);
+            // $('#referenceuid').val('');
+        }
+    });
+}*/
+
+
+/* ---------------- Fetch Product Name when Product UID changes ---------------- */
+function fetchProductName() {
+    const type = $('#producttype').val();
+    const productUid = $('#productuid').val();
+    if (!type || !productUid) {
+        $('#productNameText').text('');
+        $('#productDetails').hide();
+        return;
+    }
+
+    $.ajax({
+        url: '/inventoryentry/productName', // endpoint to fetch product name only
+        type: 'GET',
+        data: { type: type, productUid: productUid },
+        success: function(resp) {
+            if (!resp || !resp.productname) {
+                alert('Product not found!');
+                $('#productNameText').text('');
+                $('#productDetails').hide();
+                return;
+            }
+			$('#productnameTextBox').val(resp.productname);
+			$('#productname').val(resp.productname); // Hidden input (used in form submission)
+			$('#productDetails').show(); // Show textboxes
+			$('#approvedQtyText').val('').hide(); // hide until fetched
+			$('#productDetails').show();
+
+            // Now load the Reference UID dropdown
+            loadReferenceUid(null);
+        }
+    });
+}
+
+/* ---------------- Fetch Approved Quantity when Reference UID changes ---------------- */
+function fetchApprovedQuantity() {
+    const type = $('#producttype').val();
+    const productUid = $('#productuid').val();
+    const referenceUid = $('#referenceuid').val();
+    if (!type || !productUid || !referenceUid) return;
+
+    $.ajax({
+        url: '/inventoryentry/productDetails', // endpoint returns approved quantity
+        type: 'GET',
+        data: { type: type, productUid: productUid, referenceUid: referenceUid },
+        success: function(resp) {
+            if (!resp || resp.approvedquantity == null) {
+                alert('Approved Quantity not found!');
+                $('#approvedQtyText').text('');
+                return;
+            }
+
+           
+			$('#approvedQtyTextBox').val(resp.approvedquantity);
+			$('#approvedquantity').val(resp.approvedquantity); // Hidden input (used in form submission)
+			$('#productDetails').show(); // Ensure it's visible
+
+        }
+    });
+}
+
+
+/* ---------------- Load Warehouse ---------------- */
+function loadWarehouseName() {
+    const wid = $('#warehouseuid').val();
+
+    // Always clear the field initially
+    $('#warehouseNameText').val('');
+    $('#warehouseDetails').hide();
+
+    // If no warehouse selected, stop here
+    if (!wid) return;
+
+    // Fetch new warehouse data
+    $.ajax({
+        url: '/inventoryentry/warehouse/details',
+        type: 'GET',
+        data: { warehouseuid: wid },
+        success: function(resp) {
+            if (resp && resp.warehousename) {
+                $('#warehouseNameText').val(resp.warehousename);
+                $('#warehouseDetails').show();
+            }
+        }
+    });
+}
+
+/* ---------------- Init ---------------- */
+$(function() {
+    $('#producttype').on('change', function() {
+        const type = $(this).val();
+        if (type === "GOODS") { 
+            $('#productuidLabel').text("Product ID:"); 
+            $('#referenceuidLabel').text("Finish Goods QC ID:"); 
+        } else if (type === "RAW MATERIAL") { 
+            $('#productuidLabel').text("Raw Material ID:"); 
+            $('#referenceuidLabel').text("Raw Material Receipt Note ID:"); 
+        }
+
+        // Clear dependent fields
+        $('#productuid, #referenceuid').empty().append('<option value="">-- Select --</option>');
+        $('#productDetails').hide();
+        $('#warehouseNameText').val('');  
+        $('#warehouseDetails').hide();
+		usedUids = { 
+			    GOODS: [], 
+			    "RAW MATERIAL": [] 
+			};
+
+
+        // Only clear fields if it's a NEW entry
+        if (!initialType) {
+            $('#actualquantity').val('');
+            $('#warehouseuid').val('');
+            $('#entrydate').val('');
+            $('#employeeuid').val('');
+            $('#referenceuid').val('');
+			
+        }
+
+        loadProductUids(type, null);
+
+        // 🔑 Refresh warehouse name if a warehouse UID is already selected
+        if ($('#warehouseuid').val()) {
+            loadWarehouseName();
+        }
+    });
+
+    $('#productuid').on('change', function() {
+        fetchProductName(); // Step 1: fetch product name + populate Reference UID
+    });
+    $('#referenceuid').on('change', function() {
+        fetchApprovedQuantity(); // Step 2: fetch approved quantity
+    });
+
+    $('#warehouseuid').on('change', loadWarehouseName);
+
+    // Prefill edit mode
+    if (initialType) {
+        $('#producttype').val(initialType).trigger('change');
+        loadProductUids(initialType, initialProductUid, function() { 
+            loadReferenceUid(initialReferenceUid); 
+        });
+    }
+    if (initialWarehouseUid) { 
+        $('#warehouseuid').val(initialWarehouseUid); 
+        loadWarehouseName(); 
+    }
+});
+
+</script>
+</body>
+</html>

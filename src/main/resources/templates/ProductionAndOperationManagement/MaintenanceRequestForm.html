@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Maintenance Request Details</title>
+  <link rel="stylesheet" href="/css/empinfo.css">
+  <link rel="stylesheet" href="/css/hrms.css"> <!-- // for side bar code  -->
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    .one-line-label {
+  white-space: nowrap;
+  overflow: hidden;        /* Optional: hide overflow */
+  text-overflow: ellipsis; /* Optional: adds "..." if text overflows */
+}
+
+  </style>
+</head>
+
+<body>
+<div th:replace="~{PRODUCTIONANDOPERATION.html :: sidebarFragment}"></div> <!-- // for side bar code  -->                                                                        
+    
+   <form  id="maintenancerequestform" enctype="multipart/form-data" class="form-container" >
+    <!-- Personal Information Section -->
+   <input type="hidden" id="id" name="id" th:value="${request?.id}"/>
+    <br>
+    <h2>Maintenance Request Details</h2>   
+     
+
+      <!-- First Row -->
+    <br>
+      <div class="form-row" >
+        <div class="form-group"> 
+		 <label for="equipmentmasteruid">Equipment Master ID :</label>
+		
+			<select  id="equipmentmasteruid" class="form-control" name="equipmentmasteruid" onchange="fetchEquipmentMasterDetails(this.value)"  th:if="${request == null or request.id == null}">
+				<option value="">Select Equipment Master ID </option>
+			    <option th:each="uid : ${equipmentmasteruid}" th:value="${uid}" th:text="${uid}"></option>	
+			 </select>										   		 			        
+			 <input type="text" id="equipmentmasteruid" name="equipmentmasteruid" th:value="${request?.equipmentmasteruid}" readonly th:if="${request?.id != null}">
+        </div>
+      
+      <div class="form-group">
+       <label for="equipmentname">Equipment Name :</label>
+        <input type="text" class="form-control" id="equipmentname" name="equipmentname" readonly />
+     </div>
+   <div class="form-group">
+         <label>Maintenance Type :</label>
+                <select class="form-control" id="maintenancetype" name="maintenancetype" required>
+                    <option value="">Select Maintenance Type</option>
+                    <option value="Preventive" th:selected="${request?.maintenancetype == 'Preventive'}">Preventive</option>
+                    <option value="Corrective" th:selected="${request?.maintenancetype == 'Corrective'}">Corrective</option>
+                    <option value="Breakdown" th:selected="${request?.maintenancetype == 'Breakdown'}">Breakdown</option>
+                </select>
+    </div>
+</div>
+
+      <!-- Second Row -->
+      <!-- Second Row: Description, Priority, Status -->
+<div class="form-row">
+     
+  <div class="form-group">
+        <label>Issue Description :</label>
+        <input type="text" class="form-control" id="issuedescription" name="issuedescription" th:value="${request?.issuedescription}" required />
+  </div>
+ <!-- Quality Rating Input -->
+<!-- Quality Rating -->
+<div class="form-group">
+        <label>Spare Parts Required :</label>
+        <input type="text" class="form-control" id="sparepartsrequired" name="sparepartsrequired" th:value="${request?.sparepartsrequired}" required />
+</div>
+
+<!-- Timeliness Rating -->
+<div class="form-group">
+   <label>Estimated Repair Cost :</label>
+   <input type="number" class="form-control" id="estimatedrepaircost" name="estimatedrepaircost"
+            th:value="${request?.estimatedrepaircost}" required min="0" />
+</div>
+</div>
+
+ <!-- Third Row -->
+<div class="form-row">
+  <div class="form-group">
+     	<label>Estimated Completion Date :</label>
+        <input type="date" class="form-control" id="estimatedcompletiondate" name="estimatedcompletiondate"
+                       th:value="${request?.estimatedcompletiondate}" required />
+  </div>
+  <div class="form-group">
+       <label>Requested Status :</label>
+       <br>
+                <select class="form-control" id="requestedstatus" name="requestedstatus" required>
+                    <option value="">Select Requested Status </option>
+                    <option value="Approved" th:selected="${request?.requestedstatus == 'Approved'}">Approved</option>
+                    <option value="Pending" th:selected="${request?.requestedstatus == 'Pending'}">Pending</option>
+                    <option value="Rejected" th:selected="${request?.requestedstatus == 'Rejected'}">Rejected</option>
+                </select>
+  </div>
+  <div class="form-group">
+        <label for="employeeuid">Requested By :</label>
+        <br>
+		<select  id="employeeuid" class="form-control" name="employeeuid" onchange="fetchEmployeeDetails(this.value)"  th:if="${request == null or request.id == null}">
+				<option value="">Select ID </option>
+			    <option th:each="uid : ${employeeuid}" th:value="${uid}" th:text="${uid}"></option>	
+			 </select>										   		 			        
+			 <input type="text" id="employeeuid" name="employeeuid" th:value="${request?.employeeuid}" readonly th:if="${request?.id != null}">
+  </div>
+</div>
+<div class="form-row">
+<div class="form-group">
+    <label>Requested By Name :</label>
+    <input type="text" class="form-control" id="employeename" name="employeename" readonly />
+    </div>
+</div>
+
+   <!-- Fourth Row  -->
+    <div class="form-actions">
+  <div class="button-group">
+    <button type="button" id="submitBtn" onclick="submitMaintenanceRequestForm()">Submit</button>
+    <button type="button" class="back-button" onclick="goback();">Back</button>
+  </div>
+  <div th:if="${successMessage}" class="success-message" th:text="${successMessage}"></div>
+</div>
+
+   </form>
+   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+   
+<script>
+function goback() {
+		window.location.href = '/productionandoperationmanagementgrid/maintanancerequestgrid';
+	  }
+
+  </script>
+<script>
+$(document).ready(function() {
+    var existingEmployeeUid = $('#employeeuid').val();
+    if (existingEmployeeUid) {
+        fetchEmployeeDetails(existingEmployeeUid);
+    }
+});
+
+function fetchEmployeeDetails(employeeuid) {
+    if (!employeeuid) return;
+
+    $.ajax({
+        url: '/getemployeenamebyid',
+        method: 'GET',
+        data: { employeeuid: employeeuid },
+        success: function(response) {
+            // Expecting full name string like "John Doe"
+            $('#employeename').val(response);
+        },
+        error: function() {
+            alert('Error fetching employee name. Please try again.');
+        }
+    });
+}
+
+
+
+	$(document).ready(function() {
+        // Auto-fill Item details when updating
+        var existingequipmentmasteruid= $('#equipmentmasteruid').val();
+        if (existingequipmentmasteruid) {
+        	fetchEquipmentMasterDetails(existingequipmentmasteruid);
+        }
+    });
+    function fetchEquipmentMasterDetails(equipmentmasteruid) {
+  	  if (!equipmentmasteruid) return; 
+
+  	     $.ajax({
+  	 		url: '/getequipmentmasterdetails',
+  	 		method: 'GET',
+  	 		data: { equipmentmasteruid: equipmentmasteruid },
+  	 		success: function(response) {
+  	 			$('#equipmentname').val(response.equipmentname);	
+  	 	},
+  	 	error:function() {
+  	    	alert('Error fetching Equipment Master Details. Please try again.');
+  		}
+  	 });
+  	 } 
+
+    function submitMaintenanceRequestForm() {
+        const form = document.getElementById('maintenancerequestform');
+        const formData = new FormData(form);
+        const id = $('#id').val();
+
+        let url, successMessage;
+
+        if (!id) {
+            url = '/savemaintenancerequest';
+            successMessage = 'submitted';
+        } else {
+            url = '/updatemaintenancerequest'; // Make sure this POST endpoint exists in your controller
+            successMessage = 'updated';
+        }
+
+        $.ajax({
+            url: url,
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function(response) {
+               $('message').text(successMessage);
+                resetMaintananceRequestForm();
+                window.location.href = '/productionandoperationmanagementgrid/maintanancerequestgrid';
+                },
+            error: function() {
+                alert('Error submitting Maintanance Request. Please try again.');
+            }
+        });
+    }
+    function resetMaintananceRequestForm() {
+		$('#maintenancerequestform')[0].reset();
+		$('#id').val('');
+		$('#message').text(''); // Clear the message
+		$('#submitBtn').text('Submit');
+	}
+</script>
+
+
+</body>
+</html>

@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Spare Part Usage Log</title>
+   <link rel="stylesheet" href="/css/empinfo.css">
+  <link rel="stylesheet" href="/css/hrms.css"> <!-- // for side bar code  -->
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+  
+</head>
+<body>
+     <div th:replace="~{MAINTENANCEMANAGEMENTDEPERTMENT.html:: sidebarFragment}"></div> 
+	<div class="form-container">
+  <div class="form-section active" id="section1" style="margin-left: 20px; margin-right: 20px;">
+    <form id="spulForm">
+      <h2>Spare Part Usage Log Form</h2>
+      <br>
+
+      <input type="hidden" name="id" th:value="${updatespul?.id}">
+      <br>
+
+      <!-- First Row: Spare Part UID and Date of Usage -->
+      <div class="form-row">
+        <div class="form-group">
+          <label for="sparepartsinventoryuid">Spare Part UID</label>
+          <select id="sparepartsinventoryuid" name="sparepartsinventoryuid" required
+            th:if="${updatespul == null or updatespul.id == null}" class="form-control">
+            <option value="">Select Spare Part UID</option>
+            <option th:each="uid : ${sparepartsinventoryuid}" th:value="${uid}" th:text="${uid}"></option>
+          </select>
+          <input type="text" id="sparepartsinventoryuid" name="sparepartsinventoryuid"
+            th:value="${updatespul?.sparepartsinventoryuid}" readonly
+            th:if="${updatespul != null and updatespul.id != null}" class="form-control">
+        </div>
+
+        <div class="form-group">
+          <label for="dateofusage">Date of Usage</label>
+          <input type="date" id="dateofusage" name="dateofusage" th:value="${updatespul?.dateofusage}" required
+            class="form-control">
+        </div>
+      </div>
+
+      <!-- Second Row: Used for Equipment and Quantity Used -->
+      <div class="form-row">
+        <div class="form-group">
+          <label for="usedforequipment">Used for Equipment</label>
+          <input type="text" id="usedforequipment" name="usedforequipment"
+            th:value="${updatespul?.usedforequipment}" required class="form-control">
+        </div>
+
+        <div class="form-group">
+          <label for="quantityused">Quantity Used</label>
+          <input type="number" id="quantityused" name="quantityused" th:value="${updatespul?.quantityused}" required
+            class="form-control">
+        </div>
+      </div>
+
+      <!-- Third Row: Used By and Reason for Use -->
+      <div class="form-row">
+        <div class="form-group ">
+          <label for="usedby">Used By</label>
+          <input type="text" id="usedby" name="usedby" th:value="${updatespul?.usedby}" required class="form-control">
+        </div>
+
+        <div class="form-group">
+          <label for="reasonforuse">Reason for Use</label>
+          <input type="text" id="reasonforuse" name="reasonforuse" th:value="${updatespul?.reasonforuse}" required
+            class="form-control">
+        </div>
+      </div>
+
+      <!-- Submit Button -->
+       <div class="form-actions">
+      <button type="button" id="submitBtn" onclick="SubmitForm()" class="btn btn-primary">Submit</button>
+      <button type="button" id="backBtn" onclick="goBack()">Back</button>
+
+      </div>
+      <!-- Success Message -->
+      <div th:if="${successMessage}" class="success-message" th:text="${successMessage}"></div>
+    </form>
+  </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script>
+	
+	function SubmitForm() {
+	    
+	    const dateofusage = document.getElementById("dateofusage").value;
+	    const usedforequipment = document.getElementById("usedforequipment").value.trim();
+	    const quantityused = document.getElementById("quantityused").value.trim();
+	    const usedby = document.getElementById("usedby").value.trim();
+	    const reasonforuse = document.getElementById("reasonforuse").value.trim();
+
+	    let errors = [];
+
+	 
+	    if (dateofusage === "") errors.push("Date of Usage is required.");
+	    if (usedforequipment === "") errors.push("Used for Equipment is required.");
+	    if (quantityused === "" || isNaN(quantityused) || parseFloat(quantityused) <= 0) errors.push("Quantity Used must be a valid positive number.");
+	    if (usedby === "") errors.push("Used By is required.");
+	    if (reasonforuse === "") errors.push("Reason for Use is required.");
+
+	    if (errors.length > 0) {
+	        alert("Please fix the following errors:\n\n" + errors.join("\n"));
+	        return false;
+	    }
+
+	    const form = document.getElementById('spulForm');
+	    const formData = new FormData(form);
+	    const id = form.querySelector('input[type="hidden"]').value;
+	    let url = id ? '/updatesparepartusagelog' : '/savesparepartusagelog';
+	    let successMessage = id ? 'Spare Part Usage Log updated successfully!' : 'Spare Part Usage Log saved successfully!';
+
+
+	
+	    $.ajax({
+	        url: url,
+	        type: 'POST',
+	        data: formData,
+	        processData: false,
+	        contentType: false,
+	        success: function () {
+	            alert(successMessage);
+	            resetForm();
+	            window.location.href = '/maintenancemanagementdepartment/sparepartusageloggrid';
+	        },
+	        error: function () {
+	            alert('Error saving spare part usage log. Please try again.');
+	        }
+	    });
+
+	    return true;
+	}
+
+		    function resetForm() {
+		        $('#spulForm')[0].reset();
+		        $('#id').val('');
+		        $('#message').text('');
+		        $('#submitBtn').text('Submit');
+		    }
+		</script>
+
+
+</body>
+</html>

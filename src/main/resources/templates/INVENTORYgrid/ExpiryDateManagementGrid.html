@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expiry Date Management</title>
+    
+    <link rel="stylesheet" href="/css/hrms.css"> <!-- // for side bar code  -->
+    <link rel="stylesheet" href="/css/grid.css">
+    <link rel="stylesheet" href="/css/emplist.css">
+
+    <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<!-- ✅ Internal CSS for Button Styling -->
+  <style>
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background-color: #f0f0f0;
+      padding: 10px 20px;
+    }
+
+    .search-box {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .search-box button,
+    .back-button {
+      padding: 6px 12px;
+      font-size: 14px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .search-box button:hover,
+    .back-button:hover {
+      background-color: #0056b3;
+    }
+  </style>
+<body>
+<div th:replace="~{INVENTORY.html :: sidebarFragment}"></div> <!-- // for side bar code  -->
+
+<div class="button-container">
+    
+</div>
+
+<div class="button-grid">
+    <button onclick="loadExpiryAlertTable()">Expiry Tracking Details</button>
+    <button onclick="loadFirstExpiryTable()">First Expiry Details</button>
+<!--     <button onclick="loadSalesOrderTable()">Sales Order Details</button> -->
+<!--     <button onclick="loadBackOrderTable()">Back Order Details</button> -->
+    
+</div>
+
+<div id="expirydatemanagement-table-container">
+    <!-- Add the button above the table -->
+<!--    <button class="styled-button" onclick="window.location.href='/empregister';">-->
+<!--        Open Employee Registration Form-->
+<!--    </button>-->
+</div> <!-- Table will be dynamically loaded here -->
+
+<script src="grid.js"></script>
+<script>
+function goBack() {
+	window.location.href = '/dashboard';
+  }
+  
+</script>
+<script>
+    function loadExpiryAlertTable() {
+        // Create the button and table container structure immediately
+        const container = document.getElementById("expirydatemanagement-table-container");
+        container.innerHTML =`
+            <div class="table-header">
+				<div class="button-container" style="margin-left: 1045px;">
+				                <button class="styled-button" onclick="window.location.href='/inventory/expirydatemanagementgrid'" style="flex-grow: 1;">
+				                    <i class="fas fa-arrow-left"></i> Back
+				                </button>
+				                <button id="open-register-btn" class="styled-button" style="flex-grow: 1; margin-left: 20px;">
+				                Expiry Tracking Form
+				                </button>
+				            </div>
+				</div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Purchase Requisition Id</th>
+                        <th>Product Id</th>
+                        <th>Product Name</th>
+                        <th>Requested By</th>
+                        <th>Request Date</th>
+                        <th>Quantity</th>
+                        <th>Unit of Measure</th>
+                        <th>Priority Level</th>
+                        <th>Approval Status</th>
+                        <th>Approval Date</th>
+						<th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="expirytracking-table-body">
+                    <tr><td colspan="9">Loading data...</td></tr>
+                </tbody>
+            </table>
+        `;
+
+        // Add event listener to the "Register Employee" button
+        document.getElementById("open-register-btn").addEventListener("click", () => {
+            // Redirect to the employeeattendance registration form
+            window.location.href = '/showprform';
+        });
+
+        // Fetch and populate table data
+        fetch('/viewpurchasedlist')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                const headers = data.headers; // Extract headers dynamically
+                const rows = data.data;      // Extract employee data
+                const tbody = document.getElementById("expirytracking-table-body");
+
+                // Check if there are rows to display
+                if (rows.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="9">No data available.</td></tr>`;
+                    return;
+                }
+
+                // Generate rows from data
+                tbody.innerHTML = rows.map(row => `
+                    <tr>
+                        <td>${row['ID']}</td>
+                        <td>${row['Purchase Requisition Id']}</td>
+                        <td>${row['Product Id']}</td>
+                        <td>${row['Product Name']}</td>
+                        <td>${row['Requested By']}</td>
+                        <td>${row['Request Date']}</td>
+                        <td>${row['Quantity']}</td>
+                        <td>${row['Unit of Measure']}</td>
+                        <td>${row['Priority Level']}</td>
+                        <td>${row['Approval Status']}</td>
+                        <td>${row['Approval Date']}</td>
+
+                        <td>
+                            <div class="action-buttons">
+                                <a href="#" class="btn btn-delete" data-id="${row['ID']}" onclick="confirmDeleteExpiryTrackingInfo(this)">Delete</a>
+                                <a href="/editpr/${row['ID']}" class="btn btn-update">Update</a>
+                            </div>
+                        </td>
+                    </tr>
+                `).join('');
+            })
+            .catch(error => {
+                console.error('Error fetching expiry tracking data:', error);
+                document.getElementById("expirytracking-table-body").innerHTML = `<tr><td colspan="9">Error loading data.</td></tr>`;
+            });
+    }
+
+    // Example function to handle delete action
+    	function confirmDeleteExpiryTrackingInfo(element) {
+	    const id = element.getAttribute('data-id'); // Retrieve the employee ID
+	    if (confirm(`Are you sure you want to delete expiry tracking data with ID: ${id}?`)) {
+	        // Perform the fetch request with the employee ID as a query parameter
+	        fetch(`/deletepurchaseinfo?id=${id}`, { method: 'GET' })
+	            .then(response => {
+	                if (response.redirected) {
+	                    // Redirect to the new location if the server redirects
+	                    window.location.href = response.url;
+	                } else {
+	                    console.log('Expiry Tracking data deleted:', id);
+	                }
+	            })
+	            .catch(error => {
+	                console.error('Error deleting expiry tracking data:', error);
+	            });
+	    }
+	}
+	
+	
+function loadFirstExpiryTable() {
+    	        // Create the button and table container structure immediately
+    	        const container = document.getElementById("expirydatemanagement-table-container");
+    	        container.innerHTML =`
+    	            <div class="table-header">
+    					<div class="button-container" >
+    					                <button class="styled-button" onclick="window.location.href='/inventory/expirydatemanagementgrid'" style="flex-grow: 1;">
+    					                    <i class="fas fa-arrow-left"></i> Back
+    					                </button>
+    					                <button id="open-register-btn" class="styled-button" style="flex-grow: 1; margin-left: 20px;">
+    					                First Expiry First Out Form
+    					                </button>
+    					            </div>
+    					</div>
+    	            <table>
+    	                <thead>
+    	                    <tr>
+    	                    <th>ID</th>
+	                        <th>PO ID</th>
+	                        <th>Product Name</th>
+	                        <th>Product ID</th>
+	                        <th>PO Date</th>
+	                        <th>Delivery Date</th>
+	                        <th>Delivery Location</th>
+	                        <th>Supplier Id</th>
+	                        <th>Supplier Name</th>
+	                        <th>Total Price</th>
+	                        <th>Unit Of Measure</th>
+	                        <th>Unit Price</th>
+	                        <th>Authorized By</th>
+	                        <th>Approval Status</th>
+	                        <th>Action</th>
+    	                    </tr>
+    	                </thead>
+    	                <tbody id="firstexpiry-table-body">
+    	                    <tr><td colspan="9">Loading data...</td></tr>
+    	                </tbody>
+    	            </table>
+    	        `;
+
+    	        // Add event listener to the "Register Employee" button
+    	        document.getElementById("open-register-btn").addEventListener("click", () => {
+    	            // Redirect to the employeeattendance registration form
+    	            window.location.href = '/purchaseorderform';
+    	        });
+
+    	        // Fetch and populate table data
+    	        fetch('/viewAllPurchaseOrderlist')
+    	            .then(response => {
+    	                if (!response.ok) {
+    	                    throw new Error('Network response was not ok');
+    	                }
+    	                return response.json();
+    	            })
+    	            .then(data => {
+    	                const headers = data.headers; // Extract headers dynamically
+    	                const rows = data.data;      // Extract employee data
+    	                const tbody = document.getElementById("firstexpiry-table-body");
+
+    	                // Check if there are rows to display
+    	                if (rows.length === 0) {
+    	                    tbody.innerHTML = `<tr><td colspan="9">No data available.</td></tr>`;
+    	                    return;
+    	                }
+
+    	                // Generate rows from data
+    	                tbody.innerHTML = rows.map(row => `
+    	                    <tr>
+    	                        <td>${row['ID']}</td>
+    	                        <td>${row['PO ID']}</td>
+    	                        <td>${row['Product Name']}</td>
+    	                        <td>${row['Product ID']}</td>
+    	                        <td>${row['PO Date']}</td>
+    	                        <td>${row['Delivery Date']}</td>
+    	                        <td>${row['Delivery Location']}</td>
+    	                        <td>${row['Supplier Id']}</td>
+    	                        <td>${row['Supplier Name']}</td>
+    	                        <td>${row['Total Price']}</td>
+    	                        <td>${row['Unit Of Measure']}</td>
+    	                        <td>${row['Unit Price']}</td>
+    	                        <td>${row['Authorized By']}</td>
+    	                        <td>${row['Approval Status']}</td>
+
+    	                        <td>
+    	                            <div class="action-buttons">
+    	                                <a href="#" class="btn btn-delete" data-id="${row['ID']}" onclick="DeleteFirstExpiryinfo(this)">Delete</a>
+    	                                <a href="/updatepurchaseorders/${row['ID']}" class="btn btn-update">Update</a>
+    	                            </div>
+    	                        </td>
+    	                    </tr>
+    	                `).join('');
+    	            })
+    	            .catch(error => {
+    	                console.error('Error fetching first expiry first out data:', error);
+    	                document.getElementById("firstexpiry-table-body").innerHTML = `<tr><td colspan="9">Error loading data.</td></tr>`;
+    	            });
+    	    }
+
+			function DeleteFirstExpiryinfo(element) {
+		    const id = element.getAttribute('data-id'); // Retrieve the employee ID
+		    if (confirm(`Are you sure you want to delete first expiry first out details with ID: ${id}?`)) {
+		        // Perform the fetch request with the employee ID as a query parameter
+		        fetch(`/deletepurchaseordersinfo?id=${id}`, { method: 'GET' })
+		            .then(response => {
+		                if (response.redirected) {
+		                    // Redirect to the new location if the server redirects
+		                    window.location.href = response.url;
+		                } else {
+		                    console.log('First Expiry First Out details deleted:', id);
+		                }
+		            })
+		            .catch(error => {
+		                console.error('Error deleting first expiry first out details:', error);
+		            });
+		    }
+		}
+	
+	
+	
+// 		function loadSalesOrderTable() {
+// 			        // Create the button and table container structure immediately
+// 			        const container = document.getElementById("expirydatemanagement-table-container");
+// 			        container.innerHTML = `
+// 			            <div class="table-header">
+// 							<div class="button-container" style="margin-left: 1045px;">
+// 											                <button class="styled-button" onclick="window.location.href='/inventory/procurementintegrationGrid'" style="flex-grow: 1;">
+// 											                    <i class="fas fa-arrow-left"></i> Back
+// 											                </button>
+// 											                <button id="open-register-btn" class="styled-button" style="flex-grow: 1; margin-left: 20px;">
+// 											                Sales Order Form
+// 											                </button>
+// 											            </div>
+// 						 </div>
+// 			            <table>
+// 			            <thead>
+// 			            <tr>
+// 			                <th>ID</th>
+// 			                <th>Sales Order ID</th>
+// 			                <th>Customer UID</th>
+// 			                <th>Customer Name</th>
+// 			                <th>Email Address</th>
+// 			                <th>Phone Number</th>
+// 			                <th>Billing Address</th>
+// 			                <th>Shipping Address</th>
+// 			                <th>Product Name</th>
+// 			                <th>Product ID</th>
+// 			                <th>Quantity</th>
+// 			                <th>Total Amount</th>
+// 			                <th>Order Date</th>
+// 			                <th>Order Status</th>
+// 			                <th>Delivery Address</th>
+// 			                <th>Delivery Date</th>
+// 			                <th>Delivery Method</th>
+// 			                <th>Delivery Status</th>
+// 			                <th>Action</th>
+// 			            </tr>
+// 			        </thead>
+
+// 			                <tbody id="SalesOrder-table-body">
+// 			                    <tr><td colspan="9">Loading data...</td></tr>
+// 			                </tbody>
+// 			            </table>
+// 			        `;
+
+// 			        // Add event listener to the "Register Employee" button
+// 			        document.getElementById("open-register-btn").addEventListener("click", () => {
+// 			            // Redirect to the employee shift info form
+// 			            window.location.href = '/salesform';
+// 			        });
+
+// 			        // Fetch and populate table data
+// 			        fetch('/viewAllSalesOrderlist')
+// 			            .then(response => {
+// 			                if (!response.ok) {
+// 			                    throw new Error('Network response was not ok');
+// 			                }
+// 			                return response.json();
+// 			            })
+// 			            .then(data => {
+// 			                const headers = data.headers; // Extract headers dynamically
+// 			                const rows = data.data;      // Extract employee data
+// 			                const tbody = document.getElementById("SalesOrder-table-body");
+
+// 			                // Check if there are rows to display
+// 			                if (rows.length === 0) {
+// 			                    tbody.innerHTML = `<tr><td colspan="9">No data available.</td></tr>`;
+// 			                    return;
+// 			                }
+
+// 			                // Generate rows from data
+// 			                tbody.innerHTML = rows.map(row => `
+// 			                    <tr>
+// 			                <td>${row['ID']}</td>
+// 			                <td>${row['Sales Order ID']}</td>
+// 			                <td>${row['Customer UID']}</td>
+// 			                <td>${row['Customer Name']}</td>
+// 			                <td>${row['Email Address']}</td>
+// 			                <td>${row['Phone Number']}</td>
+// 			                <td>${row['Billing Address']}</td>
+// 			                <td>${row['Shipping Address']}</td>
+// 			                <td>${row['Product Name']}</td>
+// 			                <td>${row['Product ID']}</td>
+// 			                <td>${row['Quantity']}</td>
+// 			                <td>${row['Total Amount']}</td>
+// 			                <td>${row['Order Date']}</td>
+// 			                <td>${row['Order Status']}</td>
+// 			                <td>${row['Delivery Address']}</td>
+// 			                <td>${row['Delivery Date']}</td>
+// 			                <td>${row['Delivery Method']}</td>
+// 			                <td>${row['Delivery Status']}</td>
+// 			                <td>
+// 			                            <div class="action-buttons">
+// 			                                <a href="#" class="btn btn-delete" data-id="${row['ID']}" onclick="DeletefromSalesOrderinfo(this)">Delete</a>
+// 			                                <a href="/updatesales/${row['ID']}" class="btn btn-update">Update</a>
+// 			                            </div>
+// 			                        </td>
+// 			                    </tr>
+// 			                `).join('');
+// 			            })
+// 			            .catch(error => {
+// 			                console.error('Error fetching Sales Order data:', error);
+// 			                document.getElementById("SalesOrder-table-body").innerHTML = `<tr><td colspan="9">Error loading data.</td></tr>`;
+// 			            });
+// 			    }
+
+// 					function DeletefromSalesOrderinfo(element) {
+// 				    const id = element.getAttribute('data-id'); // Retrieve the employee ID
+// 				    if (confirm(`Are you sure you want to delete Sales Order Info with ID: ${id}?`)) {
+// 				        // Perform the fetch request with the employee ID as a query parameter
+// 				        fetch(`/deletesalesinfo?id=${id}`, { method: 'GET' })
+// 				            .then(response => {
+// 				                if (response.redirected) {
+// 				                    // Redirect to the new location if the server redirects
+// 				                    window.location.href = response.url;
+// 				                } else {
+// 				                    console.log('Sales Order info deleted:', id);
+// 				                }
+// 				            })
+// 				            .catch(error => {
+// 				                console.error('Error deleting Sales Order info :', error);
+// 				            });
+// 				    }
+// 				}
+	
+					
+// function loadBackOrderTable() {
+// 				        // Create the button and table container structure immediately
+// 				        const container = document.getElementById("expirydatemanagement-table-container");
+// 				        container.innerHTML = `
+// 				            <div class="table-header">
+// 								<div class="button-container" style="margin-left: 1045px;">
+// 												                <button class="styled-button" onclick="window.location.href='/inventory/procurementintegrationGrid'" style="flex-grow: 1;">
+// 												                    <i class="fas fa-arrow-left"></i> Back
+// 												                </button>
+// 												                <button id="open-register-btn" class="styled-button" style="flex-grow: 1; margin-left: 20px;">
+// 												                Back Order Form
+// 												                </button>
+// 												            </div>
+// 							 </div>
+// 				            <table>
+// 				                <thead>
+// 				                    <tr>
+// 				                    <th>ID</th>
+// 	    	                        <th>Employee ID</th>
+// 	    	                        <th>First Name</th>
+// 	    	                        <th>Last Name</th>
+// 	    	                        <th>Department</th>
+// 	    	                        <th>Shift Date</th>
+// 	    	                        <th>Shift Duration</th>
+// 	    	                        <th>Shift Status</th>
+// 	    	                        <th>Action</th>
+// 				                    </tr>
+// 				                </thead>
+// 				                <tbody id="BackOrder-table-body">
+// 				                    <tr><td colspan="9">Loading data...</td></tr>
+// 				                </tbody>
+// 				            </table>
+// 				        `;
+
+// 				        // Add event listener to the "Register Employee" button
+// 				        document.getElementById("open-register-btn").addEventListener("click", () => {
+// 				            // Redirect to the employee shift info form
+// 				            window.location.href = '/shift';
+// 				        });
+
+// 				        // Fetch and populate table data
+// 				        fetch('/viewshiftlist')
+// 				            .then(response => {
+// 				                if (!response.ok) {
+// 				                    throw new Error('Network response was not ok');
+// 				                }
+// 				                return response.json();
+// 				            })
+// 				            .then(data => {
+// 				                const headers = data.headers; // Extract headers dynamically
+// 				                const rows = data.data;      // Extract employee data
+// 				                const tbody = document.getElementById("BackOrder-table-body");
+
+// 				                // Check if there are rows to display
+// 				                if (rows.length === 0) {
+// 				                    tbody.innerHTML = `<tr><td colspan="9">No data available.</td></tr>`;
+// 				                    return;
+// 				                }
+
+// 				                // Generate rows from data
+// 				                tbody.innerHTML = rows.map(row => `
+// 				                    <tr>
+// 						                <td>${row['ID']}</td>
+// 				                        <td>${row['Employee ID']}</td>
+// 				                        <td>${row['First Name']}</td>
+// 				                        <td>${row['Last Name']}</td>
+// 				                        <td>${row['Department']}</td>
+// 				                        <td>${row['Shift Date']}</td>
+// 				                        <td>${row['Shift Duration']}</td>
+// 				                        <td>${row['Shift Status']}</td>
+// 				                        <td>
+// 				                            <div class="action-buttons">
+// 				                                <a href="#" class="btn btn-delete" data-id="${row['ID']}" onclick="DeletefromBackOrderinfo(this)">Delete</a>
+// 				                                <a href="/updateShift/${row['ID']}" class="btn btn-update">Update</a>
+// 				                            </div>
+// 				                        </td>
+// 				                    </tr>
+// 				                `).join('');
+// 				            })
+// 				            .catch(error => {
+// 				                console.error('Error fetching Back Order data:', error);
+// 				                document.getElementById("BackOrder-table-body").innerHTML = `<tr><td colspan="9">Error loading data.</td></tr>`;
+// 				            });
+// 				    }
+
+// 						function DeletefromBackOrderinfo(element) {
+// 					    const id = element.getAttribute('data-id'); // Retrieve the employee ID
+// 					    if (confirm(`Are you sure you want to delete Back Order Info with ID: ${id}?`)) {
+// 					        // Perform the fetch request with the employee ID as a query parameter
+// 					        fetch(`/deleteShift?id=${id}`, { method: 'GET' })
+// 					            .then(response => {
+// 					                if (response.redirected) {
+// 					                    // Redirect to the new location if the server redirects
+// 					                    window.location.href = response.url;
+// 					                } else {
+// 					                    console.log('Back Order info deleted:', id);
+// 					                }
+// 					            })
+// 					            .catch(error => {
+// 					                console.error('Error deleting Back Order info :', error);
+// 					            });
+// 					    }
+// 					}
+	
+	
+	
+	
+	
+	
+	
+	
+    // Call the function to load the employee table when the page loads
+  //  document.addEventListener("DOMContentLoaded", loadEmployeeTable);
+</script>
+</body>
+</html>

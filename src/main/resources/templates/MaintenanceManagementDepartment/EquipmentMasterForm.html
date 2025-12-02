@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Equipment Master Form</title>
+  
+  <link rel="stylesheet" href="/css/empinfo.css">
+  <link rel="stylesheet" href="/css/hrms.css"> <!-- // for side bar code  -->
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+  
+</head>
+
+<body>
+<div th:replace="~{MAINTENANCEMANAGEMENTDEPERTMENT.html :: sidebarFragment}"></div> // for side bar code    
+<div class="form-section active" id="section1" style="margin-left: 20px; margin-right: 20px;">
+  <div class="form-container">
+    
+    <!-- Personal Information Section -->
+    <input type="hidden" id="id" name="id" th:value="${em?.id}" required/>
+    <h2>Equipment Master Form</h2>   
+     <br>
+
+      <!-- First Row -->
+    
+      <div class="form-row" >
+        <div class="form-group">
+          <label for="equipmentname">Equipment Name</label>
+          <input type="text" id="equipmentname" name="equipmentname" required th:value="${em?.equipmentname}"/>
+        </div>
+       <div class="form-group">
+        <label for="category">Category</label>
+        <select id="category" name="category" required>
+        <option value="" disabled selected>Select Category</option>
+		<option value="Electrical" th:selected="${em?.category == 'Electrical'}">Electrical</option>
+		<option value="Mechanical" th:selected="${em?.category == 'Mechanical'}">Mechanical</option>
+		<option value="IT" th:selected="${em?.category == 'IT'}">IT</option>
+		<option value="Others" th:selected="${em?.category == 'Others'}">Others</option>
+    </select>
+        </div> 
+        <div class="form-group">
+          <label for="location">Location</label>
+          <input type="text" id="location" name="location" required th:value="${em?.location}" />
+        </div>
+        
+        
+     
+</div>
+
+      <!-- Second Row -->
+<div class="form-row">
+    <div class="form-group">
+           <label for="purchasedate">Purchase Date</label>
+           <input type="date" id="purchasedate" name="purchasedate" required th:value="${em?.purchasedate}" />
+
+    </div>
+    <div class="form-group">
+           <label for="warrantystartdate">Warranty Start Date</label>
+          <input type="date" id="warrantystartdate"  name="warrantystartdate" required th:value="${em?.warrantystartdate}" />
+    </div>
+    <div class="form-group">
+           <label for="warrantyenddate">Warranty End Date</label>
+    <input type="date" id="warrantyenddate"  name="warrantyenddate" required th:value="${em?.warrantyenddate}"  />
+
+    </div>
+   
+</div>
+
+ <!-- Third Row -->
+<div class="form-row">
+     <div class="form-group">
+       <label for="manufacturername">Manufacturer Name</label>
+       <input type="text" id="manufacturername"  name="manufacturername" required th:value="${em?.manufacturername}"  />
+
+    </div>
+    <div class="form-group">
+       <label for="maintenancefrequency">Maintenance Frequency</label>
+       <select id="maintenancefrequency" name="maintenancefrequency" required>
+        <option value="" disabled selected >Select Frequency</option>
+		<option value="Daily" th:selected="${em?.maintenancefrequency == 'Daily'}">Daily</option>
+		<option value="Weekly" th:selected="${em?.maintenancefrequency == 'Weekly'}">Weekly</option>
+		<option value="Monthly" th:selected="${em?.maintenancefrequency == 'Monthly'}">Monthly</option>
+		<option value="Yearly" th:selected="${em?.maintenancefrequency == 'Yearly'}">Yearly</option>
+       </select>
+</div>
+    <div class="form-group">
+       <label for="departmentname">Assigned Department</label>
+	   <select  id="departmentname"  name="departmentname" th:if="${em == null or em.id == null}">
+				<option value="">Select Department UID</option>
+			    <option th:each="uid : ${departmentname}" th:value="${uid}" th:text="${uid}"></option>	
+			 </select>										   		 			        
+			 <input type="text" id="departmentname" name="departmentname" th:value="${em?.departmentname}" readonly th:if="${em?.id != null}">
+			
+    </div>
+</div>
+<div class="form-row">
+    <div class="form-group">
+         <label for="status">Status</label>
+    <select id="status" name="status" required>
+        <option value="" disabled selected>Select Status</option>
+		<option value="Active" th:selected="${em?.status == 'Active'}">Active</option>
+		<option value="Inactive" th:selected="${em?.status == 'Inactive'}">Inactive</option>
+		<option value="Decommissioned" th:selected="${em?.status == 'Decommissioned'}">Decommissioned</option>
+    </select>
+
+
+    </div>
+</div>
+   <!-- Five Row  -->
+    <div class="form-actions">
+  <div class="button-group">
+    <button type="button" id="submitBtn" onclick="submitForm()">Submit</button>
+    <button type="button" class="back-button" onclick="goBack();">Back</button>
+  </div>
+  <div th:if="${successMessage}" class="success-message" th:text="${successMessage}"></div>
+</div>
+
+   </form>
+   </div>
+   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+ 
+<script>
+function goback() {
+		window.location.href = '/purchase/onlinepurchaserequestgrid';
+	  }
+function goBack() {
+	window.location.href = '/dashboard';
+  }
+  </script>
+  <script>
+	    function submitForm() {
+	        const form = document.getElementById('equipmentForm');
+
+	        
+	        const category = form.category.value;
+	        const location = form.location.value.trim();
+	        const purchaseDate = form.purchasedate.value;
+	        const warrantyStart = form.warrantystartdate.value;
+	        const warrantyEnd = form.warrantyenddate.value;
+	        const manufacturerName = form.manufacturername.value.trim();
+	        const maintenanceFrequency = form.maintenancefrequency.value;
+	        const status = form.status.value;
+
+	        // Regex: Only alphabets, comma and space allowed
+	        const alphaRegex = /^[A-Za-z\s,]+$/;
+
+	        // Validation
+	        if (equipmentName === "" || !alphaRegex.test(equipmentName)) {
+	            alert("Please enter a valid Equipment Name (Only alphabets, commas, and spaces are allowed).");
+	            return;
+	        }
+
+	        if (category === "") {
+	            alert("Please select a Category.");
+	            return;
+	        }
+
+	        if (location === "" || !alphaRegex.test(location)) {
+	            alert("Please enter a valid Location (Only alphabets, commas, and spaces are allowed).");
+	            return;
+	        }
+
+	        if (purchaseDate === "") {
+	            alert("Please enter Purchase Date.");
+	            return;
+	        }
+
+	        if (warrantyStart === "") {
+	            alert("Please enter Warranty Start Date.");
+	            return;
+	        }
+
+	        if (warrantyEnd === "") {
+	            alert("Please enter Warranty End Date.");
+	            return;
+	        }
+
+	        if (manufacturerName === "" || !alphaRegex.test(manufacturerName)) {
+	            alert("Please enter a valid Manufacturer Name (Only alphabets, commas, and spaces are allowed).");
+	            return;
+	        }
+
+	        if (maintenanceFrequency === "") {
+	            alert("Please select Maintenance Frequency.");
+	            return;
+	        }
+
+	       
+	        if (status === "") {
+	            alert("Please select Status.");
+	            return;
+	        }
+
+	        // Determine whether it's save or update
+	        const formData = new FormData(form);
+	        const id = $('#id').val();
+	        let url, successMessage;
+
+	        if (!id) {
+	            url = '/saveequipmentmaster';
+	            successMessage = 'Equipment saved successfully!';
+	        } else {
+	            url = '/updateequipmentmaster';
+	            successMessage = 'Equipment updated successfully!';
+	        }
+
+	        // Ajax submit
+	        $.ajax({
+	            url: url,
+	            type: 'POST',
+	            data: formData,
+	            processData: false,
+	            contentType: false,
+	            success: function () {
+	                alert(successMessage);
+	                resetForm();
+	                window.location.href = '/maintenancemanagementdepartment/equipmentmastergrid';
+	            },
+	            error: function () {
+	                alert('Error submitting the form. Please try again.');
+	            }
+	        });
+
+	        function resetForm() {
+	            $('#equipmentForm')[0].reset();
+	            $('#id').val('');
+	            $('#message').text('');
+	            $('#submitBtn').text('Submit');
+	        }
+	    }
+
+	    // Set default purchase date as today and restrict it
+	    $(document).ready(function () {
+	        const today = new Date().toISOString().split('T')[0];
+	        $('#purchasedate').val(today).attr('min', today).attr('max', today);
+
+	        $('#purchasedate').on('change', function () {
+	            if ($(this).val() !== today) {
+	                alert("Only today's date is allowed.");
+	                $(this).val(today);
+	            }
+	        });
+	    });
+	</script>
+
+
+
+</body>
+</html>

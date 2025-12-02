@@ -1,0 +1,317 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Feedback Collection Form</title>
+  <link rel="stylesheet" href="/css/empinfo.css">
+  <link rel="stylesheet" href="/css/hrms.css"> <!-- // for side bar code  -->
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<style>
+  label{
+    font-size: 13px;
+  }
+</style>
+<body>
+<div th:replace="~{HRMS.html :: sidebarFragment}"></div> <!-- // for side bar code  -->
+
+<form id="feedbackForm" th:object="${feedback}"  enctype="multipart/form-data">
+	
+	<input type="hidden" id="id" name="id" th:value="${feedback?.id}" >
+	
+
+  <div class="form-container" style="min-height: 397px;padding: 57px;">
+
+      <h2>Feedback Collection Form</h2>
+      <!-- First Row -->
+      <div class="form-row">
+        <div class="form-group">
+         <label for="employeeuid">Employee ID:</label>
+		 <select id="employeeuid" name="employeeuid" onchange="fetchEmployeDetails(this.value)" 
+		             th:if="${feedback == null or feedback.id == null}">
+		         <option value="">Select Employee ID</option>
+		         <option th:each="uid : ${employeeuid}"
+		                 th:value="${uid}"
+		                 th:text="${uid}"
+		                 th:selected="${uid == feedback?.employeeUID}">
+		         </option>
+		     </select>
+			 <input type="text" id="employeeuid" name="employeeuid"
+			           th:value="${feedback?.employeeUID}"
+			           onchange="fetchEmployeDetails(this.value)"
+			           th:if="${feedback?.id != null}" readonly>
+  
+			 </div>
+			 <div class="form-group">
+          <label>First Name:</label>
+		  <input type="text" id="first_name" name="first_name" readonly >
+             </div>
+             
+             <div class="form-group">
+          <label>Last Name:</label>
+		  <input type="text" id="last_name" name="last_name" readonly >
+             </div>
+         </div>
+      
+    <!--  Second Row -->
+      <div class="form-row">
+       <div class="form-group">
+          <label>Department Name:</label>
+		  <input type="text" id="departmentname" name="departmentname" readonly >
+             </div>
+        <div class="form-group">
+          <label for="feedbackType">Feedback Type</label>
+		  <select id="feedbackType" name="feedbackType" required>
+		      <option value="">Select</option>
+		      <option value="Complaint" th:selected="${feedback?.feedbackType == 'Complaint'}">Complaint</option>
+		      <option value="Suggestion" th:selected="${feedback?.feedbackType == 'Suggestion'}">Suggestion</option>
+		      <option value="Praise" th:selected="${feedback?.feedbackType == 'Praise'}">Praise</option>
+		      <option value="General Inquiry" th:selected="${feedback?.feedbackType == 'General Inquiry'}">General Inquiry</option>
+		  </select>
+
+        </div>
+        <div class="form-group">
+          <label for="feedbackDescription">Feedback Description</label>
+		  <input type="text" id="feedbackDescription" name="feedbackDescription" 
+		            th:value="${feedback?.feedbackDescription}" required />       
+		             </div>
+       
+      </div>
+
+      <!-- Third Row -->
+      <div class="form-row">
+       <div class="form-group">
+          <label for="feedbackDate">Feedback Date</label>
+		  <input type="date" id="feedbackDate" name="feedbackDate" 
+		             th:value="${feedback?.feedbackDate}" required />        
+		             </div>
+        <div class="form-group">
+          <label for="actionableSuggestion">Actionable Suggestion</label>
+		  <input type="text" id="actionableSuggestion" name="actionableSuggestion" 
+		             th:value="${feedback?.actionableSuggestion}" required />      
+		               </div>
+		<div class="form-group">
+		    <label for="attachment">Supporting Document</label>
+		    
+		    <a th:if="${feedback != null and feedback.id != null and feedback.attachment != null}"
+		       th:href="@{/feedback/{id}/download(id=${feedback.id})}"
+		       th:text="${feedback.attachmentName}"
+		       style="margin-top: 5px; display: inline-block;">
+		    </a>
+		    
+			<input type="file" id="file" name="file" accept=".pdf,.doc,.docx">
+		</div>
+
+      </div>
+
+      <!-- Fourth Row -->
+     
+      <div class="form-actions">
+        <!-- <button class="next-btn" onclick="nextSection(1)">Next</button> -->
+        <button type="button" onclick="submitfeedbackForm()">Submit</button>
+		<button type="button"  onclick="goback()">Back</button>
+
+				<div th:if="${successMessage}" class="success-message" th:text="${successMessage}"></div>
+      </div>
+    </div>
+    
+
+</form>
+</body>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<!-- Add this to include SweetAlert2 -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script> 
+function goBack() {
+	window.location.href = '/dashboard';
+	}
+</script>
+<script>
+	
+	function goback() {
+			    window.history.back();
+			}
+			
+	$(document).ready(function() {
+				    // Auto-fill Item details when updating
+				    var existingemployeeuid = $('#employeeuid').val();
+				    if (existingemployeeuid) {
+				    	fetchEmployeDetails(existingemployeeuid);
+				    }
+				});
+function fetchEmployeDetails(employeeuid) {
+    if (!employeeuid)  return;
+    
+    
+    $.ajax({
+        url: '/feedback/details',
+        method: 'GET',
+        data: { employeeuid: employeeuid },
+        success: function(response) {
+              $('#first_name').val(response.firstName);
+              $('#last_name').val(response.lastName);
+              $('#departmentname').val(response.departmentName);
+
+           
+        },
+        error: function() {
+            alert('Error fetching purchased details. Please try again.');
+        }
+    });
+}
+
+function submitfeedbackForm() {
+	const feedbackId = $('#id').val(); // ✅ change from #feedbackId to #id
+    const employeeUID = $('#employeeuid').val().trim();
+    const firstName = $('#first_name').val().trim();
+    const lastName = $('#last_name').val().trim();
+    const departmentName = $('#departmentname').val().trim();
+    const feedbackType = $('#feedbackType').val().trim();
+    const feedbackDescription = $('#feedbackDescription').val().trim();
+    const feedbackDate = $('#feedbackDate').val().trim();
+    const actionableSuggestion = $('#actionableSuggestion').val().trim();
+
+    // 🔴 Validate UID selected
+    if (!employeeUID) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Missing Employee UID',
+            text: 'Please select an Employee UID.',
+            confirmButtonText: 'OK'
+        });
+        return;
+    }
+
+    // 🔴 Validate if employee data was fetched (after UID selection)
+    if (!firstName || !lastName || !departmentName) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Employee Data Missing',
+            text: 'Employee details could not be fetched. Please check the UID or try again.',
+            confirmButtonText: 'OK'
+        });
+        return;
+    }
+
+    // 🔴 Validate required fields filled
+    if (!feedbackType || !feedbackDescription || !feedbackDate || !actionableSuggestion) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Incomplete Form',
+            text: 'Please fill in all required fields before submitting the form.',
+            confirmButtonText: 'OK'
+        });
+        return;
+    }
+
+    // 🔴 Validate Description and Suggestion: no leading space, first letter capital
+	// Allow hyphen (-), parentheses, slash (/), colon (:), and apostrophe (')
+	const startsWithCapital = /^[A-Z][a-zA-Z0-9\s.,!?\-()'/:]*$/;
+    const noLeadingSpace = /^[^\s]/;
+
+    if (!noLeadingSpace.test(feedbackDescription)) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Invalid Feedback Description',
+            text: 'Feedback description should not start with a space.',
+            confirmButtonText: 'OK'
+        });
+        return;
+    }
+
+    if (!startsWithCapital.test(feedbackDescription)) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Invalid Feedback Description',
+            text: 'First letter of feedback description must be capital.',
+            confirmButtonText: 'OK'
+        });
+        return;
+    }
+
+    if (!noLeadingSpace.test(actionableSuggestion)) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Invalid Suggestion',
+            text: 'Actionable suggestion should not start with a space.',
+            confirmButtonText: 'OK'
+        });
+        return;
+    }
+
+    if (!startsWithCapital.test(actionableSuggestion)) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Invalid Suggestion',
+            text: 'First letter of actionable suggestion must be capital.',
+            confirmButtonText: 'OK'
+        });
+        return;
+    }
+
+    // ✅ Prepare and send form
+    const formData = new FormData(document.getElementById('feedbackForm'));
+    const url = feedbackId ? '/updatefeedback' : '/submitFeedback';
+    const successMessage = feedbackId ? 'Feedback updated successfully!' : 'Feedback submitted successfully!';
+
+    $.ajax({
+        url: url,
+        type: 'POST',
+        data: formData,
+        processData: false,
+        contentType: false,
+        success: function () {
+            Swal.fire({
+                icon: 'success',
+                title: 'Success',
+                text: successMessage,
+                confirmButtonText: 'OK'
+            }).then(() => {
+                resetfeedbackForm();
+                window.location.href = '/hrms/GoalGrid';
+            });
+        },
+        error: function () {
+            Swal.fire({
+                icon: 'error',
+                title: 'Submission Failed',
+                text: 'There was an error while saving the feedback. Please try again.',
+                confirmButtonText: 'OK'
+            });
+        }
+    });
+}
+
+         function resetfeedbackForm() {
+             $('#feedbackForm')[0].reset();
+             $('#feedbackId').val('');
+             $('#feedbackMessage').text('').css('color', 'black'); // Clear feedback message
+         }
+
+		 function prefillfeedbackForm(data) {
+		     $('#feedbackId').val(data.feedbackId);
+		     $('#employeeuid').val(data.employeeUID).trigger('change'); // Triggers fetchEmployeeDetails
+		     $('#feedbackType').val(data.feedbackType);
+		     $('#feedbackDescription').val(data.feedbackDescription);
+		     $('#feedbackDate').val(data.feedbackDate);
+		     $('#actionableSuggestion').val(data.actionableSuggestion);
+
+		     // Also show the existing attachment name if needed
+		     if (data.attachmentName) {
+		         $('#existingAttachment')
+		             .attr('href', '/feedback/' + data.feedbackId + '/download')
+		             .text(data.attachmentName)
+		             .show();
+		     } else {
+		         $('#existingAttachment').hide();
+		     }
+
+		     // Change form titles/buttons
+		     $('#form-title').text('Update Feedback');
+		     $('#submitBtn').text('Update Feedback');
+		 }
+
+</script>
+</html>

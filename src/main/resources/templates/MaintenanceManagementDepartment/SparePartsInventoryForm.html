@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Spare Parts Inventory Form</title>
+  <link rel="stylesheet" href="/css/empinfo.css">
+  <link rel="stylesheet" href="/css/hrms.css"> <!-- // for side bar code  -->
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+	 <div th:replace="~{MAINTENANCEMANAGEMENTDEPERTMENT.html:: sidebarFragment}"></div> 
+  <div class="form-container">
+  <div class="form-section active" id="section1" style="margin-left: 20px; margin-right: 20px;">
+    <h2>Spare Parts Inventory Form</h2>
+    <br>
+    <form id="sparepartsinventoryform">
+      <input type="hidden" id="id" name="id" th:value="${spid?.id}" />
+
+      <!-- Row 1: Spare Part Name, Description, Category -->
+      <div class="form-row">
+        <div class="form-group">
+          <label for="sparepartsname">Spare Part Name</label>
+          <input type="text" id="sparepartsname" name="sparepartsname" class="form-control" th:value="${spid?.sparepartsname}" required>
+        </div>
+        <div class="form-group">
+          <label for="sparepartsdescription">Spare Part Description</label>
+          <input type="text" id="sparepartsdescription" name="sparepartsdescription" class="form-control" th:value="${spid?.sparepartsdescription}" required>
+        </div>
+        <div class="form-group">
+          <label for="category">Category</label>
+          <select id="category" name="category" class="form-control" required>
+            <option value="">--Select--</option>
+            <option value="Electrical" th:selected="${spid?.category == 'Electrical'}">Electrical</option>
+            <option value="Mechanical" th:selected="${spid?.category == 'Mechanical'}">Mechanical</option>
+            <option value="Hydraulic" th:selected="${spid?.category == 'Hydraulic'}">Hydraulic</option>
+            <option value="Pneumatic" th:selected="${spid?.category == 'Pneumatic'}">Pneumatic</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Row 2: Unit of Measure, Current Stock, Minimum Stock -->
+      <div class="form-row">
+        <div class="form-group">
+          <label for="unitofmeasure">Unit of Measure</label>
+          <select id="unitofmeasure" name="unitofmeasure" class="form-control" required>
+            <option value="">--Select Unit--</option>
+            <option value="Pieces" th:selected="${spid?.unitofmeasure == 'Pieces'}">Pieces</option>
+            <option value="Liters" th:selected="${spid?.unitofmeasure == 'Liters'}">Liters</option>
+            <option value="Kilograms" th:selected="${spid?.unitofmeasure == 'Kilograms'}">Kilograms</option>
+            <option value="Meters" th:selected="${spid?.unitofmeasure == 'Meters'}">Meters</option>
+            <option value="Boxes" th:selected="${spid?.unitofmeasure == 'Boxes'}">Boxes</option>
+            <option value="Packs" th:selected="${spid?.unitofmeasure == 'Packs'}">Packs</option>
+            <option value="Units" th:selected="${spid?.unitofmeasure == 'Units'}">Units</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="currentstocklevel">Current Stock Level</label>
+          <input type="number" id="currentstocklevel" name="currentstocklevel" class="form-control" th:value="${spid?.currentstocklevel}" required>
+        </div>
+        <div class="form-group">
+          <label for="minimimstocklevel">Minimum Stock Level</label>
+          <input type="number" id="minimimstocklevel" name="minimimstocklevel" class="form-control" th:value="${spid?.minimimstocklevel}" required>
+        </div>
+      </div>
+
+      <!-- Row 3: Location, Supplier Name, Last Used Date -->
+      <div class="form-row">
+        <div class="form-group">
+          <label for="location">Location</label>
+          <input type="text" id="location" name="location" class="form-control" th:value="${spid?.location}" required>
+        </div>
+        <div class="form-group">
+          <label for="suppliername">Supplier Name</label>
+          <input type="text" id="suppliername" name="suppliername" class="form-control" th:value="${spid?.suppliername}" required>
+        </div>
+        <div class="form-group">
+          <label for="lastuseddate">Last Used Date</label>
+          <input type="date" id="lastuseddate" name="lastuseddate" class="form-control" th:value="${spid?.lastuseddate}">
+        </div>
+      </div>
+
+      <!-- Submit Button -->
+      <div class="form-actions">
+        <button type="button" id="submitBtn" class="btn btn-primary" onclick="submitForm()">Submit</button>
+        <button type="button" id="backBtn" onclick="goBack()">Back</button>
+
+      </div>
+
+      <!-- Success Message -->
+      <div th:if="${successMessage}" class="success-message text-success text-center" th:text="${successMessage}"></div>
+
+    </form>
+  </div>
+</div>
+
+	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>  
+	<script>
+    $(document).ready(function () {
+        function validateTextInput(input) {
+            const regex = /^[A-Za-z\s]+$/;
+            if (!regex.test(input.value)) {
+                input.setCustomValidity("Please enter only letters.");
+                input.reportValidity(); // Show native browser validation popup
+                input.value = input.value.replace(/[^A-Za-z\s]/g, ""); 
+            } else {
+                input.setCustomValidity(""); // Clear the custom error
+            }
+        }
+        $('#sparepartsname').on('input', function () {
+            validateTextInput(this);
+        });
+        $('#suppliername').on('input', function () {
+            validateTextInput(this);
+        });
+    });
+   </script>
+	<script>
+	function submitForm() {
+		let form = document.getElementById('sparepartsinventoryform');
+				    
+				    if (!form.checkValidity()) {
+				        alert('Please fill in all required fields.');
+				        return;
+				    }
+				    
+				    const currentStock = parseInt($('#currentstocklevel').val(), 10);
+				    const minimumStock = parseInt($('#minimimstocklevel').val(), 10);
+
+				    if (minimumStock >= currentStock) {
+				        alert('Minimum Stock Level must be less than Current Stock Level.');
+				        return;
+				    }
+
+						    const formData = new FormData(document.getElementById('sparepartsinventoryform'));
+						    const id = $('#id').val();
+
+						    let url, successMessage;
+
+						    if (!id) {
+						        url = '/savesparepartsinventory';
+						        successMessage = 'Spare Parts Inventory Form data saved successfully!';
+						    } else {
+						        url = '/updatesparepartsinventory';
+						        successMessage = 'Spare Parts Inventory Form data updated successfully!';
+						    }
+
+						    $.ajax({
+						        url: url,
+						        type: 'POST',
+						        data: formData,
+						        processData: false,
+						        contentType: false,
+						        success: function(response) {
+						            $('#message').text(successMessage); // Display success message
+						            resetForm();
+						            window.location.href = '/maintenancemanagementdepartment/sparepartsinventorygrid';
+						        },
+						        error: function() {
+						            alert('Error saving Spare Parts Inventory Form . Please fill out the data.');
+						        }
+						    });
+						}
+						// Reset the form
+								function resetForm() {
+								    $('#sparepartsinventoryform')[0].reset();
+									$('#id').val('');
+								    $('#message').text(''); // Clear the message
+								    $('#submitBtn').text('Submit');
+								}
+
+	</script>
+</body>
+</html>

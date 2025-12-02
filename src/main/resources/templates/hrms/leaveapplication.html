@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Leave Application Form</title>
+	<link rel="stylesheet" href="/css/hrms.css">
+	<link rel="stylesheet" href="/css/empinfo.css">
+	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+	<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+
+	<style>
+		input.error-field,
+		select.error-field {
+			border: 2px solid red;
+			background-color: #ffe6e6;
+		}
+	</style>
+</head>
+
+<body>
+	<div th:replace="~{HRMS.html :: sidebarFragment}"></div>
+
+	<form id="leaveForm" enctype="multipart/form-data">
+		<div class="form-container">
+			<input type="hidden" id="id" name="id" th:value="${leave?.id}">
+
+			<h2>Leave Application Form</h2>
+			<br>
+			<!-- First Row -->
+			<div class="form-row">
+				<div class="form-group">
+					<label for="employeeuid">Employee ID:</label>
+					<select id="employeeuid" name="employeeuid" onchange="fetchEmployeDetails(this.value)"
+						th:if="${leave == null or leave.id == null}">
+						<option value="">-- Select Employee ID --</option>
+						<option th:each="uid : ${employeeuid}" th:value="${uid}" th:text="${uid}"></option>
+					</select>
+					<input type="text" id="employeeuid" name="employeeuid" th:value="${leave?.employeeuid}"
+						onchange="fetchEmployeDetails(this.value)" th:if="${leave?.id != null}" readonly>
+				</div>
+
+				<div class="form-group">
+					<label>First Name:</label>
+					<input type="text" id="first_name" name="first_name" readonly>
+				</div>
+				<div class="form-group">
+					<label>Last Name:</label>
+					<input type="text" id="last_name" name="last_name" readonly>
+				</div>
+				
+			</div>
+
+			<!-- Second Row -->
+			<div class="form-row">
+			
+			<div class="form-group">
+					<label>Department Name:</label>
+					<input type="text" id="departmentname" name="departmentname" readonly>
+				</div>
+				
+				<div class="form-group">
+					<label for="leaveType">Leave Type:</label>
+					<select id="leaveType" name="leaveType" th:value="${leave?.leaveType}">
+						<option value="">-- Select Leave Type --</option>
+						<option value="Paid Leave" th:selected="${leave?.leaveType == 'Paid Leave'}">Paid Leave</option>
+						<option value="Unpaid Leave" th:selected="${leave?.leaveType == 'Unpaid Leave'}">Unpaid Leave</option>
+						<option value="Sick Leave" th:selected="${leave?.leaveType == 'Sick Leave'}">Sick Leave</option>
+						<option value="Maternity Leave" th:selected="${leave?.leaveType == 'Maternity Leave'}">Maternity Leave</option>
+						<option value="Emergency Leave" th:selected="${leave?.leaveType == 'Emergency Leave'}">Emergency Leave</option>
+						<option value="Other" th:selected="${leave?.leaveType == 'Other'}">Other</option>
+					</select>
+				</div>
+				<div class="form-group">
+					<label for="leaveapplicationdate">Leave Application Date:</label>
+					<input type="date" id="leaveapplicationdate" name="leaveapplicationdate"
+						th:value="${leave?.leaveapplicationdate}">
+				</div>
+				
+			</div>
+
+			<!-- Third Row -->
+			<div class="form-row">
+			<div class="form-group">
+					<label for="fromDate">From Date :</label>
+					<input type="date" id="fromDate" name="fromDate" th:value="${leave?.fromDate}"
+						onchange="calculateTotalDays()">
+				</div>
+				<div class="form-group">
+					<label for="toDate">To Date :</label>
+					<input type="date" id="toDate" name="toDate" th:value="${leave?.toDate}"
+						onchange="calculateTotalDays()">
+				</div>
+			
+				<div class="form-group">
+					<label for="totalDays">Total Leave Days:</label>
+					<input type="text" id="totalDays" name="totalDays" th:value="${leave?.totalDays}" readonly>
+				</div>
+				</div>
+			<div class="form-row">
+				<div class="form-group">
+					<label for="approvalDate">Approval Date:</label>
+					<input type="date" id="approvalDate" name="approvalDate" th:value="${leave?.approvalDate}">
+				</div>
+
+				<div class="form-group">
+					<label for="file">Supporting Documents:</label>
+					<input type="file" id="file" name="file" accept=".pdf,.doc,.docx">
+					<!-- ✅ Show download link only if file exists -->
+					<span id="existingFileLink" th:if="${leave != null and leave.id != null and leave.supportingDocument != null}">
+						<a th:href="@{/leave/{id}/download(id=${leave.id})}" th:text="${leave.docName}"
+							style="margin-top: 5px; display: inline-block;"></a>
+					</span>
+				</div>
+
+				<div class="form-group">
+					<label for="leaveStatus">Leave Status:</label>
+					<select id="leaveStatus" name="leaveStatus" th:value="${leave?.leaveStatus}">
+						<option value="">-- Select Leave Status --</option>
+						<option value="Approved" th:selected="${leave?.leaveStatus == 'Approved'}">Approved</option>
+						<option value="Rejected" th:selected="${leave?.leaveStatus == 'Rejected'}">Rejected</option>
+						<option value="Pending" th:selected="${leave?.leaveStatus == 'Pending'}">Pending</option>
+					</select>
+				</div>
+			</div>
+
+			<!-- Fourth Row -->
+			<div class="form-row">
+				<div class="form-group">
+					<label for="approvedBy">Approved By:</label>
+					<select id="approvedBy" name="approvedBy" th:if="${leave == null or leave.id == null}">
+						<option value="">-- Select Approver --</option>
+						<option th:each="entry : ${approverMap}" th:value="${entry.key}"
+							th:text="${entry.key + ' - ' + entry.value}"></option>
+					</select>
+					<input type="text" id="approvedBy" name="approvedBy" th:if="${leave?.id != null}"
+						th:value="${leave.approvedBy + (approverMap[leave.approvedBy] != null ? ' - ' + approverMap[leave.approvedBy] : '')}"
+						readonly />
+				</div>
+
+				<div class="form-group">
+					<label for="reason">Reason for Leave :</label>
+					<input type="text" id="reason" name="reason" th:value="${leave?.reason}">
+				</div>
+
+				<div class="form-group">
+					<label for="remarks">Remarks / Comments:</label>
+					<input type="text" id="remarks" name="remarks" th:value="${leave?.remarks}">
+				</div>
+			</div>
+
+			<div class="form-actions">
+				<button type="button" style="width: 120px;" id="submitBtn" onclick="submitForm()">Submit</button>
+				<button type="button" style="width: 120px; margin-left: 20px;" onclick="goback()">Back</button>
+			</div>
+		</div>
+	</form>
+
+	<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script> 
+function goBack() {
+	window.location.href = '/dashboard';
+	}
+</script>
+	<script>
+		function goback() {
+			window.location.href = '/hrms/AttendanceGrid';
+		}
+
+		function fetchEmployeDetails(employeeuid) {
+			if (!employeeuid) return;
+			$.ajax({
+				url: '/leave/Edetails',
+				method: 'GET',
+				data: { employeeuid: employeeuid },
+				success: function (response) {
+					$('#first_name').val(response.firstName);
+					$('#last_name').val(response.lastName);
+					$('#departmentname').val(response.departmentname);
+				},
+				error: function () {
+					Swal.fire('Error!', 'Error fetching employee details. Please try again.', 'error');
+				}
+			});
+		}
+
+		$('#reason').on('input', function () {
+			const regex = /^[A-Za-z\s]*$/;
+			const value = $(this).val();
+			if (!regex.test(value)) {
+				$(this).val(value.replace(/[^A-Za-z\s]/g, ''));
+				Swal.fire({
+					icon: 'warning',
+					title: 'Invalid Input',
+					text: 'Reason for Leave should contain only letters and spaces.',
+					timer: 2000,
+					showConfirmButton: false
+				});
+			}
+		});
+
+		// ✅ Validation
+		async function validateForm() {
+			$('input, select').removeClass('error-field');
+
+			const fields = [
+				{ id: '#employeeuid', name: 'Employee UID' },
+				{ id: '#leaveapplicationdate', name: 'Leave Application Date' },
+				{ id: '#leaveType', name: 'Leave Type' },
+				{ id: '#fromDate', name: 'From Date' },
+				{ id: '#toDate', name: 'To Date' },
+				{ id: '#approvalDate', name: 'Approval Date' },
+				{ id: '#approvedBy', name: 'Approved By' },
+				{ id: '#reason', name: 'Reason for Leave' },
+				{ id: '#leaveStatus', name: 'Leave Status' },
+				{ id: '#remarks', name: 'Remarks / Comments' }
+			];
+
+			for (const field of fields) {
+				const value = $(field.id).val()?.trim();
+				if (!value) {
+					$(field.id).addClass('error-field');
+					await Swal.fire({
+					    icon: 'warning',
+					    title: 'Missing Field',
+					    text: `${field.name} is mandatory.`,
+					    confirmButtonText: 'OK'
+					});
+
+					$(field.id).focus();
+					return false;
+				}
+			}
+
+			// ✅ Supporting Document popup (Only if new form OR no previous file)
+			const fileInput = $('#file')[0];
+			const existingFileLink = $('#existingFileLink a').length > 0;
+
+			if (!fileInput.files.length && !existingFileLink) {
+				$('#file').addClass('error-field');
+				await Swal.fire({
+					icon: 'warning',
+					title: 'Supporting Document Missing',
+					text: 'Please upload a Supporting Document before submitting.',
+					confirmButtonText: 'OK'
+				});
+				return false;
+			}
+
+			return true;
+		}
+
+		function calculateTotalDays() {
+			const fromDate = new Date($('#fromDate').val());
+			const toDate = new Date($('#toDate').val());
+			if (fromDate && toDate && toDate >= fromDate) {
+				const totalDays = Math.ceil((toDate - fromDate) / (1000 * 60 * 60 * 24)) + 1;
+				$('#totalDays').val(totalDays);
+			} else if (toDate < fromDate) {
+				$('#totalDays').val('');
+				Swal.fire('Invalid Date Range', 'To Date must be greater than or equal to From Date.', 'error');
+			}
+		}
+
+		async function submitForm() {
+			const isValid = await validateForm();
+			if (!isValid) return;
+
+			const formData = new FormData($('#leaveForm')[0]);
+			const id = $('#id').val();
+			const url = id ? '/updateExistingLeave' : '/saveleave';
+			const successMessage = id ? 'Leave Details updated successfully!' : 'Leave Details saved successfully!';
+
+			$.ajax({
+				url: url,
+				type: 'POST',
+				data: formData,
+				processData: false,
+				contentType: false,
+				success: function () {
+					Swal.fire('Success', successMessage, 'success').then(() => {
+						resetForm();
+						window.location.href = '/hrms/AttendanceGrid';
+					});
+				},
+				error: function () {
+					Swal.fire('Error', 'Error saving Leave. Please fill the data properly.', 'error');
+				}
+			});
+		}
+
+		function resetForm() {
+			$('#leaveForm')[0].reset();
+			$('#id').val('');
+			$('input, select').removeClass('error-field');
+		}
+
+		$(document).ready(function () {
+			const existingUid = $('#employeeuid').val();
+			if (existingUid) {
+				fetchEmployeDetails(existingUid);
+			}
+		});
+	</script>
+</body>
+</html>

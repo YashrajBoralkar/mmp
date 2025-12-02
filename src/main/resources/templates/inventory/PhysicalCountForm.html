@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Physical Count Form</title>
+	<link rel="stylesheet" href="/css/empinfo.css">
+	<link rel="stylesheet" href="/css/hrms.css"> <!-- // for side bar code  -->
+	<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+	<div th:replace="~{INVENTORY.html :: sidebarFragment}"></div> <!-- // for side bar code  -->
+
+	<form id="physicalCountForm" enctype="multipart/form-data" class="form-container">
+		<!-- Personal Information Section -->
+		
+		<input type="hidden" id="physicalcountuid" name="physicalcountuid"
+		           th:value="${physicalCount != null} ? ${physicalCount.physicalcountuid} : ''">
+		
+		<input type="hidden" id="id" name="id" th:value="${physicalCount?.id}">
+
+
+
+		<h2>Physical Count Form</h2>
+
+		<!-- First Row -->
+
+		<div class="form-row">
+			<div class="form-group">
+				<label for="productuid">Product ID: </label>
+				<select id="productuid" name="productuid"
+					onchange="fetchProductDetails(); fetchGlobalQuantity(this.value)"
+					th:disabled="${physicalCount?.id != null}" required>
+					<option value="">Select Product ID</option>
+					<option th:each="uid : ${productuids}" th:value="${uid}" th:text="${uid}"
+						th:selected="${uid == physicalCount?.productuid}">
+					</option>
+				</select>
+				
+				<input type="hidden" name="productuid" th:value="${physicalCount?.productuid}" th:if="${physicalCount?.id != null}">
+
+			</div>
+
+			<div class="form-group">
+				<label>Product Name: </label>
+				<input type="text" id="productname" name="productname" th:value="${physicalCount?.productname}"
+					readonly />
+				<span id="productname-error" class="error-message"></span>
+			</div>
+		</div>
+<div class="form-row">
+		<div class="form-group">
+			<label for="currentsystemstock">Current System Stock:</label>
+			<input type="text" id="currentSystemStock" name="currentSystemStock"
+			       th:value="${physicalCount?.currentSystemStock}" readonly />
+
+			<span id="currentsystemstock-error" class="error-message"></span>
+		</div>
+
+		<div class="form-group">
+			<label for="physicalcount">Physical Count: </label>
+			<input type="text" id="physicalcount" name="physicalcount" th:value="${physicalCount?.physicalcount}"
+				oninput="calculateDifference()" required />
+
+			<span id="physicalcount-error" class="error-message"></span>
+		</div>
+
+		<div class="form-group">
+			<label for="difference">Difference: </label>
+			<input type="text" id="difference" name="difference" th:value="${physicalCount?.difference}" required />
+			<span id="difference-error" class="error-message"></span>
+		</div>
+</div>
+
+<div class="form-row">
+		<div class="form-group">
+			<label for="adjustmentreason">Adjustment Reason: </label>
+			<input type="text" id="adjustmentreason" name="adjustmentreason"
+				th:value="${physicalCount?.adjustmentreason}" required></input>
+			<span id="adjustmentreason-error" class="error-message"></span>
+		</div>
+
+			<div class="form-group">
+				<label for="file">Supporting Document: </label>
+				<input type="file" id="file" name="file" accept=".pdf, .doc, .docx" required />
+				<span id="file-error" class="error-message"></span>
+
+			</div>
+
+				<div class="form-group">
+					<label>Counted By:</label>
+					<select id="countedby" name="countedby" required>
+						<option value="">Select Counted By</option>
+						<option th:each="emp : ${employees}"
+							th:value="${emp.employeeUID + '-' + emp.firstName + ' ' + (emp.middleName == null ? '' : emp.middleName) + ' ' + emp.lastName}"
+							th:text="${emp.employeeUID + ' - ' + emp.firstName + ' ' + (emp.middleName == null ? '' : emp.middleName) + ' ' + emp.lastName}"
+							th:selected="${physicalCount?.countedby == (emp.employeeUID + '-' + emp.firstName + ' ' + (emp.middleName == null ? '' : emp.middleName) + ' ' + emp.lastName)}">
+						</option>
+					</select>
+				</div>
+			</div>
+
+
+<div class="form-row">
+			<div class="form-group">
+				<label for="countdate">Count Date: </label>
+				<input type="date" id="countdate" name="countdate" th:value="${physicalCount?.countdate}" required />
+				<span id="countdate-error" class="error-message"></span>
+			</div>	
+
+			<div class="form-group">
+				<label for="approvalstatus">Approval Status: </label>
+
+				<select id="approvalstatus" name="approvalstatus" required>
+					<option value="">Select Status</option>
+					<option value="Approved" th:selected="${physicalCount?.approvalstatus=='Approved'}">Approved
+					</option>
+					<option value="Pending" th:selected="${physicalCount?.approvalstatus=='Pending'}">Pending</option>
+					<option value="Rejected" th:selected="${physicalCount?.approvalstatus=='Rejected'}">Rejected
+					</option>
+				</select>
+			</div>
+
+			<div class="form-group">
+				<label>Processed By:</label>
+				<select id="processedby" name="processedby" required>
+					<option value="">Select Processed By</option>
+					<option th:each="emp : ${employees}"
+						th:value="${emp.employeeUID + '-' + emp.firstName + ' ' + (emp.middleName == null ? '' : emp.middleName) + ' ' + emp.lastName}"
+						th:text="${emp.employeeUID + ' - ' + emp.firstName + ' ' + (emp.middleName == null ? '' : emp.middleName) + ' ' + emp.lastName}"
+						th:selected="${physicalCount?.processedby == (emp.employeeUID + '-' + emp.firstName + ' ' + (emp.middleName == null ? '' : emp.middleName) + ' ' + emp.lastName)}">
+					</option>
+				</select>
+			</div>
+		</div>
+
+		<div class="form-actions">
+			<button type="button" id="submitBtn" onclick="submitForm()">Submit</button>
+			<div id="message" th:if="${successMessage}" class="success-message" th:text="${successMessage}"></div>
+
+			<button type="button" onclick="goBack()">Back</button>
+			<div th:if="${successMessage}" class="success-message" th:text="${successMessage}"></div>
+
+		</div>
+
+	</form>
+
+
+
+	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+	<script>
+
+		$(document).ready(function () {
+			let productuid = $('#productuid').val();
+
+			if (productuid) {
+				fetchProductDetails(productuid);
+				fetchGlobalQuantity(productuid);  // ✅ आता बरोबर
+			}
+		});
+
+
+
+		function fetchEmployeeDetails(employeeuid) {
+			if (!employeeuid) {
+				$('#countedby').val('');
+				return;
+			}
+
+			$.ajax({
+				url: '/employment/edetails',
+				method: 'GET',
+				data: {employeeuid},
+				success: function (response) {
+					if (response) {
+						const fullName = `${response.firstName || ''} ${response.middleName || ''} ${response.lastName || ''}`;
+						$('#countedby').val(fullName.trim());
+					}
+				},
+				error: function () {
+					alert('Error fetching employee details.');
+				}
+			});
+		}
+
+		function fetchEmployeeDetails(employeeuid) {
+			if (!employeeuid) {
+				$('#processedby').val('');
+				return;
+			}
+
+			$.ajax({
+				url: '/employment/edetails',
+				method: 'GET',
+				data: {employeeuid},
+				success: function (response) {
+					if (response) {
+						const fullName = `${response.firstName || ''} ${response.middleName || ''} ${response.lastName || ''}`;
+						$('#processedby').val(fullName.trim());
+					}
+				},
+				error: function () {
+					alert('Error fetching employee details.');
+				}
+			});
+		}
+
+
+		//function for differnce between global quantity and physical count
+		function calculateDifference() {
+			let systemStock = parseFloat(document.getElementById("currentSystemStock").value) || 0;
+			let physicalCount = parseFloat(document.getElementById("physicalcount").value) || 0;
+
+			let diff = physicalCount - systemStock;
+			document.getElementById("difference").value = diff;
+		}
+
+
+
+		/*function validateForm() {
+			let isValid = true;
+
+			// Validate Physical Count UID
+			const physicalCountUID = $('#physicalcountuid').val();
+			if (!physicalCountUID) {
+				$('#physicalcountuid-error').text('Physical Count UID is required.').show();
+				isValid = false;
+			} else {
+				$('#physicalcountuid-error').hide();
+			}
+
+			// Validate Product UID
+			const productUID = $('#productuid').val();
+			if (!productUID) {
+				$('#productuid-error').text('Product UID is required.').show();
+				isValid = false;
+			} else {
+				$('#productuid-error').hide();
+			}
+
+			// Validate Stock Management UID
+			const stockManagerUID = $('#stockmanageruid').val();
+			if (!stockManagerUID) {
+				$('#stockmanageruid-error').text('Stock Management UID is required.').show();
+				isValid = false;
+			} else {
+				$('#stockmanageruid-error').hide();
+			}
+
+			// Validate Physical Count
+			const physicalCount = $('#physicalcount').val();
+			if (!physicalCount) {
+				$('#physicalcount-error').text('Physical Count is required.').show();
+				isValid = false;
+			} else if (isNaN(physicalCount)) {
+				$('#physicalcount-error').text('Physical Count must be a number.').show();
+				isValid = false;
+			} else {
+				$('#physicalcount-error').hide();
+			}
+
+			// Validate Difference
+			const difference = $('#difference').val();
+			if (!difference) {
+				$('#difference-error').text('Difference is required.').show();
+				isValid = false;
+			} else if (isNaN(difference)) {
+				$('#difference-error').text('Difference must be a number.').show();
+				isValid = false;
+			} else {
+				$('#difference-error').hide();
+			}
+
+			// Validate Adjustment Reason
+			const adjustmentReason = $('#adjustmentreason').val();
+			if (!adjustmentReason) {
+				$('#adjustmentreason-error').text('Adjustment Reason is required.').show();
+				isValid = false;
+			} else {
+				$('#adjustmentreason-error').hide();
+			}
+
+			// Validate Supporting Document
+			const file = $('#file').val();
+			if (!file) {
+				$('#file-error').text('Supporting Document is required.').show();
+				isValid = false;
+			} else {
+				$('#file-error').hide();
+			}
+
+			// Validate Counted By
+			const countedBy = $('#countedby').val();
+			if (!countedBy) {
+				$('#countedby-error').text('Counted By is required.').show();
+				isValid = false;
+			} else {
+				$('#countedby-error').hide();
+			}
+
+			// Validate Count Date
+			const countDate = $('#countdate').val();
+			if (!countDate) {
+				$('#countdate-error').text('Count Date is required.').show();
+				isValid = false;
+			} else {
+				$('#countdate-error').hide();
+			}
+
+			// Validate Approval Status
+			const approvalStatus = $('#approvalstatus').val();
+			if (!approvalStatus) {
+				$('#approvalstatus-error').text('Approval Status is required.').show();
+				isValid = false;
+			} else {
+				$('#approvalstatus-error').hide();
+			}
+
+			return isValid;
+		}*/
+
+		function validateForm() {
+			// ✅ check if all fields are empty
+			if (
+				!$('#productuid').val().trim() &&
+				!$('#physicalcount').val().trim() &&
+				!$('#difference').val().trim() &&
+				!$('#adjustmentreason').val().trim() &&
+				!$('#countedby').val().trim() &&
+				!$('#countdate').val().trim() &&
+				!$('#approvalstatus').val().trim() &&
+				!$('#processedby').val().trim()
+			) {
+				alert("⚠️ Please fill out the form before submitting.");
+				return false;
+			}
+
+			// Product UID
+			if (!$('#productuid').val().trim()) {
+				alert("⚠️ Product UID is required.");
+				return false;
+			}
+
+			// Physical Count
+			const physicalCount = $('#physicalcount').val().trim();
+			if (!physicalCount) {
+				alert("⚠️ Physical Count is required.");
+				return false;
+			} else if (isNaN(physicalCount)) {
+				alert("⚠️ Physical Count must be a number.");
+				return false;
+			}
+
+			// Difference
+			const difference = $('#difference').val().trim();
+			if (!difference) {
+				alert("⚠️ Difference is required.");
+				return false;
+			} else if (isNaN(difference)) {
+				alert("⚠️ Difference must be a number.");
+				return false;
+			}
+
+			// Adjustment Reason
+			if (!$('#adjustmentreason').val().trim()) {
+				alert("⚠️ Adjustment Reason is required.");
+				return false;
+			}
+
+			// Counted By
+			if (!$('#countedby').val().trim()) {
+				alert("⚠️ Counted By is required.");
+				return false;
+			}
+
+			// Count Date
+			if (!$('#countdate').val().trim()) {
+				alert("⚠️ Count Date is required.");
+				return false;
+			}
+
+			// Approval Status
+			if (!$('#approvalstatus').val().trim()) {
+				alert("⚠️ Approval Status is required.");
+				return false;
+			}
+
+			// Processed By
+			if (!$('#processedby').val().trim()) {
+				alert("⚠️ Processed By is required.");
+				return false;
+			}
+
+			return true;
+		}
+
+
+
+
+
+		function goBack() {
+			window.location.href = '/inventory/resolvediscrepancygrid';
+		}
+
+		/*function submitForm() {
+			if (!validateForm()) {
+				return;
+			}
+
+			const formData = new FormData(document.getElementById('physicalCountForm'));
+			const id = $('#id').val();
+
+			let url, successMessage;
+
+			if (!id) {
+				url = '/physicalcountform/save'; // Correct backend URL
+				successMessage = 'Physical Count saved successfully!';
+			} else {
+				url = '/physicalcount/update';
+				successMessage = 'Physical Count updated successfully!';
+			}
+
+
+			$.ajax({
+				url: url,
+				type: 'POST',
+				data: formData,
+				processData: false,
+				contentType: false,
+				success: function (response) {
+					$('#message').text(successMessage);
+					resetForm();
+					window.location.href = '/physicalcount/List';
+				},
+				error: function () {
+					alert('Error saving Physical Count. Please fill out all required fields.');
+				}
+			});
+		}*/
+
+		function submitForm() {
+			if (!validateForm()) {
+				return;
+			}
+
+			const formData = new FormData(document.getElementById('physicalCountForm'));
+			const id = $('#id').val();
+
+			let url, successMessage;
+
+			if (!id) {
+				url = '/physicalcountform/save'; // Correct backend URL
+				successMessage = '✅ Physical Count saved successfully!';
+			} else {
+				url = '/physicalcount/update';
+				successMessage = '✅ Physical Count updated successfully!';
+			}
+
+			$.ajax({
+				url: url,
+				type: 'POST',
+				data: formData,
+				processData: false,
+				contentType: false,
+				success: function (response) {
+					// ✅ Show success alert
+					alert(successMessage);
+
+					// Redirect after alert
+					window.location.href = '/physicalcount/List';
+				},
+				error: function () {
+					alert('❌ Error saving Physical Count. Please fill out all required fields.');
+				}
+			});
+		}
+
+
+
+		function resetForm() {
+			$('#physicalCountForm')[0].reset();
+			$('#id').val('');
+			$('#message').text('');
+			$('#form-title').text('Add New Physical Count');
+			$('#submitBtn').text('Submit');
+		}
+
+		function fetchProductDetails(productuid) {
+			// If productuid not provided, get from dropdown
+			productuid = productuid || $('#productuid').val();
+
+			if (!productuid) return;
+
+			$.ajax({
+				url: '/getphysicalproductdetails',
+				method: 'GET',
+				data: {productuid: productuid},
+				success: function (response) {
+					if (response && response.length > 0) {
+						$('#productname').val(response[0].productname || '');
+					} else {
+						$('#productname').val('');
+					}
+				},
+				error: function (xhr, status, error) {
+					console.error("Error fetching Product details:", error);
+				}
+			});
+		}
+
+		function fetchGlobalQuantity(productUID) {
+		    if (!productUID) return;
+
+		    $.ajax({
+		        url: '/global-quantities-by-productuid',
+		        method: 'GET',
+		        data: { productuid: productUID },
+		        success: function (response) {
+		            if (response && response.length > 0) {
+		                // फक्त पहिली quantity value text field मध्ये टाक
+		                $('#currentSystemStock').val(response[0]);
+		            } else {
+		                $('#currentSystemStock').val("0");
+		            }
+		        },
+		        error: function (xhr, status, error) {
+		            console.error("Error fetching global quantity:", error);
+		            alert("Error fetching Current System Stock.");
+		        }
+		    });
+		}
+
+
+
+
+		function fetchStockDetails() {
+			const stockmanageruid = $('#stockmanageruid').val();
+
+			if (!stockmanageruid) {
+				alert("Please select a stock ID.");
+				return;
+			}
+
+			$.ajax({
+				url: '/getstockmanagerdetails',
+				method: 'GET',
+				data: {stockmanageruid: stockmanageruid},
+				success: function (response) {
+					console.log("Response from server:", response);
+					if (response && response.length > 0) {
+						const StockDetail = response[0];
+						$('#currentSystemStock').val(StockDetail.currentsystemstock || '');
+					} else {
+						alert("No details found for the selected stock ID.");
+					}
+				},
+				error: function (xhr, status, error) {
+					console.error("Error fetching stock details:", error);
+					alert("An error occurred while fetching the stock details.");
+				}
+			});
+		}
+	</script>
+
+
+
+
+
+
+
+
+
+</body>
+
+</html>

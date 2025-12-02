@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Technician Master Form</title>
+	<link rel="stylesheet" href="/css/empinfo.css">
+  <link rel="stylesheet" href="/css/hrms.css"> <!-- // for side bar code  -->
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+  
+</head>
+<body>
+  <div th:replace="~{MAINTENANCEMANAGEMENTDEPERTMENT.html  :: sidebarFragment}"></div> 
+<div class="form-container">
+  <div class="form-section active" id="section1" style="margin-left: 20px; margin-right: 20px;">
+    <h2 id="form-title">Technician Master Form</h2>
+    <br>
+
+    <form id="technicianMasterForm">
+      <input type="hidden" id="id" name="id" th:value="${technician?.id}">
+      <input type="hidden" id="technicianmasteruid" name="technicianmasteruid" th:value="${technician?.technicianmasteruid}">
+
+      <!-- First Row: Technician Name & Contact Number -->
+      <div class="form-row">
+        <div class="form-group">
+          <label for="technicianname">Technician Name*</label>
+          <input type="text" id="technicianname" name="technicianname"
+            th:value="${technician?.technicianname}" required class="form-control">
+        </div>
+
+        <div class="form-group">
+          <label for="contactnumber">Contact Number*</label>
+          <input type="tel" id="contactnumber" name="contactnumber" pattern="[0-9]{10}"
+            title="Enter a 10-digit phone number" th:value="${technician?.contactnumber}" required class="form-control">
+        </div>
+      </div>
+
+      <!-- Second Row: Department & Skill Set -->
+      <div class="form-row">
+        <div class="form-group">
+          <label for="department">Department*</label>
+          <input type="text" id="department" name="department" th:value="${technician?.department}" required
+            class="form-control">
+        </div>
+
+        <div class="form-group">
+          <label for="skillset">Skill Set / Expertise*</label>
+          <select id="skillset" name="skillset" required class="form-control">
+            <option value="">--Select Skill--</option>
+            <option value="Electrical" th:selected="${technician?.skillset == 'Electrical'}">Electrical</option>
+            <option value="Mechanical" th:selected="${technician?.skillset == 'Mechanical'}">Mechanical</option>
+            <option value="HVAC" th:selected="${technician?.skillset == 'HVAC'}">HVAC</option>
+            <option value="Other" th:selected="${technician?.skillset == 'Other'}">Other</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Third Row: Availability Status -->
+      <div class="form-row">
+        <div class="form-group">
+          <label for="availabilitystatus">Availability Status*</label>
+          <select id="availabilitystatus" name="availabilitystatus" required class="form-control">
+            <option value="">--Select Status--</option>
+            <option value="Available" th:selected="${technician?.availabilitystatus == 'Available'}">Available</option>
+            <option value="On Leave" th:selected="${technician?.availabilitystatus == 'On Leave'}">On Leave</option>
+            <option value="On Field" th:selected="${technician?.availabilitystatus == 'On Field'}">On Field</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Submit Button -->
+      <div class="form-actions">
+        <div class="form-group col-md-12">
+          <button type="button" id="submitBtn" onclick="submitTechnicianMasterForm()" class="btn btn-primary">
+            Submit
+          </button>
+          <button type="button" id="backBtn" onclick="goBack()">Back</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    function submitTechnicianMasterForm() {
+        if (!validateTechnicianMasterForm()) return;
+
+        const id = $('#id').val();
+        const url = id ? '/updatetechnicianmaster' : '/savetechnicianmaster';
+        const successMessage = id ? 'Technician Master Data updated successfully!' : 'Technician Master Data added successfully!';
+        const formData = new FormData(document.getElementById('technicianMasterForm'));
+
+        $.ajax({
+            url: url,
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function () {
+                alert(successMessage);
+                window.location.href = '/maintenancemanagementdepartment/technicianmastergrid';
+            },
+            error: function (xhr) {
+                console.error("Error:", xhr.responseText);
+                alert("Something went wrong. Please try again.");
+            }
+        });
+    }
+
+	function validateTechnicianMasterForm() {
+	    let isValid = true;
+	    const contactRegex = /^[0-9]{10}$/;
+	    const alphaRegex = /^[A-Za-z\s]+$/;
+
+	    const technicianName = $('#technicianname');
+	    const contactNumber = $('#contactnumber');
+	    const department = $('#department');
+	    const uid = $('#technicianmasteruid');
+	    const skillset = $('#skillset');
+	    const availability = $('#availabilitystatus');
+
+	    // Remove any previous error styles
+	    $('.error').removeClass('error');
+
+	    // Auto-generate UID if empty
+	    if (!uid.val()) {
+	        const generatedUID = 'TECH' + Date.now();
+	        uid.val(generatedUID);
+	    }
+
+	    // Technician Name validation
+	    if (!technicianName.val().trim().match(alphaRegex)) {
+	        technicianName.addClass('error');
+	        isValid = false;
+	    }
+
+	    // Contact Number validation
+	    if (!contactNumber.val().trim().match(contactRegex)) {
+	        contactNumber.addClass('error');
+	        isValid = false;
+	    }
+
+	    // Department validation
+	    if (!department.val().trim().match(alphaRegex)) {
+	        department.addClass('error');
+	        isValid = false;
+	    }
+
+	    // Skillset validation
+	    if (!skillset.val()) {
+	        skillset.addClass('error');
+	        isValid = false;
+	    }
+
+	    // Availability Status validation
+	    if (!availability.val()) {
+	        availability.addClass('error');
+	        isValid = false;
+	    }
+
+	    // Final check and alert
+	    if (!isValid) {
+	        alert("Please correct the highlighted fields.");
+	    }
+
+	    return isValid;
+	}
+
+</script>
+
+</body>
+</html>

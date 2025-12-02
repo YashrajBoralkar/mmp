@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Purchased And Sales Agreement Form</title>
+<link rel="stylesheet" href="/css/empinfo.css">
+  <link rel="stylesheet" href="/css/hrms.css"> <!-- // for side bar code  -->
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+
+  <div th:replace="~{PURCHASE.html :: sidebarFragment}"></div> <!-- // for side bar code  -->                                                                        
+    
+   <form  id="psaform" class="form-container" style="max-width: 840px;" > 
+    <!-- Personal Information Section -->
+        <input type="hidden" id="id" name="id" th:value="${pa?.id}"><br><br>
+    <h2>Purchased And Sales AgreementForm</h2>   
+     
+
+      <!-- First Row -->
+    
+      <div class="form-row" >
+        <div class="form-group">
+       <label for="agreementdate">Agreement Date :</label>
+        <input type="date" id="agreementdate" name="agreementdate" th:value="${pa?.agreementdate}">
+        </div>
+      
+      <div class="form-group">
+       <label for="buyername">Buyer Name :</label>
+        <input type="text" id="buyername" name="buyername" th:value="${pa?.buyername}">
+    </div> 
+    </div>
+
+      <!-- Second Row -->
+
+      <!-- Third Row -->
+
+      <div class="form-row">
+      <div class="form-group">           
+         <label for="supplieruid">Supplier ID :</label>
+        <select id="supplieruid" name="supplieruid" onchange="fetchSupplierdetails(this.value)" th:if="${pa == null or pa.id == null}" required>
+            <option value="">Select Supplier ID</option>
+            <option th:each="uid : ${supplieruid}" th:value="${uid}" th:text="${uid}"></option>
+        </select>
+        <input type="text" id="supplieruid" name="supplieruid" th:value="${pa?.supplieruid}" readonly th:if="${pa?.id != null}">
+      </div>
+        <div class="form-group">
+      <label for="suppliername">Supplier Name :</label>
+        <input type="text" id="suppliername" name="suppliername" readonly>
+    </div>
+      
+        </div> 
+    <div class="form-row">
+       <div class="form-group">           
+           <label for="contractvalue">Contract Value :</label>
+        <input type="number" id="contractvalue" name="contractvalue" th:value="${pa?.contractvalue}">
+      </div> 
+      <div class="form-group">
+         <div class="form-group">
+           <label for="deliveryterms">Delivery Terms :</label>
+        <input type="text" id="deliveryterms"  name="deliveryterms" th:value="${pa?.deliveryterms}">
+<!--  FOR CHECK BOX      style="position: relative;bottom: 21px;left: 45px; -->
+      </div>
+      </div>
+    </div>
+
+   <!-- Five Row  -->
+    <div class="form-actions">
+      <br><br>
+      <button type="button" id="submitBtn" onclick="submitForm()">Submit</button>	
+   <button type="button" class="back-button" onclick="goBack();">Back</button>
+   <div th:if="${successMessage}" class="success-message" th:text="${successMessage}"></div>
+    </div>
+   </form>
+   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+   <script>
+       function goBack() {
+		window.location.href = '/purchase/purchasedandsalesagreementgrid';
+	   }
+</script>
+ <script>
+ 
+ $(document).ready(function() {
+	    // Auto-fill Supplier details when updating
+	    var existingsupplieruid = $('#supplieruid').val();
+	    if (existingsupplieruid) {
+	    	fetchSupplierdetails(existingsupplieruid);
+	    }
+	});
+			function fetchSupplierdetails() {
+			    const supplieruid = $('#supplieruid').val();
+
+			    if (!supplieruid) {
+			        return;
+			    }
+
+			    $.ajax({
+			        url: '/purchasedandsalesagreement/getsupplieruidinfo',
+			        method: 'GET',
+			        data: { supplieruid: supplieruid },
+			        success: function (response) {
+			            console.log("Response from server:", response);
+			            if (response && response.length > 0) {
+			                const Data = response[0];
+			                $('#suppliername').val(Data.suppliername || '');
+			                $('#suppliercontactperson').val(Data.contactperson || '');
+	                        $('#supplieremail').val(Data.email || '');
+	                        $('#supplierphonenumber').val(Data.contactnumber || '');
+	                   
+			            } else {
+			                alert("No details found for the selected Supplier UID.");
+			            }
+			        },
+			        error: function (xhr, status, error) {
+			            console.error("Error fetching Supplier details:", error);
+			            alert("An error occurred while fetching the Supplier details.");
+			        }
+			    });
+			}
+		
+		function submitForm()
+		{
+			const formData=new FormData(document.getElementById('psaform'));
+			const id = $('#id').val();
+			
+			let url, successMessage;
+			
+			if(!id){
+				url='purchasedandsalesagreement/save';
+				successMessage='Purchase And Sales Agreement form saved successfully!';
+			}else{
+				url='/purchasedandsalesagreement/update';
+				successMessage='Purchase And Sales Agreement form updated successfully!';
+			}
+			
+			$.ajax({
+				url:url,
+				type:'POST',
+				data:formData,
+				processData:false,
+				contentType:false,
+				success: function(response){
+					alert(successMessage);
+					resetForm();
+					window.location.href= '/purchase/purchasedandsalesagreementgrid';
+				},
+				error:function(){
+					alert('Error in saving purchase and sales agreement form.Please try again');
+				}
+			});
+			
+		}
+		
+		function resetForm()
+		{
+			$('#psaform')[0].reset();
+			$('#id').val('');
+		    $('#form-title').text('psa Form');
+			$('#submitBtn').text('Submit');
+			
+		}
+		
+		function prefillForm(data)
+		{
+			$('agreementdate').val(data.agreementdate);
+			$('buyername').val(data.buyername);
+			$('suppliername').val(data.suppliername);
+			$('contractvalue').val(data.contractvalue);
+			$('deliveryterms').val(data.deliveryterms);
+			$('#form-title').text('Update PSA Form');
+		    $('#submitBtn').text('Update');
+
+		}
+	</script>
+   
+</body>
+</html>

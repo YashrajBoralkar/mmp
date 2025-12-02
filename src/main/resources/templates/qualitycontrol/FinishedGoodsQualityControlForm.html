@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Finished Goods Quality Control Form</title>
+	<link rel="stylesheet" href="/css/empinfo.css">
+	<link rel="stylesheet" href="/css/hrms.css">
+	<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<style>
+	.form-row {
+		display: flex;
+		gap: 25px;
+		margin-bottom: 21px;
+	}
+
+	h2 {
+		font-size: 21px;
+		margin-bottom: 44px;
+	}
+</style>
+
+<body>
+	<div th:replace="~{QUALITYCONTROL.html :: sidebarFragment}"></div> <!-- // for side bar code  -->
+
+
+	<form id="FinishedGoodsQCForm" class="form-container" style="padding: 20px 68px;">
+		<!-- Personal Information Section -->
+		<input type="hidden" id="id" name="id" th:value="${finishedGoodsQC?.id}">
+
+		<h2>Finished Goods Quality Control Form</h2>
+
+		<!-- First Row -->
+
+		<div class="form-row">
+
+			<div class="form-group">
+				<label for="productuid">Product ID:</label>
+				<br>
+				<select id="productuid" name="productuid" onchange="fetchproductDetails(this.value)"
+					th:if="${finishedGoodsQC == null or finishedGoodsQC.id == null}">
+					<option value="" selected disabled>Select Product ID</option>
+					<option th:each="uid : ${productuid}" th:value="${uid}" th:text="${uid}"></option>
+				</select>
+				<input type="text" id="productuids" name="productuid" th:value="${finishedGoodsQC?.productuid}" readonly
+					th:if="${finishedGoodsQC?.id != null}" />
+				<span id="productuid-error" class="error-message"></span>
+			</div>
+
+			<div class="form-group">
+				<label for="productName">Product Name:</label>
+				<br>
+				<input type="text" id="productname" name="productname" th:value="${finishedGoodsQC?.productname}"
+					readonly />
+				<span id="productname-error" class="error-message"></span>
+			</div>
+
+			<div class="form-group">
+				<label for="inprocessqualitycontroluid">In-Process QC Inspection ID:</label>
+				<input type="text" id="inprocessqualitycontroluid" name="inprocessqualitycontroluid"
+					th:value="${finishedGoodsQC?.inprocessqualitycontroluid}" readonly />
+			</div>
+
+			<div class="form-group">
+				<label for="inprocessqcquantity">In-Process QC Approved Quantity: </label>
+				<input type="text" id="inprocessqcapprovedqty" name="inprocessqcapprovedqty"
+					th:value="${finishedGoodsQC?.inprocessqcapprovedqty}" readonly />
+			</div>
+		</div>
+
+		<div class="form-row">
+			<div class="form-group">
+				<label for="workorderuid">Work Order ID:</label>
+				<br>
+				<input type="text" id="workorderuid" name="workorderuid" th:value="${finishedGoodsQC?.workorderuid}"
+					readonly />
+			</div>
+
+			<div class="form-group">
+				<label for="firstarticleinspectionuid">First Article Inspection ID:</label>
+				<input type="text" id="firstarticleinspectionuid" name="firstarticleinspectionuid"
+					th:value="${finishedGoodsQC?.firstarticleinspectionuid}" readonly />
+			</div>
+
+			<div class="form-group">
+				<label for="productionorderuid">Production Order ID:</label>
+				<input type="text" id="productionorderuid" name="productionorderuid"
+					th:value="${finishedGoodsQC?.productionorderuid}" readonly />
+			</div>
+			<div class="form-group">
+				<label for="productionorderplannedqty">Production Order Planned Quantity : </label>
+				<input type="text" id="productionorderplannedqty" name="productionorderplannedqty"
+					th:value="${finishedGoodsQC?.productionorderplannedqty}" readonly />
+			</div>
+		</div>
+
+		<!-- Second Row -->
+		<div class="form-row">
+			<div class="form-group">
+				<label for="inspectiondate">Inspection Date:</label>
+				<input type="date" id="inspectiondate" name="inspectiondate"
+					th:value="${finishedGoodsQC?.inspectiondate}" required />
+				<span id="inspectiondate-error" class="error-message"></span>
+			</div>
+
+			<div class="form-group">
+				<label for="dimensionsandweight">Dimensions & Weight:</label>
+				<input type="text" id="dimensionsandweight" name="dimensionsandweight"
+					th:value="${finishedGoodsQC?.dimensionsandweight}" required />
+				<span id="dimensionsandweight-error" class="error-message"></span>
+			</div>
+			<div class="form-group">
+				<label for="packagingcondition">Packaging Condition:</label>
+				<select id="packagingcondition" name="packagingcondition"
+					th:value="${finishedGoodsQC?.packagingcondition}" required>
+					<option value="" disabled selected>Select Option</option>
+					<option th:selected="${finishedGoodsQC?.packagingcondition == 'Pass'}" value="Pass">Pass</option>
+					<option th:selected="${finishedGoodsQC?.packagingcondition == 'Fail'}" value="Fail">Fail</option>
+				</select>
+				<span id="packagingcondition-error" class="error-message"></span>
+			</div>
+		</div>
+
+		<!-- Third Row -->
+
+		<div class="form-row">
+			<div class="form-group">
+				<label for="functionalitytest">Functionality Test:</label>
+				<select id="functionalitytest" name="functionalitytest" th:value="${finishedGoodsQC?.functionalitytest}"
+					required>
+					<option value="" disabled selected>Select Option</option>
+					<option th:selected="${finishedGoodsQC?.functionalitytest == 'Pass'}" value="Pass">Pass</option>
+					<option th:selected="${finishedGoodsQC?.functionalitytest == 'Fail'}" value="Fail">Fail</option>
+				</select>
+				<span id="functionalitytest-error" class="error-message"></span>
+			</div>
+
+			<div class="form-group">
+				<label for="visualinspection">Visual Inspection:</label>
+				<select id="visualinspection" name="visualinspection" th:value="${finishedGoodsQC?.functionalitytest}"
+					required>
+					<option value="" disabled selected>Select Option</option>
+					<option th:selected="${finishedGoodsQC?.visualinspection == 'Pass'}" value="Pass">Pass</option>
+					<option th:selected="${finishedGoodsQC?.visualinspection == 'Fail'}" value="Fail">Fail</option>
+				</select>
+				<span id="visualinspection-error" class="error-message"></span>
+			</div>
+			<div class="form-group">
+				<label for="samplesize">Sample Size:</label>
+				<input type="number" id="samplesize" name="samplesize" min="0" th:value="${finishedGoodsQC?.samplesize}"
+					required />
+				<span id="samplesize-error" class="error-message"></span>
+			</div>
+		</div>
+
+		<div class="form-row">
+			<div class="form-group">
+				<label for="defectiveitemscount">Defective Items Count:</label>
+				<br>
+				<input type="number" id="defectiveitemscount" name="defectiveitemscount" min="0"
+					th:value="${finishedGoodsQC?.defectiveitemscount}" required />
+			</div>
+
+			<div class="form-group">
+				<label for="defectrate">Defect Rate (%):</label>
+				<br>
+				<input type="text" id="defectrate" name="defectrate" min="0" th:value="${finishedGoodsQC?.defectrate}"
+					readonly />
+			</div>
+
+			<div class="form-group">
+				<label for="finishedgoodsqcapprovedquantity">Finised QC Approved Quantity : </label>
+				<input type="text" id="finishedgoodsqcapprovedquantity" name="finishedgoodsqcapprovedquantity" min="0"
+					th:value="${finishedGoodsQC?.finishedgoodsqcapprovedquantity}" />
+			</div>
+		</div>
+
+		<!-- four Row -->
+
+		<div class="form-row">
+			<div class="form-group">
+				<label for="finalapprovalstatus">Final Approval Status:</label>
+				<select id="finalapprovalstatus" name="finalapprovalstatus"
+					th:value="${finishedGoodsQC?.finalapprovalstatus}" required>
+					<option value="" disabled selected>Select Option</option>
+					<option th:selected="${finishedGoodsQC?.finalapprovalstatus == 'Approved'}" value="Approved">
+						Approved</option>
+					<option th:selected="${finishedGoodsQC?.finalapprovalstatus == 'Rework'}" value="Rework">Rework
+					</option>
+					<option th:selected="${finishedGoodsQC?.finalapprovalstatus == 'Rejected'}" value="Rejected">
+						Rejected</option>
+					<option th:selected="${finishedGoodsQC?.finalapprovalstatus == 'Pending'}" value="Pending">Pending
+					</option>
+				</select>
+				<span id="finalapprovalstatus-error" class="error-message"></span>
+			</div>
+
+			<div class="form-group">
+				<label for="actiontaken">Action Taken:</label>
+				<select id="actiontaken" name="actiontaken" th:value="${finishedGoodsQC?.actiontaken}" required>
+					<option value="" disabled selected>Select Option</option>
+					<option th:selected="${finishedGoodsQC?.actiontaken == 'Send to Warehouse'}"
+						value="Send to Warehouse">Send to Warehouse</option>
+					<option th:selected="${finishedGoodsQC?.actiontaken == 'Rework'}" value="Rework">Rework</option>
+					<option th:selected="${finishedGoodsQC?.actiontaken == 'Scrap'}" value="Scrap">Scrap</option>
+					<option th:selected="${finishedGoodsQC?.finalapprovalstatus == 'Pending'}" value="Pending">Pending
+					</option>
+
+				</select>
+				<span id="actiontaken-error" class="error-message"></span>
+			</div>
+
+			<div class="form-group">
+				<label for="employeeuid">Inspector :</label>
+				<select id="employeeuid" name="employeeuid" onchange="fetchempDetails(this.value)"
+					th:if="${finishedGoodsQC == null or finishedGoodsQC.id == null}" required>
+					<option value="" selected disabled>Select Empoyee</option>
+					<option th:each="uid : ${employeeuid}" th:value="${uid.employeeuid}" th:text="${uid.fullname}">
+					</option>
+				</select>
+				<input type="text" id="approvedby" name="approvedby" th:value="${finishedGoodsQC?.approvedby}" readonly
+					th:if="${finishedGoodsQC?.id != null}" />
+				<span id="employeeuid-error" class="error-message"></span>
+			</div>
+		</div>
+
+		<input type="hidden" id="approvedby" name="approvedby" th:value="${finishedGoodsQC?.approvedby}" />
+
+		</div>
+
+		<!-- Five Row  -->
+		<div class="form-actions">
+			<button type="button" id="submitBtn" onclick="submitForm()">Submit</button>
+			<div th:if="${successMessage}" class="success-message" th:text="${successMessage}"></div>
+			<button type="button" class="back-button" onclick="goBack();">Back</button>
+
+		</div>
+	</form>
+
+	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+	<script>
+
+		function goBack() {
+			window.location.href = '/qualitycontrol/finishgoodsqcgrid';
+		}
+		// New function for popup validation
+		function validateFormWithPopup() {
+
+		    const id = $('#id').val(); // if exists -> update mode
+
+		    // Validate Product UID (Add or Update)
+		    const productuid = $('[name="productuid"]').val();
+		    if (!productuid) {
+		        alert('Product UID is required.');
+		        $('#productuid').focus();
+		        return false;
+		    }
+
+		    // Fetched fields (do NOT validate – but check they exist)
+		    const productname = $('#productname').val();
+		    const ipqcapprovedqty = $('#inprocessqcapprovedqty').val();
+		    if (!productname || !ipqcapprovedqty) {
+		        alert('Product details are missing. Please select a valid Product UID.');
+		        return false;
+		    }
+
+		    // Employee validation (Add & Update)
+		    if (!id) {
+		        // ADD MODE
+		        const empuid = $('#employeeuid').val();
+		        if (!empuid) {
+		            alert('Inspector (Employee) is required.');
+		            $('#employeeuid').focus();
+		            return false;
+		        }
+		    } else {
+		        // UPDATE MODE
+		        const approvedby = $('#approvedby').val();
+		        if (!approvedby) {
+		            alert('Inspector (Employee) is required.');
+		            $('#employeeuid').focus();
+		            return false;
+		        }
+		    }
+
+		    // Inspection Date
+		    const inspectiondate = $('#inspectiondate').val();
+		    if (!inspectiondate) {
+		        alert('Inspection Date is required.');
+		        $('#inspectiondate').focus();
+		        return false;
+		    }
+
+		    // Dimensions & Weight
+		    const dimensionsandweight = $('#dimensionsandweight').val();
+		    if (!dimensionsandweight.trim()) {
+		        alert('Dimensions & Weight is required.');
+		        $('#dimensionsandweight').focus();
+		        return false;
+		    }
+
+		    // Packaging Condition
+		    const packagingcondition = $('#packagingcondition').val();
+		    if (!packagingcondition) {
+		        alert('Packaging Condition is required.');
+		        $('#packagingcondition').focus();
+		        return false;
+		    }
+
+		    // Functionality Test
+		    const functionalitytest = $('#functionalitytest').val();
+		    if (!functionalitytest) {
+		        alert('Functionality Test is required.');
+		        $('#functionalitytest').focus();
+		        return false;
+		    }
+
+		    // Visual Inspection
+		    const visualinspection = $('#visualinspection').val();
+		    if (!visualinspection) {
+		        alert('Visual Inspection is required.');
+		        $('#visualinspection').focus();
+		        return false;
+		    }
+
+		    // Sample Size
+		    const samplesize = $('#samplesize').val();
+		    if (!samplesize || parseInt(samplesize) <= 0) {
+		        alert('Sample Size must be greater than 0.');
+		        $('#samplesize').focus();
+		        return false;
+		    }
+
+		    // Defective Items Count
+		    const defectiveitemscount = $('#defectiveitemscount').val();
+		    if (defectiveitemscount === "" || parseInt(defectiveitemscount) < 0) {
+		        alert('Defective Items Count is required.');
+		        $('#defectiveitemscount').focus();
+		        return false;
+		    }
+		    if (parseInt(defectiveitemscount) > parseInt(samplesize)) {
+		        alert('Defective Items Count cannot exceed Sample Size.');
+		        $('#defectiveitemscount').focus();
+		        return false;
+		    }
+
+		    // Finished Goods QC Approved Quantity
+		    const finishedQty = $('#finishedgoodsqcapprovedquantity').val();
+		    const ipqcQty = parseInt($('#inprocessqcapprovedqty').val());
+
+		    if (finishedQty === "" || finishedQty === null) {
+		        alert('Finished QC Approved Quantity is required.');
+		        $('#finishedgoodsqcapprovedquantity').focus();
+		        return false;
+		    }
+
+		    if (parseInt(finishedQty) > ipqcQty) {
+		        alert('Finished QC Approved Quantity cannot exceed In-Process QC Approved Quantity.');
+		        $('#finishedgoodsqcapprovedquantity').focus();
+		        return false;
+		    }
+
+		    if (parseInt(finishedQty) < 0) {
+		        alert('Finished QC Approved Quantity cannot be negative.');
+		        $('#finishedgoodsqcapprovedquantity').focus();
+		        return false;
+		    }
+
+		    // Final Approval Status
+		    const finalapprovalstatus = $('#finalapprovalstatus').val();
+		    if (!finalapprovalstatus) {
+		        alert('Final Approval Status is required.');
+		        $('#finalapprovalstatus').focus();
+		        return false;
+		    }
+
+		    // Action Taken
+		    const actiontaken = $('#actiontaken').val();
+		    if (!actiontaken) {
+		        alert('Action Taken is required.');
+		        $('#actiontaken').focus();
+		        return false;
+		    }
+
+		    return true;  // All validations passed
+		}
+
+
+
+		function calculateDefectRate() {
+			const samplesizeElem = document.getElementById('samplesize');
+			const defectiveItemsElem = document.getElementById('defectiveitemscount');
+			const defectRateElem = document.getElementById('defectrate');
+			const inprocessVal = parseInt($('#inprocessqcapprovedqty').val());
+
+			const samplesize = parseInt(samplesizeElem.value) || 0;
+			let defectiveitemscount = parseInt(defectiveItemsElem.value) || 0;
+
+			if (samplesize > inprocessVal) {
+				alert("Sample size must be smaller than in-process qc approved quantity");
+				$('#samplesize').val("");
+			}
+			// If defective items exceed the sample size when sample size changes
+			if (defectiveitemscount > samplesize) {
+				confirm("This action will reset Defective Items Count : " + defectiveitemscount)
+				defectiveitemscount = "";
+				defectiveItemsElem.value = ""; // Reset defective items count
+				defectRateElem.value = '0.00%'; // Reset defect rate
+				// No alert here, silent correction
+			}
+
+			if (samplesize > 0) {
+				const defectRate = (defectiveitemscount / samplesize) * 100;
+				defectRateElem.value = defectRate.toFixed(2) + '%';
+			} else {
+				defectRateElem.value = '';
+			}
+		}
+
+		// Separate listener for sample size to handle resetting logic
+		document.getElementById('samplesize').addEventListener('input', calculateDefectRate);
+		document.getElementById('defectiveitemscount').addEventListener('input', function () {
+			const samplesize = parseInt(document.getElementById('samplesize').value) || 0;
+			const defectiveitemscount = parseInt(this.value) || 0;
+			const defectRateElem = document.getElementById('defectrate');
+			const inprocessVal = parseInt($('#inprocessqcapprovedqty').val());
+
+
+			if (defectiveitemscount > samplesize || defectiveitemscount > inprocessVal) {
+				alert("Defective items cannot be greater than the sample size.");
+				this.value = "";
+				defectRateElem.value = "";
+				;
+				return;
+			}
+			$("#finishedgoodsqcapprovedquantity").val(inprocessVal - defectiveitemscount);
+
+			if (samplesize > 0) {
+				const defectRate = (defectiveitemscount / samplesize) * 100;
+				defectRateElem.value = defectRate.toFixed(2) + '%';
+			} else {
+				defectRateElem.value = '';
+			}
+
+		});
+
+		// Modify the submitForm function to use the new validation function
+		function submitForm() {
+			// Call the popup validation function
+			if (!validateFormWithPopup()) {
+				return; // Stop submission if validation fails
+			}
+
+			const formData = new FormData(document.getElementById('FinishedGoodsQCForm'));
+			const id = $('#id').val();
+
+
+			let url, successMessage;
+
+			if (!id) {
+				url = '/finishgoodsqc/save';
+				successMessage = 'Finish Goods Quality Control saved successfully!';
+			} else {
+				url = '/finishgoodsqc/update';
+				successMessage = 'Finish Goods Quality Control updated successfully!';
+			}
+
+			$.ajax({
+				url: url,
+				type: 'POST',
+				data: formData,
+				processData: false,
+				contentType: false,
+				success: function (response) {
+					alert(successMessage);
+					resetForm();
+					window.location.href = '/qualitycontrol/finishgoodsqcgrid';
+				},
+				error: function () {
+					alert('Error saving Quality Control. Please fill out all required fields.');
+				}
+			});
+		}
+
+		// Rest of your existing code remains unchanged
+		function resetForm() {
+			$('#FinishedGoodsQCForm')[0].reset();
+			$('#id').val('');
+			$('#message').text('');
+			$('#form-title').text('Add New Quality Control');
+			$('#submitBtn').text('Submit');
+		}
+
+		/*$(document).ready(function () {
+			// Auto-fill Item details when updating
+			var existingProductid = $('#productuid').val();
+			if (existingProductid) {
+				fetchproductDetails(existingProductid);
+			}
+		});*/
+
+		function fetchempDetails(employeeuid) {
+			if (!employeeuid) return;
+
+			$.ajax({
+				url: '/finishgoodsqc/getempdetails',
+				method: 'GET',
+				data: {employeeuid: employeeuid},
+				success: function (response) {
+					if (response && response.length > 0) {
+						let empName = response[0];
+						$('#approvedby').val(empName.fullname || '');
+
+					} else {
+						alert('No data found for the selected employee.');
+					}
+				},
+				error: function (xhr, status, error) {
+					console.error('Error fetching product details:', error);
+					alert('Error fetching product details. Please try again.');
+				}
+			});
+		}
+
+		function fetchproductDetails(productuid) {
+			if (!productuid) return;
+
+			$.ajax({
+				url: '/finishgoodsqc/getproductdetails',
+				method: 'GET',
+				data: {productuid: productuid},
+				success: function (response) {
+					if (response && response.length > 0) {
+						let stockData = response[0];
+						$('#productname').val(stockData.productname || '');
+						$('#inprocessqualitycontroluid').val(stockData.inprocessqualitycontroluid || '');
+						$('#workorderuid').val(stockData.workorderuid || '');
+						$('#productionorderuid').val(stockData.productionorderuid || '');
+						$('#firstarticleinspectionuid').val(stockData.firstarticleinspectionuid || '');
+						$('#inprocessqcapprovedqty').val(stockData.approvedquantity || '');
+						$('#productionorderplannedqty').val(stockData.productionorderquantity || '');
+						$('#finishedgoodsqcapprovedquantity').val(stockData.plannedquantity || '');
+					} else {
+						alert('No data found for the selected product.');
+						$('#productname').val('');
+						$('#inprocessqualitycontroluid').val('');
+						$('#workorderuid').val('');
+						$('#productionorderuid').val('');
+						$('#firstarticleinspectionuid').val('');
+						$('#inprocessqcapprovedqty').val('');
+						$('#productionorderplannedqty').val('');
+						$('#finishedgoodsqcapprovedquantity').val('');
+					}
+				},
+				error: function (xhr, status, error) {
+					console.error('Error fetching product details:', error);
+					alert('Error fetching product details. Please try again.');
+				}
+			});
+		}
+
+	</script>
+
+
+
+
+
+
+</body>
+
+</html>

@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Customer Invoice Form</title>
+	<link rel="stylesheet" href="/css/empinfo.css">
+	<link rel="stylesheet" href="/css/hrms.css">
+	<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+	<div th:replace="~{WHOLESELLERANDRETAILER.html :: sidebarFragment}"></div> <!-- // for side bar code  -->
+
+	<form id="customer-invoice-form" enctype="multipart/form-data" class="form-container" autocomplete="off">
+		<!-- Personal Information Section -->
+		<input type="hidden" id="id" name="id" th:value="${customerinvoice?.id}" />
+		<h2>Customer Invoice Form</h2>
+		<br>
+
+		<!-- First Row -->
+
+		<div class="form-row">
+			<div class="form-group">
+				<label for="customertype">Customer Type:</label>
+
+				<!-- Dropdown for new entry -->
+				<select id="customertype" name="customertype" class="form-control" required
+					th:if="${customerinvoice?.id == null}">
+					<option value="">Select Customer Type</option>
+					<option value="Wholesaler">Wholesaler</option>
+					<option value="Retailer">Retailer</option>
+					<option value="Other">Other</option>
+				</select>
+
+				<!-- Read-only input for update -->
+				<input type="text" id="customertype" name="customertype" readonly
+					th:value="${customerinvoice?.customertype}" th:unless="${customerinvoice?.id == null}" />
+			</div>
+
+
+
+			<div class="form-group">
+				<label for="customeruid">Customer ID :</label>
+
+				<!-- Dropdown for new entry -->
+				<select id="customeruid" name="customeruid" onchange="fetchCustomerDetails(this.value)" required
+					th:if="${customerinvoice?.id == null}">
+					<option value="">Select Customer</option>
+					<!-- Options dynamically populated via JS -->
+				</select>
+
+				<!-- Read-only input for update -->
+				<input type="text" id="customeruid" name="customeruid" readonly
+					th:value="${customerinvoice?.customeruid}" th:unless="${customerinvoice?.id == null}" />
+			</div>
+
+
+			<div class="form-group">
+				<label for="companyname">Company Name :</label>
+				<input type="text" id="companyname" name="companyname" th:value="${customerinvoice?.companyname}"
+					readonly>
+			</div>
+
+			<div class="form-group">
+				<label for="customerorderuid">Customer Order ID:</label>
+
+				<!-- Dropdown for new entry -->
+				<select id="customerorderuid" name="customerorderuid" onchange="fetchOrderDetails(this.value)" required
+					th:if="${customerinvoice?.id == null}">
+					<option value="">Select Customer Order ID</option>
+					<!-- Options dynamically populated via JS -->
+				</select>
+
+				<!-- Read-only input for update -->
+				<input type="text" id="customerorderuid" name="customerorderuid" readonly
+					th:value="${customerinvoice?.customerorderuid}" th:unless="${customerinvoice?.id == null}" />
+			</div>
+
+
+
+
+
+		</div>
+		<br>
+		<!-- Second Row -->
+		<div class="form-row">
+
+			<div class="form-group">
+				<label for="productuid">Product ID :</label>
+				<input type="text" id="productuid" name="productuid" th:value="${customerinvoice?.productuid}" readonly>
+			</div>
+			<div class="form-group">
+				<label for="productname">Product Name :</label>
+				<input type="text" id="productname" name="productname" th:value="${customerinvoice?.productname}"
+					readonly>
+
+			</div>
+			<div class="form-group">
+				<label for="unitprice">Unit Price :</label>
+				<input type="text" id="unitprice" name="unitprice" readonly oninput="calculateTotal()"
+					th:value="${customerinvoice?.unitprice}" required>
+			</div>
+		</div>
+
+		<br>
+		<!-- Third Row -->
+		<div class="form-row">
+			<div class="form-group">
+				<label for="invoicedate">Invoice Date :</label>
+				<input type="date" id="invoicedate" name="invoicedate" required
+					th:value="${customerinvoice?.invoicedate}">
+			</div>
+
+			<div class="form-group">
+				<label for="quantitysold">Quantity Sold :</label>
+				<input type="text" id="quantitysold" name="quantitysold" class="validate-positive-number"
+					oninput="calculateTotal()" required th:value="${customerinvoice?.quantitysold}">
+			</div>
+			<div class="form-group">
+				<label for="tax">Tax (GST/VAT) % :</label>
+				<input type="number" id="tax" name="tax" step="0.01" class="validate-positive-number"
+					oninput="calculateTotal()" required th:value="${customerinvoice?.tax}">
+			</div>
+		</div>
+		<div class="form-row">
+
+			<div class="form-group">
+				<label for="applydiscount">Apply Discount :</label>
+				<select id="applydiscount" name="applydiscount" onchange="toggleDiscountField()" required>
+					<option value="Select">Select</option>
+					<option value="Yes" th:selected="${customerinvoice?.applydiscount == 'Yes'}">Yes</option>
+					<option value="No" th:selected="${customerinvoice?.applydiscount == 'No'}">No</option>
+				</select>
+			</div>
+			<div class="form-group" id="discountContainer">
+				<label for="discountapplied">Discount Applied (%):</label>
+				<input type="text" id="discountapplied" name="discountapplied" class="validate-positive-number"
+					oninput="calculateTotal()" th:value="${customerinvoice?.discountapplied}">
+			</div>
+
+
+			<div class="form-group">
+				<label for="totalammount">Total Amount :</label>
+				<input type="number" id="totalammount" name="totalammount" step="0.01" readonly required
+					th:value="${customerinvoice?.totalammount}">
+			</div>
+		</div>
+
+		<div class="form-row">
+			<div class="form-group">
+
+				<label for="paymentmode">Payment Mode :</label>
+				<select id="paymentmode" name="paymentmode" required>
+					<option value="">--Select--</option>
+					<option value="Cash" th:selected="${customerinvoice?.paymentmode == 'Cash'}">Cash</option>
+					<option value="Card" th:selected="${customerinvoice?.paymentmode == 'Card'}">Card</option>
+					<option value="UPI" th:selected="${customerinvoice?.paymentmode == 'UPI'}">UPI</option>
+					<option value="NetBanking" th:selected="${customerinvoice?.paymentmode == 'NetBanking'}">Net Banking
+					</option>
+				</select>
+			</div>
+		</div>
+
+
+
+		<!-- Five Row  -->
+		<div class="form-actions">
+			<div class="button-group">
+				<button type="button" id="submitBtn" onclick="submitCustomerInvoiceForm()">Submit</button>
+				<button type="button" class="back-button" onclick="goback();">Back</button>
+			</div>
+			<div th:if="${successMessage}" class="success-message" th:text="${successMessage}"></div>
+		</div>
+
+	</form>
+	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+	<script>
+		function goback() {
+			window.location.href = '/wholesellerandretailer/customerinvoicegrid';
+		}
+		
+		function goBack() {
+			window.location.href = '/dashboard';
+		}
+	</script>
+	<script>
+
+		function validateCustomerInvoiceForm() {
+		    const id = $('#id').val(); // Check if new or update
+		    const customertype = $('#customertype').val();
+		    const customeruid = $('#customeruid').val();
+		    const customerorderuid = $('#customerorderuid').val();
+		    const invoicedate = $('#invoicedate').val();
+		    const quantity = $('#quantitysold').val();
+		    const tax = $('#tax').val();
+		    const applyDiscount = $('#applydiscount').val();
+		    const discount = $('#discountapplied').val();
+		    const paymentmode = $('#paymentmode').val();
+
+		    // Basic required fields
+		    if (!customertype) { alert('Please select Customer Type'); return false; }
+		    if (!customeruid) { alert('Please select Customer ID'); return false; }
+		    if (!customerorderuid) { alert('Please select Customer Order ID'); return false; }
+		    if (!invoicedate) { alert('Please select Invoice Date'); return false; }
+		    if (!quantity || isNaN(quantity) || parseFloat(quantity) <= 0) { alert('Quantity Sold must be > 0'); return false; }
+		    if (!tax || isNaN(tax) || parseFloat(tax) < 0) { alert('Tax must be >= 0'); return false; }
+		    if (!paymentmode) { alert('Please select Payment Mode'); return false; }
+
+			// Wholesaler discount validation (for both new and updates)
+			if (customertype === 'Wholesaler' && applyDiscount === 'Select') {
+			    alert('Please select Yes or No for Apply Discount.');
+			    return false;
+			}
+
+			if (customertype === 'Wholesaler' && applyDiscount === 'Yes') {
+			    if (discount === '' || isNaN(discount) || parseFloat(discount) < 0 || parseFloat(discount) > 100) {
+			        alert('Please enter a valid discount between 0 and 100 when discount is applied.');
+			        return false;
+			    }
+			}
+
+
+		    return true;
+		}
+
+		function submitCustomerInvoiceForm() {
+			if (!validateCustomerInvoiceForm()) {
+				return; // stop submission if validation fails
+			}
+
+			const formData = new FormData(document.getElementById('customer-invoice-form'));
+			const id = $('#id').val();
+			let url, successMessage;
+
+			if (!id) {
+				url = '/customerinvoice/save';
+				successMessage = 'Customer invoice submitted successfully!';
+			} else {
+				url = '/customerinvoice/update';
+				successMessage = 'Customer invoice updated successfully!';
+			}
+
+			$.ajax({
+				url: url,
+				type: 'POST',
+				data: formData,
+				processData: false,
+				contentType: false,
+				success: function () {
+				    alert(successMessage); // Shows a popup
+				    window.location.href = '/wholesellerandretailer/customerinvoicegrid';
+				    resetCustomerInvoiceForm();
+				},
+
+				error: function () {
+					alert('Error submitting customer invoice. Please try again.');
+				}
+			});
+		}
+
+		function prefillCustomerInvoiceForm(data) {
+			// Basic fields
+			$('#id').val(data.id);
+			$('#companyname').val(data.companyname);
+			$('#productuid').val(data.productuid);
+			$('#productname').val(data.productname);
+			$('#unitprice').val(data.unitprice);
+			$('#quantitysold').val(data.quantitysold);
+			$('#tax').val(data.tax);
+			$('#totalammount').val(data.totalammount);
+
+			// Handle date formatting for <input type="date">
+			if (data.invoicedate) {
+				let date = new Date(data.invoicedate);
+				let formattedDate = date.toISOString().split('T')[0]; // yyyy-MM-dd
+				$('#invoicedate').val(formattedDate);
+			}
+
+			// Customer dropdown
+			if (data.customeruid) {
+				$('#customeruid').val(data.customeruid).trigger('change');
+			}
+
+			// Order dropdown (set after AJAX populates options)
+			if (data.customerorderuid) {
+				setTimeout(() => {
+					$('#customerorderuid').val(data.customerorderuid).trigger('change');
+				}, 500); // delay to ensure options are loaded
+			}
+
+			// Payment mode dropdown
+			if (data.paymentmode) {
+				$('#paymentmode').val(data.paymentmode).trigger('change');
+			}
+
+			// Handle discount logic
+			$('#applydiscount').val(data.applydiscount);
+			if (data.applydiscount === 'Yes') {
+				$('#discountContainer').show();
+				$('#discountapplied').val(data.discountapplied);
+			} else {
+				$('#discountContainer').hide();
+				$('#discountapplied').val('');
+			}
+
+			// Update form UI
+			$('#submitBtn').text('Update Invoice');
+			$('#form-title').text('Update Customer Invoice');
+
+			// Call calculation to reflect totals based on pre-filled data
+			calculateTotal();
+		}
+
+
+
+		function resetCustomerInvoiceForm() {
+			$('#customer-invoice-form')[0].reset();
+			$('#id').val('');
+
+			toggleDiscountField();
+			calculateTotal();
+
+		}
+		/*$(document).ready(function () {
+			var existingcustomerorderuid = $('#customerorderuid').val();
+			if (existingcustomerorderuid) {
+				fetchCustomerDetails(existingcustomerorderuid);
+			}
+		});*/
+
+		/*function fetchRetailOrderDetails(customerorderuid) {
+			if (!customerorderuid) return;
+
+			$.ajax({
+				url: '/customerinvoice/getretsilorderdetails',
+				method: 'GET',
+				data: {retailorderuid: customerorderuid},
+				success: function (response) {
+					if (response && response.length > 0) {
+						const data = response[0];
+						$('#selleruid').val(data.selleruid || '');
+						$('#companyname').val(data.companyname || '');
+						$('#productuid').val(data.productuid || '');
+						$('#productname').val(data.productname || '');
+						$('#unitprice').val(data.sellingprice || '');
+						calculateTotal();
+					} else {
+						alert('No data found for the selected order.');
+					}
+				},
+				error: function () {
+					alert('Error fetching retail order details.');
+				}
+			});
+		}
+*/
+
+
+
+
+
+		// Fetch Customer UIDs based on selected customer type
+		$('#customertype').change(function () {
+			let type = $(this).val();
+			if (!type) return;
+
+			$.ajax({
+				url: '/getCustomerUidsByType',
+				method: 'GET',
+				data: {customertype: type},
+				success: function (data) {
+					let dropdown = $('#customeruid');
+					dropdown.empty().append('<option value="">Select Customer</option>');
+					data.forEach(function (customeruid) {
+						dropdown.append('<option value="' + customeruid + '">' + customeruid + '</option>');
+					});
+					$('#companyname').val('');
+					$('#customerorderuid').empty().append('<option value="">Select Customer Order ID</option>');
+				}
+
+			});
+		});
+
+		// Fetch Company Name & Customer Order UIDs
+		function fetchCustomerDetails(customeruid) {
+			if (!customeruid) return;
+
+			$.ajax({
+				url: '/getCustomerDetails',
+				method: 'GET',
+				data: {customeruid: customeruid},
+				success: function (data) {
+					$('#companyname').val(data.companyname || '');
+					let orderDropdown = $('#customerorderuid');
+					orderDropdown.empty().append('<option value="">Select Customer Order ID</option>');
+					data.orders.forEach(function (order) {
+						orderDropdown.append('<option value="' + order.customerorderuid + '">' + order.customerorderuid + '</option>');
+					});
+				}
+			});
+		}
+
+		// Fetch Product details for selected order
+		function fetchOrderDetails(customerorderuid) {
+			if (!customerorderuid) return;
+
+			$.ajax({
+				url: '/getOrderDetails',
+				method: 'GET',
+				data: {customerorderuid: customerorderuid},
+				success: function (data) {
+					console.log("Order Details:", data);
+
+					if (data.length > 0) {
+						// If multiple products, pick first for now
+						$('#productuid').val(data[0].productuid || '');
+						$('#productname').val(data[0].productname || '');
+						$('#unitprice').val(data[0].sellingprice || '');
+						calculateTotal();
+					}
+				}
+			});
+		}
+
+
+
+
+
+		function toggleDiscountField() {
+		    const customerType = document.getElementById('customertype').value;
+		    const applyDiscount = document.getElementById('applydiscount');
+		    const discountContainer = document.getElementById('discountContainer');
+		    const discountInput = document.getElementById('discountapplied');
+
+		    if (customerType === 'Wholesaler') {
+		        // Keep dropdown enabled for wholesalers
+		        applyDiscount.disabled = false;
+
+		        // If "Yes" selected → show discount field
+		        if (applyDiscount.value === 'Yes') {
+		            discountContainer.style.display = 'block';
+		            discountInput.disabled = false;
+		        }
+		        // If "No" selected → hide discount field
+		        else if (applyDiscount.value === 'No') {
+		            discountContainer.style.display = 'none';
+		            discountInput.value = '';
+		        }
+		        // For initial "Select" state
+		        else {
+		            discountContainer.style.display = 'none';
+		            discountInput.value = '';
+		        }
+		    } else {
+		        // For Retailer/Other — fix to No and hide
+		        applyDiscount.value = 'No';
+		        applyDiscount.disabled = true;
+		        discountContainer.style.display = 'none';
+		        discountInput.value = '';
+		    }
+
+		    calculateTotal();
+		}
+
+
+
+		// Trigger whenever customer type or apply discount changes
+		$('#customertype').change(toggleDiscountField);
+		$('#applydiscount').change(toggleDiscountField);
+
+		// Call it on page load or when pre-filling the form
+		$(document).ready(function () {
+		    toggleDiscountField();
+		});
+
+
+
+		function calculateTotal() {
+			const quantity = parseFloat(document.getElementById('quantitysold').value) || 0;
+			const price = parseFloat(document.getElementById('unitprice').value) || 0;
+			const tax = parseFloat(document.getElementById('tax').value) || 0;
+
+			const applyDiscount = document.getElementById('applydiscount').value;
+			let discount = 0;
+
+			if (applyDiscount === 'Yes') {
+				discount = parseFloat(document.getElementById('discountapplied').value) || 0;
+			}
+
+			const subtotal = quantity * price;
+			const taxAmount = subtotal * (tax / 100);
+			const discountAmount = subtotal * (discount / 100);
+			const total = subtotal + taxAmount - discountAmount;
+
+			document.getElementById('totalammount').value = total.toFixed(2);
+		}
+		$('.validate-positive-number').on('input', function () {
+			let value = parseFloat($(this).val());
+			const fieldName = $(this).data('field-name') || $(this).attr('name') || 'This field';
+
+			if (isNaN(value) || value <= 0) {
+				alert(fieldName + ' must be a number greater than 0.');
+				$(this).val('');
+			}
+		});
+		// Set today's date for invoice date
+		<!-- Set today's date as default but keep it flexible -->
+		
+			document.addEventListener("DOMContentLoaded", function () {
+				let invoicedateInput = document.getElementById("invoicedate");
+
+				// Set default value only if not already filled (update mode)
+				let today = new Date().toISOString().split('T')[0];
+				if (!invoicedateInput.value) {
+					invoicedateInput.value = today;
+				}
+			});
+	
+
+
+		// Check if all required invoice fields have values
+		function allInvoiceDataAvl() {
+		    let customertype     = $("#customertype").val();
+		    let customeruid      = $("#customeruid").val();
+		    let customerorderuid = $("#customerorderuid").val();
+		    let invoicedate      = $("#invoicedate").val();
+		    let quantitysold     = $("#quantitysold").val();
+		    let tax              = $("#tax").val();
+		    let applydiscount    = $("#applydiscount").val();
+		    let discountapplied  = $("#discountapplied").val();
+		    let paymentmode      = $("#paymentmode").val();
+		    let productuid       = $("#productuid").val();
+		    let productname      = $("#productname").val();
+		    let unitprice        = $("#unitprice").val();
+
+		    if (
+		        customertype &&
+		        customeruid &&
+		        customerorderuid &&
+		        invoicedate &&
+		        quantitysold &&
+		        tax !== "" &&
+		        applydiscount &&
+		        paymentmode &&
+		        productuid &&
+		        productname &&
+		        unitprice
+		    ) {
+		        return true;
+		    } else {
+		        return false;
+		    }
+		}
+
+		// Reset fields except specified ones
+		function resetInvoiceFields(exclude = []) {
+		    if (!exclude.includes("customertype")) $("#customertype").val("");
+		    if (!exclude.includes("customeruid")) $("#customeruid").val("");
+		    if (!exclude.includes("customerorderuid")) $("#customerorderuid").val("");
+
+		    // Dependent dropdowns
+		    if (!exclude.includes("customerorderuid")) {
+		        $("#customerorderuid").empty().append('<option value="">Select Customer Order ID</option>');
+		    }
+
+		    // Reset other inputs
+		    if (!exclude.includes("companyname")) $("#companyname").val("");
+		    if (!exclude.includes("productuid")) $("#productuid").val("");
+		    if (!exclude.includes("productname")) $("#productname").val("");
+		    if (!exclude.includes("unitprice")) $("#unitprice").val("");
+		    if (!exclude.includes("quantitysold")) $("#quantitysold").val("");
+		    if (!exclude.includes("tax")) $("#tax").val("");
+		    if (!exclude.includes("applydiscount")) $("#applydiscount").val("Select");
+		    if (!exclude.includes("discountapplied")) $("#discountapplied").val("");
+		    if (!exclude.includes("totalammount")) $("#totalammount").val("");
+		    if (!exclude.includes("paymentmode")) $("#paymentmode").val("");
+			// Reset date explicitly
+			  if (!exclude.includes("invoicedate")) {
+			      const today = new Date().toISOString().split('T')[0];
+			      const invoicedateInput = $("#invoicedate");
+			      invoicedateInput.val(today);
+			      invoicedateInput.prop("value", today); // ensure the property is updated
+			  }
+		}
+
+		// On Customer Type change — reset everything except type itself
+		$("#customertype").change(function () {
+		    if ($("#id").val() === "") {
+		        resetInvoiceFields(["customertype"]);
+		        toggleDiscountField();  // Update discount field visibility
+		    }
+		});
+
+		// On Customer UID change
+		$("#customeruid").change(function () {
+		    if ($("#id").val() === "") {
+		        resetInvoiceFields(["customertype", "customeruid"]);
+		    }
+		});
+
+	
+
+
+	</script>
+</body>
+
+</html>

@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Downtime Analysis Form</title>
+	<link rel="stylesheet" href="/css/empinfo.css">
+  <link rel="stylesheet" href="/css/hrms.css"> <!-- // for side bar code  -->
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+
+</head>
+<body>
+
+		<div th:replace="~{MAINTENANCEMANAGEMENTDEPERTMENT.html :: sidebarFragment}"></div> 
+          <div class="form-section active" id="section1" style="margin-left: 20px; margin-right: 20px;">
+         <div class="form-container">
+  <form id="downtimeform">
+    <h2>Downtime Analysis Form</h2>
+
+    <input type="hidden" name="id" id="id" th:value="${downtime?.id}" />
+
+    <!-- Row 1: Only one field -->
+    <div class="form-row">
+      <div class="form-group">
+        <label>Equipment Master UID</label>
+          <select id="equipmentmasteruid" name="equipmentmasteruid" onchange="fetchEquipmentDetails(this.value)" 
+                  th:if="${downtime == null or downtime.id == null}" required>
+            <option value="">Select Equipment UID</option>
+            <option th:each="uid : ${equipmentmasteruid}" th:value="${uid}" th:text="${uid}"></option>
+          </select>
+          <input type="text" id="equipmentmasteruid" name="equipmentmasteruid" 
+                 th:value="${downtime?.equipmentmasteruid}" 
+                 onchange="fetchEquipmentDetails(this.value)" 
+                 readonly th:if="${downtime?.id != null}">
+        </div>
+    </div>
+
+    <!-- Row 2: Equipment Name & Total Downtime -->
+    <div class="form-row">
+      <div class="form-group">
+        <label for="equipmentname">Equipment Name</label>
+        <input type="text" class="form-control" id="equipmentname" name="equipmentname" readonly />
+      </div>
+
+      <div class="form-group">
+        <label for="totaldowntime">Total Downtime (Hrs)</label>
+        <input type="number" class="form-control" id="totaldowntime" name="totaldowntime" readonly />
+      </div>
+    </div>
+
+    <!-- Row 3: No. of Breakdowns & Frequent Issues -->
+    <div class="form-row">
+      <div class="form-group">
+        <label for="noofbreakdown">No. of Breakdowns</label>
+        <input type="number" class="form-control" id="noofbreakdown" name="noofbreakdown"
+                readonly  />
+      </div>
+
+      <div class="form-group">
+        <label for="frequentissues">Frequent Issues</label>
+        <textarea class="form-control" id="frequentissues" name="frequentissues" rows="3" required
+                  th:text="${downtime?.frequentissues}"style="height: 37px; width: 365px;"></textarea>
+      </div>
+    </div>
+
+    <!-- Row 4: Preventive Actions Suggested & Remarks -->
+    <div class="form-row">
+      <div class="form-group">
+        <label for="preventiveactionssuggested">Preventive Actions Suggested</label>
+        <textarea class="form-control" id="preventiveactionssuggested" name="preventiveactionssuggested" rows="3" required
+                  th:text="${downtime?.preventiveactionssuggested}"style="height: 37px; width: 365px;"></textarea>
+      </div>
+
+      <div class="form-group">
+        <label for="remarks">Remarks</label>
+        <textarea class="form-control" id="remarks" name="remarks" rows="3"
+                  th:text="${downtime?.remarks}"style="height: 37px; width: 365px;"></textarea>
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <button type="button" id="submitBtn" onclick="submitForm()">Submit</button>
+	  <button type="button" id="backBtn" onclick="goBack()">Back</button>
+
+    </div>
+  </form>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+function fetchTotalDowntime(equipmentmasteruid) {
+    if (!equipmentmasteruid) return;
+
+    $.ajax({
+        url: '/downtime/total/' + equipmentmasteruid,
+        method: 'GET',
+        success: function(response) {
+            // response = total downtime from controller
+            $('#totaldowntime').val(response);
+        },
+        error: function() {
+            alert('Error fetching total downtime. Please try again.');
+        }
+    });
+}
+
+
+//✅ Function to count repeated equipmentmasteruid in <select>
+function calculateDowntimeCount(equipmentmasteruid) {
+    let count = 0;
+    $('#equipmentmasteruid option').each(function() {
+        if ($(this).val() === equipmentmasteruid) {
+            count++;
+        }
+    });
+
+    // Optional: also set No. of Breakdowns to same count
+    $('#noofbreakdown').val(count);
+}
+
+$(document).ready(function() {
+    // Auto-fill Item details when updating
+    var existingequipmentmasteruid = $('#equipmentmasteruid').val();
+    if (existingequipmentmasteruid) {
+    	fetchEquipmentDetails(existingequipmentmasteruid);
+        calculateDowntimeCount(existingequipmentmasteruid);
+
+    }
+});
+function fetchEquipmentDetails(equipmentmasteruid) {
+  if (!equipmentmasteruid) return; 
+
+     $.ajax({
+ 		url: '/fetchEquipmentDetailsInDowntimeAnalysis',
+ 		method: 'GET',
+ 		data: { equipmentmasteruid: equipmentmasteruid },
+ 		success: function(response) {
+ 			$('#equipmentname').val(response.equipmentname);
+            calculateDowntimeCount(equipmentmasteruid);
+            fetchTotalDowntime(equipmentmasteruid);
+
+
+ 	},
+ 	error:function() {
+    alert('Error fetching Equipment Master Details. Please try again.');
+ 			                }
+ 							});
+ } 
+		function submitForm() {
+			let form = document.getElementById('downtimeform');
+					    
+					    if (!form.checkValidity()) {
+					        alert('Please fill in all required fields.');
+					        return;
+					    }
+
+					   
+							    const formData = new FormData(document.getElementById('downtimeform'));
+							    const id = $('#id').val();
+
+							    let url, successMessage;
+
+							    if (!id) {
+							        url = '/savedowntimeanalysis';
+							        successMessage = 'Downtime Analysis Form data saved successfully!';
+							    } else {
+							        url = '/updatedowntimeanalysis';
+							        successMessage = 'Downtime Analysis Form data updated successfully!';
+							    }
+
+							    $.ajax({
+							        url: url,
+							        type: 'POST',
+							        data: formData,
+							        processData: false,
+							        contentType: false,
+							        success: function(response) {
+							            $('#message').text(successMessage); // Display success message
+							            resetForm();
+							            window.location.href = '/maintenancemanagementdepartment/downtimeanalysisgrid';
+							        },
+							        error: function() {
+							            alert('Error saving Downtime Analysis Form . Please fill out the data.');
+							        }
+							    });
+							}
+							// Reset the form
+									function resetForm() {
+									    $('#downtimeform')[0].reset();
+										$('#id').val('');
+									    $('#message').text(''); // Clear the message
+									    $('#submitBtn').text('Submit');
+									}
+						$(document).ready(function () {
+
+		 // ✅ Validation for text fields (Only alphabets and spaces)
+		           function validateTextField(selector) {
+				   $(selector).on('input', function () {
+		           let value = $(this).val();
+                  if (!/^[a-zA-Z\s]*$/.test(value)) {
+					 alert('Only alphabets and spaces are allowed.');
+				 $(this).val(value.replace(/[^a-zA-Z\s]/g, ''));
+				 }
+				  });
+				}
+																	   
+           // Apply validation on specified fields (text)
+				 validateTextField('#frequentissues');
+				 validateTextField('#preventiveactionssuggested');
+				  validateTextField('#remarks');
+		});
+														
+	
+</script>
+</body>
+</html>

@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Purchase Order Form</title>
+ <link rel="stylesheet" href="/css/empinfo.css">
+  <link rel="stylesheet" href="/css/hrms.css"> <!-- // for side bar code  -->
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<style>
+h5{
+  margin: 10px;
+}
+</style>
+<body>
+  <div th:replace="~{INVENTORY.html :: sidebarFragment}"></div> <!-- // for side bar code  -->
+
+   <form id="purchaseOrderForm" method="post" class="form-container"  >
+    <!-- Personal Information Section -->
+    <input type="hidden" id="id" name="id" th:value="${purchaseorder?.id}" required>
+    <input type="hidden" id="pouid" name="pouid" th:value="${purchaseorder?.pouid}" required>
+    
+      <h2>Purchase Order Form</h2>
+
+      <!-- First Row -->
+    
+      <div class="form-row">
+        
+        <div class="form-group">        
+          <label for="podate">PO Date</label>
+          <input type="date" id="podate" name="podate" th:value="${purchaseorder?.podate}" required>
+        </div>
+        <div class="form-group">
+          <label for="supplieruid">Supplier UID</label>
+            <select  id="supplieruid"  name="supplieruid" onchange="fetchSupplierDetails(this.value)" th:if="${purchaseorder == null or purchaseorder.id == null}">
+                <option value="">Select Supplier UID</option>
+                <option th:each="uid : ${supplieruid}" th:value="${uid}" th:text="${uid}"></option>	
+            </select>
+            <input type="text" id="supplieruid" name="supplieruid" th:value="${purchaseorder?.supplieruid}" onchange="fetchSupplierDetails(this.value)" readonly th:if="${purchaseorder?.id != null}">
+            
+        </div>
+
+        <div class="form-group">
+          <label for="suppliername">Supplier Name</label>
+		           <input type="text" id="suppliername" name="suppliername" readonly>   
+        </div>
+
+        <div class="form-group">
+          <label for="productuid">Product UID</label>
+          <select id="productuid" name="productuid" onchange="fetchProductDetails(this.value)" th:if="${purchaseorder == null or purchaseorder.id == null}">
+            <option value="">Select Product UID</option>
+            <option th:each="uid : ${productuid}" th:value="${uid}" th:text="${uid}"></option>	
+           </select>
+           <input type="text" id="productuid" name="productuid" th:value="${purchaseorder?.productuid}" onchange="fetchProductDetails(this.value)" readonly th:if="${purchaseorder?.id != null}">
+           
+        </div>
+      </div>
+
+      <!-- Second Row -->
+      <div class="form-row">
+        <div class="form-group">
+          <label for="productname">Product Name</label>
+          <input type="text" id="productname" name="productname" readonly>
+	      </div>
+   
+        <div class="form-group">
+          <label for="quantityordered">Quantity Ordered</label>
+            <input type="number" id="quantityordered" name="quantityordered" th:value="${purchaseorder?.quantityordered}" required>
+        </div>
+
+        <div class="form-group">
+          <label for="unitofmeasure">Unit of Measure</label>
+          <select id="unitofmeasure" name="unitofmeasure" th:value="${purchaseorder?.unitofmeasure}" required>
+      <option value="Select" th:selected="${purchaseorder?.unitofmeasure == 'Select'}">Select</option>
+      <option value="Lot" th:selected="${purchaseorder?.unitofmeasure == 'Lot'}">Lot</option>
+     </select>
+        </div>
+
+        <div class="form-group" >
+          <label for="unitprice">Unit Price</label>
+            <input type="number" id="unitprice" name="unitprice" step="0.01" th:value="${purchaseorder?.unitprice}" required>
+        </div>
+      </div>
+      <!-- Third Row -->
+      <div class="form-row">
+      
+          <div class="form-group">            
+            <label for="totalprice">Total Price</label>
+            <input type="number" id="totalprice" name="totalprice" step="0.01" th:value="${purchaseorder?.totalprice}" required readonly>
+          </div>
+
+          <div class="form-group">
+            <label for="taxrate">Tax Rate</label>
+            <input type="number" id="taxrate" name="taxrate" step="0.01" th:value="${purchaseorder?.taxrate}" required>
+        </div>
+        <div class="form-group">
+          <label for="deliverydate">Delivery Date</label>
+          <input type="date" id="deliverydate" name="deliverydate" th:value="${purchaseorder?.deliverydate}" required>
+        </div>
+        <div class="form-group">
+          <label for="deliverylocation">Delivery Location</label>
+          <input type="text" id="deliverylocation" name="deliverylocation" th:value="${purchaseorder?.deliverylocation}" required>      
+        </div>
+        <div class="form-group">
+          <label for="paymentterms">Payment Terms</label>
+          <input type="text" id="paymentterms" name="paymentterms" th:value="${purchaseorder?.paymentterms}" required>  
+        </div>
+      </div>
+
+      <!-- four Row -->
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="currency">Currency</label>
+          <input type="text" id="currency" name="currency" th:value="${purchaseorder?.currency}" required>
+        </div> 
+        <div class="form-group">
+          <label for="totalamount">Total Amount</label>
+          <input type="number" id="totalamount" name="totalamount" step="0.01" th:value="${purchaseorder?.totalamount}" required readonly>
+        </div>     
+        <div class="form-group">          
+            <label for="approvaldate">Approval Date</label>
+            <input type="date" id="approvaldate" name="approvaldate" th:value="${purchaseorder?.approvaldate}" required>
+        </div>
+      
+        <div class="form-group">
+          <label for="authorizedby">Authorized By</label>
+          <input type="text" id="authorizedby" name="authorizedby" th:value="${purchaseorder?.authorizedby}" required>
+        </div>
+    </div>
+
+   <!-- Five Row  -->
+   <div class="form-row">
+    <div class="form-group">
+      <label for="approvalstatus">Approval Status</label>
+      <select id="approvalstatus" name="approvalstatus" th:value="${purchaseorder?.approvalstatus}" required>
+            <option value="Select" th:selected="${purchaseorder?.approvalstatus == 'Select'}">Select</option>
+            <option value="Pending" th:selected="${purchaseorder?.approvalstatus == 'Pending'}">Pending</option>
+            <option value="Approved" th:selected="${purchaseorder?.approvalstatus == 'Approved'}">Approved</option>
+            <option value="Rejected" th:selected="${purchaseorder?.approvalstatus == 'Rejected'}">Rejected</option>
+      </select>
+      </div>
+   </div>  
+
+ 
+
+
+    <div class="form-actions">
+        <button type="button" id="submitBtn" onclick="submitForm()">Submit Purchase Order</button>
+        <div th:if="${successMessage}" class="success-message" th:value="${successMessage}"></div>                      
+    </div>
+  
+</form>
+ <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+   <script>
+   $(document).ready(function() {
+	    // Auto-fill Item details when updating
+	    var existingsupplieruid = $('#supplieruid').val();
+	    if (existingsupplieruid) {
+	    	fetchSupplierDetails(existingsupplieruid);
+	    }
+	});
+   
+   $(document).ready(function() {
+	    // Auto-fill Item details when updating
+	    var existingproductuid = $('#productuid').val();
+	    if (existingproductuid) {
+	    	fetchProductDetails(existingproductuid);
+	    }
+	});
+   
+   function fetchSupplierDetails(supplieruid) {
+               if (!supplieruid) return;
+
+               $.ajax({
+               url: '/supplier/getSupplierDetails',
+                   method: 'GET',
+                   data: { supplieruid: supplieruid },
+                   success: function(response) {
+                       if (response) {
+                           $('#suppliername').val(response.suppliername);
+                          
+                       }
+                   },
+                   error: function() {
+                       alert('Error fetching employee details. Please try again.');
+                   }
+               });
+           }
+   
+   
+   
+           
+       function fetchProductDetails(productuid) {
+          if (!productuid) return;
+
+          $.ajax({
+           url: '/product/getproductDetails',
+           method: 'GET',
+           data: { productuid: productuid },
+               success: function(response) {
+                   if (response) {
+                    $('#productname').val(response.productname);
+                                        
+                    }
+                 },
+                    error: function() {
+                       alert('Error fetching employee details. Please try again.');
+                                 }
+                     });
+                 }
+           
+       function submitForm() {
+           const formData = new FormData(document.getElementById('purchaseOrderForm'));
+           const id = $('#id').val();
+           let url, successMessage;
+
+           if (!id) {
+               url = '/submitPurchaseOrder';
+               successMessage = 'Purchase order saved successfully!';
+           } else {
+               url = '/updateorders';
+               successMessage = 'Purchase order updated successfully!';
+           }
+
+           $.ajax({
+               url: url,
+               type: 'POST',
+               data: formData,
+               processData: false,
+               contentType: false,
+               success: function(response) {
+                   $('#successMessage').text(successMessage).show();
+                   resetForm();
+                   window.location.href = '/viewAllPurchaseOrderlist';
+               },
+               error: function() {
+                   alert('Error saving purchase order. Please try again.');
+               }
+           });
+       }
+   
+   function resetForm() {
+           $('#purchaseOrderForm')[0].reset();
+           $('#id').val('');
+           $('#form-title').text('Purchase Order Form');
+           $('#submitBtn').text('Submit Purchase Order');
+       }
+   
+   
+
+   function prefillForm(data) {
+       $('#id').val(data.id);
+       $('#pouid').val(data.pouid);
+       $('#podate').val(data.podate);
+       $('#suppliername').val(data.suppliername);
+       $('#supplieruid').val(data.supplieruid);
+       $('#productuid').val(data.productuid);
+       $('#productname').val(data.productname);
+       $('#quantityordered').val(data.quantityordered);
+       $('#unitofmeasure').val(data.unitofmeasure);
+       $('#unitprice').val(data.unitprice);
+       $('#totalprice').val(data.totalprice);
+       $('#taxrate').val(data.taxrate);
+       $('#deliverydate').val(data.deliverydate);
+       $('#deliverylocation').val(data.deliverylocation);
+       $('#paymentterms').val(data.paymentterms);
+       $('#currency').val(data.currency);
+       $('#totalamount').val(data.totalamount);
+       $('#approvalstatus').val(data.approvalstatus);
+       $('#authorizedby').val(data.authorizedby);
+       $('#approvaldate').val(data.approvaldate);
+
+       $('#form-title').text('Update Purchase Order');
+       $('#submitBtn').text('Update Purchase Order');
+   }
+
+
+       function calculateTotal() {
+           const unitPrice = parseFloat($('#unitprice').val());
+           const quantity = parseInt($('#quantityordered').val());
+           const taxRate = parseFloat($('#taxrate').val());
+
+           if (!isNaN(unitPrice) && !isNaN(quantity)) {
+               const totalPrice = unitPrice * quantity;
+               $('#totalprice').val(totalPrice.toFixed(2));
+
+               if (!isNaN(taxRate)) {
+                   const taxAmount = (totalPrice * taxRate) / 100;
+                   const totalAmount = totalPrice + taxAmount;
+                   $('#totalamount').val(totalAmount.toFixed(2));
+               }
+           }
+       }
+
+       $(document).ready(function() {
+           $('#unitprice, #quantityordered, #taxrate').on('input', calculateTotal);
+           
+           const today = new Date().toISOString().split('T')[0];
+           $('#podate').attr('min', today).attr('max', today).val(today);
+       });
+   
+   function validateQuantity() {
+          const quantity = $('#quantityordered').val();
+          if (quantity < 1 || isNaN(quantity)) {
+              alert('Quantity Ordered must be a positive number.');
+              $('#quantityordered').val(''); // Reset invalid input
+          }
+      }
+
+      function validateDates() {
+          const today = new Date().toISOString().split('T')[0];
+          const deliveryDate = $('#deliverydate').val();
+          const approvalDate = $('#approvaldate').val();
+
+          if (deliveryDate && deliveryDate < today) {
+              alert('Delivery Date cannot be in the past.');
+              $('#deliverydate').val(''); // Reset invalid input
+          }
+
+          if (approvalDate && approvalDate < today) {
+              alert('Approval Date cannot be in the past.');
+              $('#approvaldate').val(''); // Reset invalid input
+          }
+      }
+
+      $(document).ready(function() {
+          // Attach event listeners for validations
+          $('#quantityordered').on('input', validateQuantity);
+          $('#deliverydate').on('change', validateDates);
+          $('#approvaldate').on('change', validateDates);
+
+          // Set min attribute for Delivery Date and Approval Date fields
+          const today = new Date().toISOString().split('T')[0];
+          $('#deliverydate').attr('min', today);
+          $('#approvaldate').attr('min', today);
+
+          // Existing code for calculating total price
+          $('#unitprice, #quantityordered, #taxrate').on('input', calculateTotal);
+
+          // Default PO date logic
+          $('#podate').attr('min', today).attr('max', today).val(today);
+      });
+      
+      
+   </script>
+</body>
+</html>

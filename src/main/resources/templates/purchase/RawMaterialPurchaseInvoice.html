@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8" />
+  <title>Raw Material Purchase Invoice</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" th:href="@{/css/hrms.css}" />
+  <link rel="stylesheet" th:href="@{/css/empinfo.css}" />
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet" />
+
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+  <style>
+    /* kept minimal — keep your original CSS files for overall look */
+    .materials-table { width: 100%; border-collapse: collapse; margin-top: 10px; background-color: #fff; box-shadow: 0 0 4px rgba(0,0,0,0.1); }
+    .materials-table th, .materials-table td { border: 1px solid #ccc; padding: 8px 10px; padding-left: 20px !important; text-align:left !important;}
+    .materials-table th { background:#f2f2f2; font-weight:700; padding-left:20px; }
+    .materials-table input { width:100%; border:none; background:transparent; padding:4px; font-size:14px;}
+    .materials-table input[readonly] { background:#f9f9f9; }
+    .materials-table tbody tr:nth-child(even){ background:#f9f9f9; }
+
+    .submit-button { background:#007acc; color:#fff; border:none; padding:12px 20px; font-size:16px; border-radius:6px; cursor:pointer; }
+    .back-button { background:#6c757d; color:#fff; border:none; padding:12px 20px; font-size:16px; border-radius:6px; cursor:pointer; }
+    .buttons-center {
+      display: flex;
+      justify-content: center;   /* center horizontally */
+      gap: 15px;                 /* space between buttons */
+      margin-top: 20px;
+  }
+
+  .submit-button, .back-button {
+      background-color: #007bff;   /* same blue color */
+      color: white;
+      padding: 10px 20px;
+      font-size: 16px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      min-width: 120px;
+      transition: 0.2s;
+  }
+
+  .submit-button:hover, .back-button:hover {
+      background-color: #0056b3;  /* darker blue hover */
+  }
+  </style>
+</head>
+<body>
+  <div th:replace="~{PURCHASE.html :: sidebarFragment}"></div>
+
+  <div class="form-container">
+    <div class="form-section active" id="section1" style="margin:20px;">
+      <div class="invoice-container">
+        <h2 class="invoice-title">Raw Material Purchase Invoice</h2>
+        <br>
+
+        <form id="rawMaterialInvoiceForm" novalidate autocomplete="off">
+          <!-- Hidden / IDs -->
+          <input type="hidden" id="id" name="id" th:value="${invoice?.id}" />
+          <input type="hidden" name="rawmaterialpurchaseinvoiceuid" th:value="${invoice?.rawmaterialpurchaseinvoiceuid}" />
+          <input type="hidden" id="rawmaterialpurchaseorderuid" name="rawmaterialpurchaseorderuid" th:value="${invoice?.rawmaterialpurchaseorderuid}" />
+          <input type="hidden" id="rawmaterialdetails" name="materialdetails" />
+
+          <!-- 1: GRN (create uses select, edit shows readonly input) -->
+          <div class="form-row">
+            <div class="form-group">
+              <label for="grnuidSelect">Raw Material Receipt Note ID:</label>
+
+              <!-- CREATE MODE -->
+              <select id="grnuidSelect" name="rawmaterialreceiptnoteuid" th:if="${invoice == null or invoice.id == null}" required>
+                <option value="">-- Select RMRN ID --</option>
+                <option th:each="grn : ${grnUids}" th:value="${grn}" th:text="${grn}"></option>
+              </select>
+
+              <!-- EDIT MODE (readonly) -->
+              <input type="text" id="grnuidInput" name="rawmaterialreceiptnoteuid" th:value="${invoice?.rawmaterialreceiptnoteuid}" th:if="${invoice?.id != null}" readonly class="form-control" />
+            </div>
+          </div>
+
+          <!-- 2: Supplier fields (readonly) -->
+          <div class="form-row">
+            <div class="form-group">
+              <label for="supplierUid">RM Supplier ID:</label>
+              <input type="text" id="supplierUid" name="supplierUid" th:value="${invoice.rawmaterialsupplieruid}" readonly required />
+            </div>
+            <div class="form-group">
+              <label for="supplierName">RM Supplier Name:</label>
+              <input type="text" id="supplierName" name="suppliername" th:value="${invoice.suppliername}" readonly required />
+            </div>
+          </div>
+
+          <!-- 3: Received Materials table (hidden initially until GRN selected) -->
+          <div class="form-row">
+            <div class="form-group" style="width:100%; display:none;" id="receivedMaterialsSection">
+              <label>Received Materials:</label>
+              <table class="materials-table">
+                <thead id="receivedMaterialsHeader">
+                  <tr>
+                    <th>Raw Material Name</th>
+                    <th>Received Quantity</th>
+                    <th>Unit Price</th>
+                  </tr>
+                </thead>
+                <tbody id="receivedMaterialsTable">
+                  <!-- filled dynamically -->
+                </tbody>
+              </table>
+              <small id="materialsHelp" style="color:#666"></small>
+            </div>
+          </div>
+
+          <!-- 4: Invoice Date & Tax -->
+          <div class="form-row">
+            <div class="form-group">
+              <label for="invoicedate">Invoice Date:</label>
+              <input type="date" id="invoicedate" name="invoicedate" th:value="${invoice?.invoicedate}" required />
+            </div>
+            <div class="form-group">
+              <label for="taxamount">Tax Amount (%):</label>
+              <input type="number" step="0.01" id="taxamount" name="taxamount" th:value="${invoice?.taxamount}" oninput="calculateTotalAmount()" required />
+            </div>
+          </div>
+
+          <!-- 5: Total & Payment Terms -->
+          <div class="form-row">
+            <div class="form-group">
+              <label for="totalamount">Total Amount:</label>
+              <input type="number" step="0.01" id="totalamount" name="totalamount" th:field="${invoice.totalamount}" readonly required />
+            </div>
+            <div class="form-group">
+              <label for="paymentterms">Payment Terms:</label>
+              <input type="text" id="paymentterms" name="paymentterms" th:value="${invoice.paymentterms}" th:attr="readonly=${invoice.id != null}" required />
+            </div>
+          </div>
+
+          <!-- Verified By -->
+          <div class="form-group">
+            <label for="verifiedby">Verified By:</label>
+
+            <!-- CREATE MODE -->
+            <select id="verifiedbySelect" name="verifiedby" th:if="${invoice == null or invoice.id == null}" required>
+              <option value="">-- Select verified by --</option>
+              <option th:each="entry : ${verifiedbyMap}" th:value="${entry.key + ' - ' + entry.value}" th:text="${entry.key + ' - ' + entry.value}"></option>
+            </select>
+
+            <!-- EDIT MODE -->
+            <input type="text" id="verifiedbyInput" name="verifiedby" th:value="${invoice.verifiedby}" th:if="${invoice.id != null}" readonly required />
+          </div>
+
+          <br>
+
+          <div class="form-actions buttons-center">            <button type="button" id="submitBtn" class="submit-button">Submit</button>
+            <button type="button" class="back-button" onclick="goback()">Back</button>
+            <div th:if="${successMessage}" class="success-message" th:text="${successMessage}" style="margin-left:10px"></div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ---------- helpers ----------
+    function goback() { window.location.href = '/purchase/rawmaterialpurchaseinvoicegrid'; }
+
+    function goBack() {
+		window.location.href = '/dashboard';
+		}
+    // Utility: Show SweetAlert error and focus element if provided
+    function showError(title, text, focusSelector) {
+      Swal.fire({ icon: 'error', title: title, text: text });
+      if (focusSelector) {
+        setTimeout(() => { const el = document.querySelector(focusSelector); if (el) el.focus(); }, 200);
+      }
+    }
+
+    // ---------- GRN fetch & materials ----------
+    $(document).ready(function() {
+      const isEdit = !!$('#id').val();
+
+      // bind create-select change
+      $('#grnuidSelect').on('change', function() {
+        const grn = $(this).val();
+        if (grn) fetchRMRNDetails(grn);
+        else {
+          $('#receivedMaterialsSection').hide();
+          $('#receivedMaterialsTable').empty();
+          $('#rawmaterialdetails').val('');
+          $('#supplierUid').val('');
+          $('#supplierName').val('');
+          $('#totalamount').val('');
+        }
+      });
+
+      // on page load: if in create mode but grn preselected, fetch
+      if ($('#grnuidSelect').length && $('#grnuidSelect').val()) {
+        fetchRMRNDetails($('#grnuidSelect').val());
+      }
+
+      // in edit mode: if readonly grn present, fetch
+      if ($('#grnuidInput').length && $('#grnuidInput').val()) {
+        fetchRMRNDetails($('#grnuidInput').val());
+      }
+
+      // bind calculation triggers
+      $('#receivedMaterialsTable').on('input', '.quantity-input, .unit-price-input', function() {
+        updateReceivedMaterialsJson();
+        calculateTotalAmount();
+      });
+      $('#taxamount').on('input', function() { calculateTotalAmount(); });
+
+      // submit button
+      $('#submitBtn').on('click', submitRawMaterialInvoiceForm);
+    });
+
+    function fetchRMRNDetails(grnUid) {
+      if (!grnUid) return;
+      const tableBody = $("#receivedMaterialsTable");
+      const section = $("#receivedMaterialsSection");
+      tableBody.empty();
+      section.hide();
+      $('#rawmaterialdetails').val('');
+      $('#totalamount').val('');
+
+      $.ajax({
+        url: "/getReceiptNoteDetails",
+        type: "GET",
+        data: { grnuid: grnUid },
+        success: function(data) {
+          if (!data || data.length === 0) {
+            tableBody.append("<tr><td colspan='3'>No data found for the selected GRN UID.</td></tr>");
+            $('#materialsHelp').text('');
+            return;
+          }
+
+          section.show();
+          $('#supplierUid').val(data[0].rawmaterialsupplieruid || '');
+          $('#supplierName').val(data[0].suppliername || '');
+          $('#rawmaterialpurchaseorderuid').val(data[0].rawmaterialpurchaseorderuid || '');
+
+          data.forEach(material => {
+            // ensure values are safe
+            const name = material.rawmaterialname || '';
+            const qty = isFinite(material.receivedquantity) ? material.receivedquantity : 0;
+            const price = isFinite(material.price) ? material.price : 0;
+
+            const row = `<tr>
+                           <td><input type="text" class="rm-name" value="${escapeHtml(name)}" readonly></td>
+                           <td><input type="number" min="0" step="0.01" class="quantity-input" value="${qty}"></td>
+                           <td><input type="number" min="0" step="0.01" class="unit-price-input" value="${price}"></td>
+                         </tr>`;
+            tableBody.append(row);
+          });
+
+          updateReceivedMaterialsJson();
+          calculateTotalAmount();
+         // $('#materialsHelp').text('You may adjust Quantity / Unit Price if needed (must be >= 0).');
+        },
+        error: function(xhr, status, err) {
+          console.error("Error fetching RMRN details:", err);
+          showError('Error', 'Unable to fetch RMRN details.');
+        }
+      });
+    }
+
+    // escape to avoid HTML injection in inserted values
+    function escapeHtml(text) {
+      return String(text).replace(/[&<>"'`]/g, function (m) { return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;', '`':'&#96;'})[m]; });
+    }
+
+    function updateReceivedMaterialsJson() {
+      const tableRows = $('#receivedMaterialsTable tr');
+      const materialDetails = [];
+
+      tableRows.each(function() {
+        const name = $(this).find('td:eq(0) input').val() || '';
+        const quantity = parseFloat($(this).find('td:eq(1) input').val()) || 0;
+        const unitPrice = parseFloat($(this).find('td:eq(2) input').val()) || 0;
+
+        if (name.trim()) {
+          materialDetails.push({ name: name.trim(), quantity: quantity, unitPrice: unitPrice });
+        }
+      });
+
+      $('#rawmaterialdetails').val(JSON.stringify(materialDetails));
+    }
+
+    // ---------- calculations ----------
+    function calculateTotalAmount() {
+      let subtotal = 0;
+      let hasValidInput = false;
+      let hasNegativeInput = false;
+
+      $('#receivedMaterialsTable tr').each(function() {
+        const quantity = parseFloat($(this).find('.quantity-input').val()) || 0;
+        const unitPrice = parseFloat($(this).find('.unit-price-input').val()) || 0;
+
+        if (quantity < 0 || unitPrice < 0) hasNegativeInput = true;
+        if (quantity > 0 && unitPrice >= 0) hasValidInput = true;
+        subtotal += quantity * unitPrice;
+      });
+
+      const taxPercent = parseFloat($('#taxamount').val());
+      const taxIsNumber = !isNaN(taxPercent);
+
+      if (hasNegativeInput) {
+        $('#totalamount').val('');
+        return;
+      }
+
+      if (!taxIsNumber) {
+        $('#totalamount').val('');
+        return;
+      }
+
+      const taxRate = (taxPercent || 0) / 100;
+      const totalAmount = subtotal + (subtotal * taxRate);
+      $('#totalamount').val(isFinite(totalAmount) ? totalAmount.toFixed(2) : '');
+    }
+
+    // ---------- validation ----------
+    function validateRequiredFields() {
+      // Check GRN
+      const grnSelect = $('#grnuidSelect');
+      const grnInput = $('#grnuidInput');
+      const grnVal = grnSelect.length ? grnSelect.val() : (grnInput.length ? grnInput.val() : '');
+      if (!grnVal || grnVal.trim() === '') {
+        showError('Missing RMRN ID', 'Please select / provide Raw Material Receipt Note ID.', grnSelect.length ? '#grnuidSelect' : '#grnuidInput');
+        return false;
+      }
+
+      // Ensure received materials exist and at least one non-empty material
+      const materials = $('#receivedMaterialsTable tr');
+      if (materials.length === 0) {
+        showError('Missing Materials', 'No received materials found for the selected RMRN ID.', '#grnuidSelect');
+        return false;
+      }
+
+      // For each material row, check name and numeric quantity and price
+      let invalidMaterial = null;
+      let hasValidRow = false;
+      materials.each(function(index) {
+        const name = $(this).find('.rm-name').val() || '';
+        const qty = $(this).find('.quantity-input').val();
+        const price = $(this).find('.unit-price-input').val();
+
+        if (!name.trim()) invalidMaterial = { msg: 'Material name is missing', selector: $(this).find('.rm-name') };
+        if (qty === '' || qty === null || isNaN(qty)) invalidMaterial = { msg: 'Quantity is required and must be a number', selector: $(this).find('.quantity-input') };
+        if (price === '' || price === null || isNaN(price)) invalidMaterial = { msg: 'Unit price is required and must be a number', selector: $(this).find('.unit-price-input') };
+
+        if (Number(qty) < 0 || Number(price) < 0) invalidMaterial = { msg: 'Quantity and Unit Price must not be negative', selector: $(this).find('.quantity-input') };
+
+        if (name.trim() && Number(qty) >= 0 && Number(price) >= 0) hasValidRow = true;
+        if (invalidMaterial) return false; // break
+      });
+
+      if (invalidMaterial) {
+        showError('Invalid Material', invalidMaterial.msg, invalidMaterial.selector ? invalidMaterial.selector.get(0) : null);
+        return false;
+      }
+      if (!hasValidRow) {
+        showError('Invalid Materials', 'Please ensure materials have valid quantity and unit price.', '#receivedMaterialsTable');
+        return false;
+      }
+
+      // Invoice date
+      const invoiceDate = $('#invoicedate').val();
+      if (!invoiceDate) { showError('Missing Invoice Date', 'Invoice date is required.', '#invoicedate'); return false; }
+
+      // Tax amount
+      const tax = $('#taxamount').val();
+      if (tax === '' || tax === null || isNaN(tax)) { showError('Invalid Tax', 'Tax percentage is required and must be a number.', '#taxamount'); return false; }
+      if (Number(tax) < 0) { showError('Invalid Tax', 'Tax percentage cannot be negative.', '#taxamount'); return false; }
+
+      // Total amount must be present (calculated)
+      const total = $('#totalamount').val();
+      if (!total || total === '') { showError('Total Missing', 'Total amount could not be calculated. Check materials and tax.', '#totalamount'); return false; }
+
+      // Payment terms
+      const paymentTerms = $('#paymentterms').val() || '';
+      if (!paymentTerms.trim()) { showError('Payment Terms Missing', 'Payment Terms cannot be empty.', '#paymentterms'); return false; }
+      if (paymentTerms.startsWith(' ')) { showError('Invalid Payment Terms', 'No leading space allowed in Payment Terms.', '#paymentterms'); return false; }
+      const capitalizedPattern = /^[A-Z][a-zA-Z0-9 %.\-]*$/;
+      if (!capitalizedPattern.test(paymentTerms)) { showError('Invalid Payment Terms', 'Must start with a capital letter and contain only allowed characters.', '#paymentterms'); return false; }
+
+      // Verified by (select or input)
+      const verifiedSelect = $('#verifiedbySelect');
+      const verifiedInput = $('#verifiedbyInput');
+      const verifiedVal = verifiedSelect.length ? verifiedSelect.val() : (verifiedInput.length ? verifiedInput.val() : '');
+      if (!verifiedVal || verifiedVal.trim() === '') { showError('Verified By Missing', 'Please select Verified By.', verifiedSelect.length ? '#verifiedbySelect' : '#verifiedbyInput'); return false; }
+
+      // Update hidden JSON before submit
+      updateReceivedMaterialsJson();
+
+      return true;
+    }
+
+    // ---------- submit ----------
+    function submitRawMaterialInvoiceForm(e) {
+      if (e && e.preventDefault) e.preventDefault();
+
+      // run validation
+      if (!validateRequiredFields()) return;
+
+      // Prepare endpoint & message
+      const id = $('[name="id"]').val();
+      const url = id ? '/rawmaterialpurchaseinvoice/update' : '/rawmaterialpurchaseinvoice/save';
+      const successMessage = id ? 'RM Purchase Invoice updated successfully!' : 'RM Purchase Invoice submitted successfully!';
+
+      // disable submit to prevent duplicate
+      $('#submitBtn').prop('disabled', true);
+
+      $.ajax({
+        url: url,
+        type: 'POST',
+        data: $('#rawMaterialInvoiceForm').serialize(),
+        success: function(response) {
+          Swal.fire({ icon: 'success', title: 'Saved', text: successMessage }).then(() => {
+            // redirect to grid
+            window.location.href = '/purchase/rawmaterialpurchaseinvoicegrid';
+          });
+        },
+        error: function(xhr, status, error) {
+          console.error('Error saving form:', error);
+          Swal.fire({ icon: 'error', title: 'Error', text: 'Error saving form. Please try again.' });
+          $('#submitBtn').prop('disabled', false);
+        }
+      });
+    }
+  </script>
+</body>
+</html>

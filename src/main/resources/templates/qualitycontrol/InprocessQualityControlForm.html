@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>In-Process Quality Control</title>
+  <link rel="stylesheet" href="/css/empinfo.css">
+  <link rel="stylesheet" href="/css/hrms.css">
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+<div th:replace="~{QUALITYCONTROL.html :: sidebarFragment}"></div>
+
+<form id="processQualityControl" class="form-container">
+  <input type="hidden" id="id" name="id" th:value="${processQualityControl?.id}">
+  <h2>In-Process Quality Control Form</h2>
+
+  <!-- First Row -->
+  <div class="form-row">
+    <div class="form-group">
+      <label for="productuid">Product ID:</label>
+  
+ <!-- Show <select> only when inserting a new record -->
+	<select id="productuid" name="productuid" required onchange="onProductUidChange()" th:if="${processQualityControl?.id == null}">
+	       <option value="" selected>Select Product ID</option>
+	       <option th:each="uid : ${productuid}" th:value="${uid}" th:text="${uid}"></option>
+	     </select>
+
+	     <!-- Readonly input for existing record -->
+	     <input type="text" id="productuid" name="productuid" th:value="${processQualityControl?.productuid}" readonly th:unless="${processQualityControl?.id == null}">
+    </div>
+
+    <div class="form-group">
+      <label for="productname">Product Name:</label>
+      <input type="text" id="productname" name="productname" th:value="${processQualityControl?.productname}" readonly />
+    </div>
+
+    <div class="form-group">
+      <label for="firstarticleinspectionuid">Approved FAI ID:</label>
+	  <select id="firstarticleinspectionuid" name="firstarticleinspectionuid" required onchange="onFaiUidChange()" th:if="${processQualityControl?.id == null}">
+	          <option value="" selected>Select FAI ID</option>
+	          <option th:each="uid : ${firstarticleinspectionuid}" th:value="${uid}" th:text="${uid}"></option>
+	        </select>
+
+	        <input type="text" id="firstarticleinspectionuid" name="firstarticleinspectionuid"
+	               th:value="${processQualityControl?.firstarticleinspectionuid}" readonly 
+	               th:unless="${processQualityControl?.id == null}">
+    </div>
+  </div>
+  
+  <!-- Second Row -->
+  <div class="form-row">
+    <div class="form-group">
+      <label for="productionorderuid">Production Order ID:</label>
+      <input type="text" id="productionorderuid" name="productionorderuid" th:value="${processQualityControl?.productionorderuid}" readonly required>
+    </div>
+
+    <div class="form-group">
+      <label for="workorderuid">Work Order ID:</label>
+      <input type="text" id="workorderuid" name="workorderuid" th:value="${processQualityControl?.workorderuid}" readonly>
+    </div>
+	
+	<div class="form-group">
+	      <label for="plannedquantity">Approved FAI Quantity:</label>
+	      <input type="text" id="plannedquantity" name="plannedquantity" th:value="${processQualityControl?.plannedquantity}" readonly>
+	    </div>
+
+    <div class="form-group">
+      <label for="departmentname">Department Name:</label>
+      <select id="departmentname" name="departmentname" required>
+        <option value="" selected>Select department</option>
+        <option value="assembly" th:selected="${processQualityControl?.departmentname == 'assembly'}">Assembly</option>
+        <option value="machining" th:selected="${processQualityControl?.departmentname == 'machining'}">Machining</option>
+        <option value="painting" th:selected="${processQualityControl?.departmentname == 'painting'}">Painting</option>
+        <option value="quality control" th:selected="${processQualityControl?.departmentname == 'quality control'}">Quality Control</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Stage of Production -->
+  <div class="form-row">
+    <div class="form-group">
+      <label for="stageofproduction">Stage of Production:</label>
+      <select id="stageofproduction" name="stageofproduction" required>
+        <option value="" selected>Select stage</option>
+        <option value="Injection Molding" th:selected="${processQualityControl?.stageofproduction == 'Injection Molding'}">Injection Molding</option>
+        <option value="CNC Machining" th:selected="${processQualityControl?.stageofproduction == 'CNC Machining'}">CNC Machining</option>
+        <option value="Painting & Coating" th:selected="${processQualityControl?.stageofproduction == 'Painting & Coating'}">Painting & Coating</option>
+        <option value="Final Assembly" th:selected="${processQualityControl?.stageofproduction == 'inal Assembly'}">Final Assembly</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label for="inspectiondatetime">Inspection Date & Time:</label>
+      <input type="datetime-local" id="inspectiondatetime" name="inspectiondatetime" th:value="${processQualityControl?.inspectiondatetime}" required>
+    </div>
+
+    <div class="form-group">
+      <label for="testingmethod">Testing Method:</label>
+      <select id="testingmethod" name="testingmethod" required>
+        <option value="" selected>Select testing method</option>
+        <option value="Visual Inspection" th:selected="${processQualityControl?.testingmethod == 'Visual Inspection'}">Visual Inspection</option>
+        <option value="Dimensional Check" th:selected="${processQualityControl?.testingmethod == 'Dimensional Check'}">Dimensional Check</option>
+        <option value="Functional Testing" th:selected="${processQualityControl?.testingmethod == 'Functional Testing'}">Functional Testing</option>
+        <option value="Destructive Testing" th:selected="${processQualityControl?.testingmethod == 'Destructive Testing'}">Destructive Testing</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- More Fields -->
+  <div class="form-row">
+    <div class="form-group">
+      <label for="tolerancelimits">Tolerance Limits:</label>
+      <input type="text" id="tolerancelimits" name="tolerancelimits" th:value="${processQualityControl?.tolerancelimits}" required>
+    </div>
+
+    <div class="form-group">
+      <label for="defecttype">Defect Type:</label>
+      <select id="defecttype" name="defecttype" required>
+        <option value="" selected>Select defect type</option>
+        <option value="dimensional defect" th:selected="${processQualityControl?.defecttype == 'dimensional defect'}">Dimensional Defect</option>
+        <option value="material defect" th:selected="${processQualityControl?.defecttype == 'material defect'}">Material Defect</option>
+        <option value="functional defect" th:selected="${processQualityControl?.defecttype == 'functional defect'}">Functional Defect</option>
+        <option value="assembly defect" th:selected="${processQualityControl?.defecttype == 'assembly defect'}">Assembly Defect</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label for="samplesize">Sample Size:</label>
+      <input type="number" id="samplesize" name="samplesize" min="1" th:value="${processQualityControl?.samplesize}"  required>
+    </div>
+  </div>
+
+  <!-- Defect Info -->
+  <div class="form-row">
+    <div class="form-group">
+      <label for="defectivecount">Defective Count:</label>
+      <input type="number" id="defectivecount" name="defectivecount" min="0" th:value="${processQualityControl?.defectivecount}"  required>
+    </div>
+
+    <div class="form-group">
+      <label for="defectrate">Defect Rate (%):</label>
+      <input type="text" id="defectrate" name="defectrate" th:value="${processQualityControl?.defectrate}"  readonly>
+    </div>
+	
+	<div class="form-group">
+	      <label for="approvedquantity">Approved Quantity:</label>
+	      <input type="number" id="approvedquantity" name="approvedquantity" th:value="${processQualityControl?.approvedquantity}"  min="0" readonly>
+	    </div>
+		
+    <div class="form-group">
+      <label for="inspectionstatus">Inspection Status:</label>
+      <select id="inspectionstatus" name="inspectionstatus" required>
+        <option value="" selected>Select status</option>
+        <option value="Pending" th:selected="${processQualityControl?.inspectionstatus == 'Pending'}">Pending</option>
+        <option value="Reviewed" th:selected="${processQualityControl?.inspectionstatus == 'Reviewed'}">Reviewed</option>
+        <option value="Finalized" th:selected="${processQualityControl?.inspectionstatus == 'Finalized'}">Finalized</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="form-row">
+    <div class="form-group">
+      <label for="correctiveaction">Corrective Action Taken:</label>
+      <select id="correctiveaction" name="correctiveaction" required>
+        <option value="" selected>Select corrective action</option>
+        <option value="process adjustment" th:selected="${processQualityControl?.correctiveaction == 'process adjustment'}">Process Adjustment</option>
+        <option value="rework & repair" th:selected="${processQualityControl?.correctiveaction == 'rework & repair'}">Rework & Repair</option>
+        <option value="reject & scrap" th:selected="${processQualityControl?.correctiveaction == 'reject & scrap'}">Reject & Scrap</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label for="inspectorname">Inspector Name:</label>
+      <input type="text" id="inspectorname" name="inspectorname" th:value="${processQualityControl?.inspectorname}"  required>
+    </div>
+
+    <div class="form-group">
+      <label for="supervisorapproval">Supervisor Approval:</label>
+      <select id="supervisorapproval" name="supervisorapproval" required>
+        <option value="" selected>Select approval status</option>
+        <option value="Approved"  th:selected="${processQualityControl?.supervisorapproval == 'Approved'}">Approved</option>
+        <option value="Pending"  th:selected="${processQualityControl?.supervisorapproval == 'Pending'}">Pending</option>
+        <option value="Not Required"  th:selected="${processQualityControl?.supervisorapproval == 'Not Required'}">Not Required</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Submit -->
+  <div class="form-actions">
+    <button type="button" id="submitBtn" onclick="submitForm()">Submit</button>
+    <div th:if="${successMessage}" class="success-message" th:text="${successMessage}"></div>
+    <button type="button" class="back-button" onclick="goBack();">Back</button>
+  </div>
+</form>
+
+<!-- JS Section -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+	
+// Redirects user back to the grid/list page
+  function goBack() {
+    window.location.href = '/qualitycontrol/inprocessqualitycontrolgrid';
+  }
+  
+  // Calculates defect rate percentage whenever sample size or defective count is updated
+  function calculateDefectRate() {
+    const samplesize = +document.getElementById('samplesize').value;
+    const defectivecount = +document.getElementById('defectivecount').value;
+    const rate = samplesize > 0 ? (defectivecount / samplesize) * 100 : 0;
+    document.getElementById('defectrate').value = rate.toFixed(2) + '%';
+  }
+
+  // Attach listeners to recalculate defect rate when inputs change
+  document.getElementById('samplesize').addEventListener('input', calculateDefectRate);
+  document.getElementById('defectivecount').addEventListener('input', calculateDefectRate);
+  
+  // Validates the form fields before submission
+  function validateFormFields() {
+    const id = $('#id').val(); // Check if it's insertion
+	// --- Update mode validations only ---
+	    if (id) {
+	        let valid = true;
+
+	        // Validation 1: Inspection Date & Time on update
+	        const inspectionDateTime = $('#inspectiondatetime').val();
+	        if (!inspectionDateTime || inspectionDateTime.trim() === '') {
+	            alert("Please select Inspection Date & Time.");
+	            $('#inspectiondatetime').css('border', '2px solid red');
+	            valid = false;
+	        } else {
+	            $('#inspectiondatetime').css('border', '');
+	        }
+
+			// NEW VALIDATION: Sample Size cannot be blank in update
+			  const sampleSize = $('#samplesize').val();
+			  if (!sampleSize || sampleSize.trim() === '') {
+			      alert("Please enter Sample Size.");
+			      $('#samplesize').css('border', '2px solid red');
+			      valid = false;
+			  } else if (parseInt(sampleSize) <= 0) {
+			      alert("Sample Size must be greater than 0.");
+			      $('#samplesize').css('border', '2px solid red');
+			      valid = false;
+			  } else {
+			      $('#samplesize').css('border', '');
+			  }
+	        // Validation 2: Defective Count on update
+	        let defectiveCount = $('#defectivecount').val();
+	        if (defectiveCount === '' || defectiveCount === null) {
+	            $('#defectivecount').val(0); // Default to 0 if blank
+	        }
+			// Validation 3: Inspector Name
+			        const inspectorName = $('#inspectorname').val();
+			        const onlyAlphabetsPattern = /^[A-Za-z\s]+$/;
+			        if (!inspectorName || inspectorName.trim() === '') {
+			            alert("Please enter Inspector Name.");
+			            $('#inspectorname').css('border', '2px solid red');
+			            valid = false;
+			        } else if (!onlyAlphabetsPattern.test(inspectorName)) {
+			            alert("Inspector Name must contain only alphabets and spaces.");
+			            $('#inspectorname').css('border', '2px solid red');
+			            valid = false;
+			        } else {
+			            $('#inspectorname').css('border', '');
+			        }
+
+			        // Validation 4: Inspection Status
+			        const inspectionStatus = $('#inspectionstatus').val();
+			        if (!inspectionStatus || inspectionStatus.trim() === '') {
+			            alert("Please select Inspection Status.");
+			            $('#inspectionstatus').css('border', '2px solid red');
+			            valid = false;
+			        } else {
+			            $('#inspectionstatus').css('border', '');
+			        }
+
+			        // Validation 5: Supervisor Approval
+			        const supervisorApproval = $('#supervisorapproval').val();
+			        if (!supervisorApproval || supervisorApproval.trim() === '') {
+			            alert("Please select Supervisor Approval.");
+			            $('#supervisorapproval').css('border', '2px solid red');
+			            valid = false;
+			        } else {
+			            $('#supervisorapproval').css('border', '');
+			        }
+					
+	        return valid; // Skip other validations for update
+	    }
+
+    let valid = true;
+    let missingFields = [];
+
+	// Loop through all relevant form fields
+    $('#processQualityControl').find('select, input[type="text"], input[type="number"], input[type="datetime-local"]').each(function () {
+      const isDisabled = $(this).prop('disabled') || $(this).prop('readonly');
+      const isHidden = $(this).css('display') === 'none';
+      const isRequired = $(this).attr('required') !== undefined;
+      const value = $(this).val();
+
+	  // General required field validation
+      if (!isDisabled && !isHidden && isRequired) {
+        if (!value || value.trim() === '') {
+          valid = false;
+          missingFields.push($(this).attr('name'));// Record missing field name
+          $(this).css('border', '2px solid red');// Highlight
+          return;
+        } else {
+          $(this).css('border', '');// Reset border
+        }
+      }
+
+	  // Non-negative number validation + custom validations
+	  const nonNegativeFields = ['samplesize', 'defectivecount', 'approvedquantity'];
+	  const onlyNumericPattern = /^[0-9.]+$/;  // For tolerancelimits
+	  const onlyAlphabetsPattern = /^[A-Za-z\s]+$/; // For inspectorname
+	  const name = $(this).attr('name');
+
+	  if (nonNegativeFields.includes(name)) {
+	    const num = parseFloat(value);
+	    if (isNaN(num) || num < 0) {
+	      alert(name + ' must be a non-negative number.');
+	      $(this).css('border', '2px solid red');
+	      valid = false;
+	    } else {
+	      $(this).css('border', '');
+	    }
+	  }
+
+	  // Additional validation for supervisorapproval
+	   const supervisorApproval = $('#supervisorapproval').val();
+	   if (!supervisorApproval) {
+	     alert('Please select a Supervisor Approval status.');
+	     $('#supervisorapproval').css('border', '2px solid red');
+	     valid = false;
+	   } else {
+	     $('#supervisorapproval').css('border', '');
+	   }
+	   
+	  // Additional validation for tolerancelimits
+	  if (name === 'tolerancelimits') {
+	    if (!onlyNumericPattern.test(value)) {
+	      alert('Tolerance Limits must contain only numeric values (no characters or special characters).');
+	      $(this).css('border', '2px solid red');
+	      valid = false;
+	    } else {
+	      $(this).css('border', '');
+	    }
+	  }
+
+	  // Additional validation for inspectorname
+	  if (name === 'inspectorname') {
+	    if (!onlyAlphabetsPattern.test(value)) {
+	      alert('Inspector Name must contain only alphabets and spaces.');
+	      $(this).css('border', '2px solid red');
+	      valid = false;
+	    } else {
+	      $(this).css('border', '');
+	    }
+	  }
+
+    });
+
+    if (!valid && missingFields.length > 0) {
+      alert("Please fill in all required fields correctly before submitting.");
+    }
+
+    return valid;
+  }
+
+  // Submits the form using AJAX after validation
+  function submitForm() {
+	if (!validateFormFields()) return;
+
+    const form = document.getElementById('processQualityControl');
+    const formData = new FormData(form);
+    const id = $('#id').val();
+    const url = id ? '/inprogressqualitycontrol/update' : '/inprogressqualitycontrol/save';
+    const message = id ? 'Updated successfully!' : 'Saved successfully!';
+	
+	// Perform AJAX POST
+    $.ajax({
+      url: url,
+      type: 'POST',
+      data: formData,
+      processData: false,
+      contentType: false,
+      success: function () {
+        alert(message);
+        window.location.href = '/qualitycontrol/inprocessqualitycontrolgrid';
+      },
+      error: function () {
+        alert('Error saving data.');
+      }
+    });
+  }
+
+  // Clears the form and resets button label
+  function resetForm() {
+              $('#processQualityControl')[0].reset();
+              $('#id').val('');
+              $('#form-title').text('Process Quality Control Form');
+              $('#submitBtn').text('Submit');
+          }
+
+		  // Prefills the form with data (for update mode)
+          function prefillForm(data) {
+              $('#id').val(data.id);
+			  $('#productuid').replaceWith('<input type="text" id="productuid" name="productuid" value="' + data.productuid + '" readonly>');
+              $('#productname').val(data.productname);
+			  $('#firstarticleinspectionuid').replaceWith('<input type="text" id="firstarticleinspectionuid" name="firstarticleinspectionuid" value="' + data.firstarticleinspectionuid + '" readonly>');
+			  $('#productionorderuid').val(data.productionorderuid);
+			  $('#workorderuid').val(data.workorderuid);
+			  $('#plannedquantity').val(data.plannedquantity);
+              $('#departmentname').val(data.departmentname);
+              $('#stageofproduction').val(data.stageofproduction);
+              $('#inspectiondatetime').val(data.inspectiondatetime);
+              $('#testingmethod').val(data.testingmethod);
+              $('#tolerancelimits').val(data.tolerancelimits);
+			  $('#defecttype').val(data.defecttype);
+			  $('#samplesize').val(data.samplesize);
+              $('#defectivecount').val(data.defectivecount);
+			  $('#defectrate').val(data.defectrate);
+              $('#approvedquantity').val(data.approvedquantity);
+  			$('#inspectionstatus').val(data.inspectionstatus);
+  			$('#correctiveaction').val(data.correctiveaction);
+  			$('#inspectorname').val(data.inspectorname);
+  			$('#supervisorapproval').val(data.supervisorapproval);
+			
+              $('#form-title').text('Update Process Quality Control');
+              $('#submitBtn').text('Update');
+          }
+		  
+// Called when product UID changes; updates product name and available FAI UIDs
+  function onProductUidChange() {
+    const productUid = $('#productuid').val();// Get selected product UID
+
+	// Fetch and update product name
+    $.get('/product-name/' + productUid, function (response) {
+      $('#productname').val(response || '');
+    });
+
+	// Fetch related FAI UIDs
+    $.get('/fai-uids/' + productUid, function (data) {
+      const select = $('#firstarticleinspectionuid');
+      select.empty().append(new Option("Select FAI UID", "", true, true));
+      data.forEach(uid => {
+        select.append(new Option(uid, uid));// Add each FAI UID
+      });
+    });
+  }
+  // Set approvedquantity same as plannedquantity initially
+  function setApprovedQuantityFromPlanned() {
+      const plannedQty = parseFloat($('#plannedquantity').val()) || 0;
+      $('#approvedquantity').val(plannedQty);
+  }
+
+  // Update approvedquantity when defectivecount changes
+  function updateApprovedQuantityFromDefective() {
+      const plannedQty = parseFloat($('#plannedquantity').val()) || 0;
+      const defectiveCount = parseFloat($('#defectivecount').val()) || 0;
+	  const sampleSize = parseFloat($('#samplesize').val()) || 0;
+
+	      // Validation: Defective Count cannot be greater than Sample Size
+	      if (defectiveCount > sampleSize) {
+	          alert("Defective Count cannot be greater than Sample Size.");
+	          $('#defectivecount').val(sampleSize); // Reset to sample size
+	          return;
+	      }
+      let approvedQty = plannedQty - defectiveCount;
+
+      if (approvedQty < 0) approvedQty = 0; // Avoid negative quantity
+      $('#approvedquantity').val(approvedQty);
+  }
+
+  // Fetches order details when FAI UID changes
+  function onFaiUidChange() {
+    const faiUid = $('#firstarticleinspectionuid').val();
+    if (!faiUid) return;
+
+    $.get('/order-details/' + faiUid, function (response) {
+      $('#productionorderuid').val(response.productionorderuid || '');
+      $('#workorderuid').val(response.workorderuid || '');
+	  $('#plannedquantity').val(response.plannedquantity || '');
+	  // Auto-fill approvedquantity when plannedquantity is fetched
+	     setApprovedQuantityFromPlanned();
+    });
+  }
+
+  // On page load, fetch and populate product UID dropdown
+  $(document).ready(function () {
+    $.get('/product-uids', function (data) {
+      const select = $('#productuid');
+      
+      // Clear existing options (optional if needed)
+      select.empty();
+
+      // Add default option at the top
+      select.append(new Option('Select UID', '', true, true));// Default option
+
+      // Add the fetched UIDs
+      data.forEach(uid => {
+        select.append(new Option(uid, uid));// Populate dropdown with fetched UIDs
+      });
+    });
+  });
+  // Listen for changes in defectivecount
+  $('#defectivecount').on('input', updateApprovedQuantityFromDefective);
+  
+ 
+</script>
+</body>
+</html>

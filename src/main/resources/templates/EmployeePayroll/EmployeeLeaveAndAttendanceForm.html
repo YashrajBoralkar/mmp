@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<htm lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employee leave and Attendance form</title>
+    <link rel="stylesheet" href="hrms1.css">
+    <link rel="stylesheet" href="css/sty.css">
+      <link rel="stylesheet" href="/css/hrms.css"> <!-- // for side bar code  -->
+    
+    <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+</head>
+
+<style>
+    h5 {
+        margin: 10px;
+    }
+    label {
+        font-size: 12px;
+    }
+</style>
+<body>
+<div th:replace="~{EmployeePayroll.html :: sidebarFragment}"></div> <!-- // for side bar code  -->
+
+
+    <form id="SalaryStructureForm" class="form-container">
+        <h2>Employee leave and Attendance form</h2>
+
+        <!-- Employee Details -->
+        <h5>Employee Information</h5>
+        <div class="form-row">
+            <div class="form-group">
+                <label for="employeeId">Employee ID:</label>
+                <input type="text" class="form-control" id="employeeId" name="employeeId" required>
+            </div>
+            <div class="form-group">
+                <label for="employeeName">Employee Name:</label>
+                <input type="text" class="form-control" id="employeeName" name="employeeName" required>
+            </div>
+            <div class="form-group">
+                <label for="department">Department:</label>
+                <input type="text" class="form-control" id="department" name="department" required>
+            </div>
+        </div>
+<h5>Attendance & Leave Details*</h5>
+<div class="form-row">
+           <div class="form-group">
+               <label for="totalworkingdays">Total working Days:</label>
+               <input type="number" class="form-control" id="totalworkingdays" name="totalworkingdays" required>
+           </div>
+           <div class="form-group">
+               <label for="presentday">Present Days:</label>
+               <input type="number" class="form-control" id="presentday" name="presentday" required>
+           </div>
+           <div class="form-group">
+               <label for="leavetaken">Leave Taken:</label>
+               <input type="number" class="form-control" id="leavetaken" name="leavetaken" required>
+           </div>
+		   <div class="form-group">
+			<label for="leavetype">Leave Type</label>
+			<select class="form-select" id="leavetype" name="leavetype" required>
+				<option value="">select</option>
+				<option value="paid">Paid</option>
+				<option value="unpaid">Unpaid</option>
+				<option value="sick">Sick</option>
+				<option value="casualleave">Casual Leave</option>
+				</select>
+		   </div>
+		   <div class="form-group">
+		   <label for="leavetype">Overtime Hours</label>
+		   <input type="number" class="form-control" id="overtime" name="overtime">
+ </div>
+ </div>
+	<h5>Payroll Impact</h5>
+<div class="form-row">
+	<div class="form-group">
+		<label for="leavededutionamount">Leave deduction amount</label>
+		<input type="text" class="form-control" id="leavededutionamount" name="leavededutionamount">
+	</div>
+<div class="for-row">
+	<div class="form-group">
+		<label for="overtimepay">Overtime pay</label>
+		<input type="text" class="form-control" id="overtimepay" name="overtimepay">
+	</div>
+</div>	
+</div>
+<h5>Approval information</h5>
+<div class="for-row">
+	<div class="form-group">
+		<label for="approvedby">Approved By</label>
+		<select class="form-select" id="approvedby" name="approvedby" required>
+			<option value="">Select</option>
+			<option value="hr">HR</option>
+			<option value="payroll">payroll manager</option>
+	</select>
+		</div>
+</div>
+<div class="for-row">
+	<div class="form-group">
+		<label for="approvalstatus">Approval status</label>
+		<select class="form-select" id="approvalstatus" name="approvalstatus" required>
+			<option value="">Select</option>
+			<option value="approved">Approved</option>
+			<option value="pending">pending</option>
+			<option value="rejected">Rejected</option>
+		</select> 
+
+		</div>
+</div>
+<div class="form-actions">
+            <button type="submit">Submit</button>
+        </div>
+
+
+</form> 
+</body>
+</html>

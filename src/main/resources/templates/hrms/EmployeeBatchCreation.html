@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Employee Batch Creation</title>
+	<link rel="stylesheet" href="/css/empinfo.css">
+	<link rel="stylesheet" href="/css/hrms.css">
+	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+	<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+	<div th:replace="~{HRMS.html :: sidebarFragment}"></div>
+
+	<div class="form-container">
+		<h2 id="form-title">Employee Batch Creation</h2><br>
+		<form id="batchForm" autocomplete="off">
+			<input type="hidden" id="id" name="id" th:value="${empbatch?.id}">
+
+			<div class="form-row">
+				<div class="form-group">
+					<label for="batchname">Batch Name:</label>
+					<input type="text" id="batchname" name="batchname" th:value="${empbatch?.batchname}" required>
+				</div>
+				<div class="form-group">
+					<label for="batchdescription">Batch Description:</label>
+					<input type="text" id="batchdescription" name="batchdescription" th:value="${empbatch?.batchdescription}">
+				</div>
+			</div>
+
+			<div class="form-row">
+				<div class="form-group">
+					<label for="departmentuid">Department:</label>
+
+					<!-- Department dropdown for CREATE -->
+					<select id="departmentuid" name="departmentuid"
+						onchange="loadEmployees(this.value)"
+						th:if="${empbatch == null or empbatch.id == null}">
+						<option value="">-- Select Department --</option>
+					</select>
+
+					<!-- Department name + hidden UID for UPDATE -->
+					<div th:if="${empbatch?.id != null}">
+						<input type="text" id="departmentname" name="departmentname"
+							th:value="${empbatch?.departmentname}" readonly />
+						<input type="hidden" id="departmentuid" name="departmentuid"
+							th:value="${empbatch?.departmentuid}" />
+					</div>
+				</div>
+
+				<div class="form-group">
+					<label for="employeeuid">Select Employees (max 10):</label>
+					<select id="employeeuid" name="employeeuid" multiple  ></select>
+				</div>
+			</div>
+
+			<div class="form-row">
+				<div class="form-group">
+					<label for="status">Status:</label>
+					<select id="status" name="status" th:value="${empbatch?.status}">
+						<option value="">-- Select Status --</option>
+						<option value="Active" th:selected="${empbatch?.status == 'Active'}">Active</option>
+						<option value="Inactive" th:selected="${empbatch?.status == 'Inactive'}">Inactive</option>
+					</select>
+				</div>
+				<div class="form-group">
+					<label for="remark">Remark:</label>
+					<input type="text" id="remark" name="remark" th:value="${empbatch?.remark}">
+				</div>
+			</div><br>
+
+			<div class="form-actions">
+				<button type="button" id="submitBtn" onclick="submitForm()">Save</button>
+				<button type="button" id="backBtn" onclick="goback()">Back</button>
+			</div>
+		</form>
+	</div>
+<script> 
+function goBack() {
+	window.location.href = '/dashboard';
+	}
+</script>
+	<script>
+	
+		function goback() {
+		 window.location.href = '/hrms/employeebatchcreationgrid'; 
+		 }
+		
+		$(document).ready(function () {
+		    const Id = $("#id").val(); // get value of hidden id input
+		    const deptUid = $("#departmentuid").val(); // get department UID
+
+		    if (!Id) return; // only run if batchId exists (edit mode)
+
+		    const selectedUids = []; // initialize, or get from some existing variable
+		    const $empSelect = $("#employeeuid");
+
+		    $.ajax({
+		        url: "/batch/employees-by-dept",
+		        method: "GET",
+		        data: { departmentuid: deptUid },
+		        success: function (data) {
+		            $empSelect.empty();
+		            data.forEach(emp => {
+		                const isSelected = selectedUids.includes(emp.employeeuid) ? "selected" : "";
+		                $empSelect.append(
+		                    `<option value="${emp.employeeuid}" ${isSelected}>
+		                        ${emp.employeeuid} - ${emp.employeename}
+		                    </option>`
+		                );
+		            });
+		        },
+		        error: function () {
+		            alert("❌ Failed to load employees.");
+		        }
+		    });
+		});
+
+
+		function loadEmployees(deptUid, selectedUids = []) {
+			const $empSelect = $("#employeeuid");
+			$empSelect.empty();
+			if (!deptUid) return;
+
+			$.ajax({
+				url: "/batch/employees-by-dept",
+				method: "GET",
+				data: { departmentuid: deptUid },
+				success: function (data) {
+					data.forEach(emp => {
+						const isSelected = selectedUids.includes(emp.employeeuid) ? "selected" : "";
+						$empSelect.append(
+							`<option value="${emp.employeeuid}" ${isSelected}>
+								${emp.employeeuid} - ${emp.employeename}
+							</option>`
+						);
+					});
+				},
+				error: function () {
+					alert("❌ Failed to load employees.");
+				}
+			});
+		}
+
+		$(document).ready(function () {
+		    const id = $("#id").val();
+
+		    // Load departments for CREATE mode only
+		    if (!id) {
+		        $.ajax({
+		            url: "/batch/departments",
+		            method: "GET",
+		            success: function (data) {
+		                $("#departmentuid").empty().append('<option value="">-- Select Department --</option>');
+		                data.forEach(d => {
+		                    $("#departmentuid").append(
+		                        `<option value="${d.departmentuid}">${d.departmentname}</option>`
+		                    );
+		                });
+		            },
+		            error: function () {
+		                alert("❌ Failed to load departments.");
+		            }
+		        });
+		    }
+
+		    // Edit mode logic
+		    if (id) {
+		        $.ajax({
+		            url: `/batch/get/${id}`,
+		            method: "GET",
+		            success: function (batch) {
+		                $("#id").val(batch.id);
+		                $("#batchname").val(batch.batchname);
+		                $("#batchdescription").val(batch.batchdescription);
+		                $("#status").val(batch.status);
+		                $("#remark").val(batch.remark);
+		                $("#departmentname").val(batch.departmentname);
+		                $("#departmentuid").val(batch.departmentuid);
+
+		                // Preselect employee UIDs
+		                const selectedUids = batch.employeeuid ? batch.employeeuid.split(",") : [];
+
+		                // Fetch employees of the frozen department and preselect
+		                $.ajax({
+		                    url: "/batch/employees-by-dept",
+		                    method: "GET",
+		                    data: { departmentuid: batch.departmentuid },
+		                    success: function (data) {
+		                        const $empSelect = $("#employeeuid");
+		                        $empSelect.empty();
+		                        data.forEach(emp => {
+		                            const isSelected = selectedUids.includes(emp.employeeuid) ? "selected" : "";
+		                            $empSelect.append(
+		                                `<option value="${emp.employeeuid}" ${isSelected}>${emp.employeeuid} - ${emp.employeename}</option>`
+		                            );
+		                        });
+		                    },
+		                    error: function () {
+		                        alert("❌ Failed to load employees for the department.");
+		                    }
+		                });
+
+		                $("#form-title").text("Update Employee Batch");
+		                $("#submitBtn").text("Update Batch");
+		            },
+		            error: function () {
+		                alert("❌ Failed to load batch data.");
+		            }
+		        });
+		    }
+
+		    // Limit employee selection to 10
+		    $("#employeeuid").change(function () {
+		        const selected = $(this).find("option:selected");
+		        if (selected.length > 10) {
+		            alert("You can select maximum 10 employees per batch.");
+		            selected.slice(10).prop("selected", false);
+		        }
+		    });
+		});
+
+
+		function submitForm() {
+			const id = $("#id").val().trim();
+			const deptUid = $("#departmentuid").val();
+			const batchname = $("#batchname").val().trim();
+			const status = $("#status").val();
+			const selectedEmps = $("#employeeuid option:selected");
+
+			if (!batchname || !deptUid || selectedEmps.length === 0 || !status) {
+				alert("❌ Please fill all required fields.");
+				return;
+			}
+			if (selectedEmps.length > 10) {
+				alert("❌ You can select maximum 10 employees.");
+				return;
+			}
+
+			const empUids = [], empNames = [];
+			selectedEmps.each(function () {
+				empUids.push($(this).val());
+				empNames.push($(this).text().split(" - ")[1].trim());
+			});
+
+			const formData = {
+				id,
+				batchname,
+				batchdescription: $("#batchdescription").val().trim(),
+				departmentuid: deptUid,
+				departmentname: $("#departmentname").val() || $("#departmentuid option:selected").text(),
+				employeeuid: empUids.join(","),
+				employeename: empNames.join(","),
+				status,
+				remark: $("#remark").val().trim()
+			};
+
+			let url, successMessage;
+            
+            if (!id) {
+                url = '/empbatch/save';
+                successMessage = 'Employee Batch Creation Details saved successfully!';
+            } else {
+                url = '/empbatch/update';
+                successMessage = 'Employee Batch Creation Details updated successfully!';
+            }
+
+            $.ajax({
+                url: url,
+                type: 'POST',
+                data: formData,
+                success: function(response) {
+					alert(successMessage);
+                	resetForm();
+                    window.location.href = '/hrms/employeebatchcreationgrid';
+                },
+                error: function() {
+                    alert('Error saving attendance. Please fill out the data.');
+                }
+            });
+        }
+
+           
+
+        // Reset form
+        function resetForm() {
+            $("#batchForm")[0].reset();
+            $("#id").val('');
+            $("#employeeuid").empty();
+            $("#form-title").text("Employee Batch Creation");
+            $("#submitBtn").text("Save Batch");
+            $("#message").text('');
+        }
+	</script>
+</body>
+</html>

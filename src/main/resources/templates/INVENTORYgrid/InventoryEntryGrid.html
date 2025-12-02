@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventory Entry Management</title>
+    
+    <link rel="stylesheet" href="/css/hrms.css"> <!-- // for side bar code  -->
+    <link rel="stylesheet" href="/css/grid.css">
+    <link rel="stylesheet" href="/css/emplist.css">
+
+    <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<!-- ✅ Internal CSS for Button Styling -->
+  <style>
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background-color: #f0f0f0;
+      padding: 10px 20px;
+    }
+
+    .search-box {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .search-box button,
+    .back-button {
+      padding: 6px 12px;
+      font-size: 14px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .search-box button:hover,
+    .back-button:hover {
+      background-color: #0056b3;
+    }
+  </style>
+<body>
+<div th:replace="~{INVENTORY.html :: sidebarFragment}"></div> <!-- // for side bar code  -->
+
+<div class="button-container">
+    
+</div>
+
+<div class="button-grid">
+    <button onclick="loadInventoryEntryManagementTable()"style="width:112%">Inventory Entry Details</button>
+
+</div>
+
+<div id="InventoryEntry-table-container">
+    <!-- Add the button above the table -->
+<!--    <button class="styled-button" onclick="window.location.href='/empregister';">-->
+<!--        Open Employee Registration Form-->
+<!--    </button>-->
+</div> <!-- Table will be dynamically loaded here -->
+
+<script src="grid.js"></script>
+<script> function goBack() {
+	window.location.href = '/dashboard';
+	  }
+</script>
+<script>
+    function loadInventoryEntryManagementTable() {
+        /// Create the button and table container structure immediately
+        const container = document.getElementById("InventoryEntry-table-container");
+        container.innerHTML = `
+            <div class="table-header">
+				<div class="button-container" style="margin-left: 1045px;">
+								                <button class="styled-button" onclick="window.location.href='/dashboard'" style="flex-grow: 1;">
+								                    <i class="fas fa-arrow-left"></i> Back
+								                </button>
+								                <button id="open-register-btn" class="styled-button" style="flex-grow: 1; margin-left: 20px;">
+								                Inventory Entry Form
+								                </button>
+								            </div>
+			 </div>
+            <table>
+            <thead>
+            <tr>
+                <th>ID</th>
+                <th>Product Type</th>
+                <th>Product Name</th>
+                <th>Reference ID</th>
+                <th>Actual Quantity</th>
+                <th>Warehouse Name</th>
+                <th>Entry Date</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+
+                <tbody id="InventoryEntry-table-body">
+                    <tr><td colspan="9">Loading data...</td></tr>
+                </tbody>
+            </table>
+        `;
+
+        // Add event listener to the "Register Employee" button
+        document.getElementById("open-register-btn").addEventListener("click", () => {
+            // Redirect to the employee shift info form
+            window.location.href = '/inventoryentry/form';
+        });
+        
+     // Helper function to format raw material details
+        function formatMaterialDetails(rawJson) {
+            let formatted = "";
+            try {
+                const data = JSON.parse(rawJson);
+                const parts = [];
+
+                for (const material in data) {
+                    const details = data[material];
+                    const quantity = details.quantity;
+                    parts.push(`${material} - Quantity: ${quantity}`);
+                }
+
+                formatted = parts.join("<br>"); // Use <br> for line breaks in HTML
+            } catch (e) {
+                formatted = rawJson; // fallback in case JSON is malformed
+            }
+
+            return formatted;
+        }
+
+
+        // Fetch and populate table data
+        fetch('/viewinventoryentrylist')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                const headers = data.headers; // Extract headers dynamically
+                const rows = data.data;      // Extract employee data
+                const tbody = document.getElementById("InventoryEntry-table-body");
+
+                // Check if there are rows to display
+                if (rows.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="9">No data available.</td></tr>`;
+                    return;
+                }
+
+             // Generate rows from data
+                tbody.innerHTML = rows.map(row => {
+                    const formattedDetails = formatMaterialDetails(row['Raw Material Details']); // 👈 Format here
+
+                    return `
+                          <tr>
+                <td>${row['ID']}</td>
+                <td>${row['Product Type']}</td>
+                <td>${row['Product Name']}</td>
+                <td>${row['Reference ID']}</td>
+                <td>${row['Actual Quantity']}</td>
+                <td>${row['Warehouse Name']}</td>
+                <td>${row['Entry Date']}</td>
+                <td>
+                            <div class="action-buttons">
+                                <a href="#" class="btn btn-delete" data-id="${row['ID']}" onclick="DeletefromInventoryEntryInfo(this)">Delete</a>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                }).join('');
+            })
+            .catch(error => {
+                console.error('Error fetching Inventory Entry data:', error);
+                document.getElementById("InventoryEntry-table-body").innerHTML = `<tr><td colspan="9">Error loading data.</td></tr>`;
+            });
+    }
+
+		function DeletefromInventoryEntryInfo(element) {
+	    const id = element.getAttribute('data-id'); // Retrieve the employee ID
+	    if (confirm(`Are you sure you want to delete Inventory Entry Info with ID: ${id}?`)) {
+	        // Perform the fetch request with the employee ID as a query parameter
+	        fetch(`/deleteinventoryentryinfo?id=${id}`, { method: 'GET' })
+	            .then(response => {
+	                if (response.redirected) {
+	                    // Redirect to the new location if the server redirects
+	                    window.location.href = response.url;
+	                } else {
+	                    console.log('Inventory Entry info deleted:', id);
+	                }
+	            })
+	            .catch(error => {
+	                console.error('Error deleting Inventory Entry info :', error);
+	            });
+	    }
+	}
+
+
+</script>
+
+
+
+
+</body>
+</html>
